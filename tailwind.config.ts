@@ -47,6 +47,12 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        baseball: {
+          field: "hsl(var(--baseball-field))",
+          dirt: "hsl(var(--baseball-dirt))",
+          white: "hsl(var(--baseball-white))",
+          warning: "hsl(var(--baseball-warning))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

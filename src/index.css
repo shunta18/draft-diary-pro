@@ -8,35 +8,58 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    /* 野球テーマのベースカラー */
+    --background: 120 15% 98%;
+    --foreground: 25 25% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 25 25% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 25 25% 15%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* 野球場の芝生グリーンをプライマリカラーに */
+    --primary: 120 40% 25%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* 土のブラウンをセカンダリカラーに */
+    --secondary: 25 30% 85%;
+    --secondary-foreground: 25 25% 15%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 120 15% 95%;
+    --muted-foreground: 25 15% 45%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 35 70% 60%;
+    --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 120 15% 90%;
+    --input: 120 15% 96%;
+    --ring: 120 40% 25%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* 野球テーマの専用カラー */
+    --baseball-field: 120 40% 25%;
+    --baseball-dirt: 25 40% 70%;
+    --baseball-white: 0 0% 98%;
+    --baseball-warning: 45 90% 55%;
+    
+    /* グラデーション */
+    --gradient-field: linear-gradient(135deg, hsl(var(--baseball-field)), hsl(120 35% 30%));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(35 80% 65%));
+    --gradient-card: linear-gradient(135deg, hsl(var(--card)), hsl(120 10% 96%));
+    
+    /* シャドウ */
+    --shadow-soft: 0 4px 20px -2px hsl(var(--baseball-field) / 0.1);
+    --shadow-elevated: 0 8px 30px -4px hsl(var(--baseball-field) / 0.15);
+    --shadow-glow: 0 0 25px hsl(var(--accent) / 0.3);
+
+    /* アニメーション */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,33 +79,49 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 25 15% 8%;
+    --foreground: 0 0% 95%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 25 15% 10%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 25 15% 10%;
+    --popover-foreground: 0 0% 95%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 120 35% 35%;
+    --primary-foreground: 0 0% 98%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 25 20% 20%;
+    --secondary-foreground: 0 0% 95%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 25 15% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 35 70% 55%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 25 15% 20%;
+    --input: 25 15% 15%;
+    --ring: 120 35% 35%;
+
+    /* ダークモード専用の野球テーマカラー */
+    --baseball-field: 120 35% 35%;
+    --baseball-dirt: 25 30% 45%;
+    --baseball-white: 0 0% 95%;
+    --baseball-warning: 45 85% 60%;
+    
+    /* ダークモードグラデーション */
+    --gradient-field: linear-gradient(135deg, hsl(var(--baseball-field)), hsl(120 40% 25%));
+    --gradient-accent: linear-gradient(135deg, hsl(var(--accent)), hsl(35 75% 50%));
+    --gradient-card: linear-gradient(135deg, hsl(var(--card)), hsl(25 20% 12%));
+    
+    /* ダークモードシャドウ */
+    --shadow-soft: 0 4px 20px -2px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 8px 30px -4px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 25px hsl(var(--accent) / 0.4);
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
@@ -101,5 +140,54 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .gradient-field {
+    background: var(--gradient-field);
+  }
+  
+  .gradient-accent {
+    background: var(--gradient-accent);
+  }
+  
+  .gradient-card {
+    background: var(--gradient-card);
+  }
+  
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+  
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .transition-smooth {
+    transition: var(--transition-smooth);
+  }
+  
+  .transition-bounce {
+    transition: var(--transition-bounce);
+  }
+
+  .baseball-field {
+    background-color: hsl(var(--baseball-field));
+    color: hsl(var(--baseball-white));
+  }
+
+  .baseball-dirt {
+    background-color: hsl(var(--baseball-dirt));
+    color: hsl(var(--foreground));
   }
 }

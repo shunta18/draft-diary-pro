@@ -1,0 +1,86 @@
+import { Menu, Home, Users, Trophy, Calendar, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useState } from "react";
+import { Link, useLocation } from "react-router-dom";
+
+interface NavItem {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  path: string;
+}
+
+const navItems: NavItem[] = [
+  { icon: Home, label: "ホーム", path: "/" },
+  { icon: Users, label: "選手リスト", path: "/players" },
+  { icon: Trophy, label: "ドラフト構想", path: "/draft" },
+  { icon: Calendar, label: "観戦日記", path: "/diary" },
+  { icon: Settings, label: "設定", path: "/settings" },
+];
+
+export const Navigation = () => {
+  const [open, setOpen] = useState(false);
+  const location = useLocation();
+
+  const isActive = (path: string) => location.pathname === path;
+
+  return (
+    <div className="bg-card border-b shadow-soft">
+      <div className="flex items-center justify-between p-4">
+        <h1 className="text-xl font-bold text-primary">
+          BaaS 野球管理ツール
+        </h1>
+        
+        <Sheet open={open} onOpenChange={setOpen}>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-6 w-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-64">
+            <nav className="flex flex-col space-y-2 mt-8">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    onClick={() => setOpen(false)}
+                    className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-smooth ${
+                      isActive(item.path)
+                        ? "bg-primary text-primary-foreground shadow-glow"
+                        : "hover:bg-secondary text-foreground"
+                    }`}
+                  >
+                    <Icon className="h-5 w-5" />
+                    <span className="font-medium">{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </SheetContent>
+        </Sheet>
+
+        {/* Desktop Navigation */}
+        <nav className="hidden md:flex space-x-2">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.path} to={item.path}>
+                <Button
+                  variant={isActive(item.path) ? "default" : "ghost"}
+                  className={`flex items-center space-x-2 transition-smooth ${
+                    isActive(item.path) ? "shadow-glow" : ""
+                  }`}
+                >
+                  <Icon className="h-4 w-4" />
+                  <span>{item.label}</span>
+                </Button>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
+  );
+};
