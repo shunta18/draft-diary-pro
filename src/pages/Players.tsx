@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Link } from "react-router-dom";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Link, useNavigate } from "react-router-dom";
 
 // モックデータ
 const mockPlayers = [
@@ -18,6 +19,11 @@ const mockPlayers = [
     category: "高校",
     evaluation: "1位競合確実",
     draftYear: "2025",
+    battingThrowing: "右投右打",
+    hometown: "東京都",
+    careerPath: "プロ志望",
+    memo: "球速150km/h超、変化球のキレが抜群",
+    videoLinks: ["https://youtube.com/watch?v=example1"],
   },
   {
     id: 2,
@@ -27,6 +33,11 @@ const mockPlayers = [
     category: "大学",
     evaluation: "2-3位",
     draftYear: "2025",
+    battingThrowing: "右投左打",
+    hometown: "大阪府",
+    careerPath: "プロ志望",
+    memo: "守備範囲が広く、打撃センスも良好",
+    videoLinks: ["https://youtube.com/watch?v=example2"],
   },
   {
     id: 3,
@@ -36,6 +47,11 @@ const mockPlayers = [
     category: "社会人",
     evaluation: "4-5位",
     draftYear: "2025",
+    battingThrowing: "左投左打",
+    hometown: "愛知県",
+    careerPath: "プロ志望",
+    memo: "長打力があり、走力も申し分ない",
+    videoLinks: [],
   },
 ];
 
@@ -49,14 +65,16 @@ const evaluationColors = {
 };
 
 export default function Players() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedPosition, setSelectedPosition] = useState("all");
   const [selectedEvaluation, setSelectedEvaluation] = useState("all");
   const [selectedPlayer, setSelectedPlayer] = useState<typeof mockPlayers[0] | null>(null);
+  const [players, setPlayers] = useState(mockPlayers);
 
-  const filteredPlayers = mockPlayers.filter((player) => {
+  const filteredPlayers = players.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.team.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesYear = selectedYear === "all" || player.draftYear === selectedYear;
@@ -182,6 +200,8 @@ export default function Players() {
                       <span>{player.team}</span>
                       <span>•</span>
                       <span>{player.position.join("・")}</span>
+                      <span>•</span>
+                      <span>{player.draftYear}年</span>
                     </div>
                   </div>
                   
@@ -209,24 +229,15 @@ export default function Players() {
       
       {/* Player Detail Dialog */}
       <Dialog open={!!selectedPlayer} onOpenChange={() => setSelectedPlayer(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span className="text-primary font-bold">{selectedPlayer?.name}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setSelectedPlayer(null)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </DialogTitle>
+            <DialogTitle className="text-primary font-bold">{selectedPlayer?.name}</DialogTitle>
           </DialogHeader>
           
           {selectedPlayer && (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Basic Info */}
-              <div className="space-y-3">
+              <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Badge variant="secondary" className="text-xs">
                     {selectedPlayer.category}
@@ -238,41 +249,117 @@ export default function Players() {
                   </Badge>
                 </div>
                 
-                <div className="space-y-2 text-sm">
+                <div className="grid grid-cols-1 gap-3 text-sm">
                   <div className="flex items-center space-x-2">
                     <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">所属:</span>
                     <span>{selectedPlayer.team}</span>
                   </div>
                   
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span>{selectedPlayer.draftYear}年ドラフト</span>
+                    <span className="text-muted-foreground">ドラフト年度:</span>
+                    <span>{selectedPlayer.draftYear}年</span>
                   </div>
                   
-                  <div>
-                    <span className="text-muted-foreground">ポジション: </span>
+                  <div className="flex items-center space-x-2">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-muted-foreground">ポジション:</span>
                     <span>{selectedPlayer.position.join("・")}</span>
                   </div>
+
+                  {selectedPlayer.battingThrowing && (
+                    <div className="flex items-center space-x-2">
+                      <Target className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">投打:</span>
+                      <span>{selectedPlayer.battingThrowing}</span>
+                    </div>
+                  )}
+
+                  {selectedPlayer.hometown && (
+                    <div className="flex items-center space-x-2">
+                      <LocationIcon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">出身地:</span>
+                      <span>{selectedPlayer.hometown}</span>
+                    </div>
+                  )}
+
+                  {selectedPlayer.careerPath && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-muted-foreground">進路先:</span>
+                      <span>{selectedPlayer.careerPath}</span>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Memo */}
+              {selectedPlayer.memo && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground">メモ</h4>
+                  <p className="text-sm bg-muted p-3 rounded-md">{selectedPlayer.memo}</p>
+                </div>
+              )}
+
+              {/* Video Links */}
+              {selectedPlayer.videoLinks && selectedPlayer.videoLinks.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-medium text-sm text-muted-foreground">動画リンク</h4>
+                  <div className="space-y-2">
+                    {selectedPlayer.videoLinks.map((link, index) => (
+                      <a 
+                        key={index}
+                        href={link} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-primary hover:underline block truncate"
+                      >
+                        {link}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
               
               {/* Action Buttons */}
               <div className="flex space-x-2 pt-4">
-                <Link to={`/players/${selectedPlayer.id}/edit`} className="flex-1">
-                  <Button variant="outline" className="w-full">
-                    編集
-                  </Button>
-                </Link>
                 <Button 
-                  variant="destructive" 
+                  variant="outline" 
                   className="flex-1"
                   onClick={() => {
-                    // Delete functionality would go here
+                    navigate(`/players/${selectedPlayer.id}/edit`);
                     setSelectedPlayer(null);
                   }}
                 >
-                  削除
+                  編集
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="flex-1">
+                      削除
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>選手を削除しますか？</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        {selectedPlayer.name}を削除します。この操作は取り消せません。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={() => {
+                          setPlayers(prev => prev.filter(p => p.id !== selectedPlayer.id));
+                          setSelectedPlayer(null);
+                        }}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        削除
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             </div>
           )}
