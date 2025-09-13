@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,52 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link, useNavigate } from "react-router-dom";
+import { getPlayers, deletePlayer, type Player } from "@/lib/playerStorage";
 
-// モックデータ
-const mockPlayers = [
-  {
-    id: 1,
-    name: "田中太郎",
-    team: "○○高校",
-    position: ["投手"],
-    category: "高校",
-    evaluation: "1位競合確実",
-    draftYear: "2025",
-    battingThrowing: "右投右打",
-    hometown: "東京都",
-    careerPath: "プロ志望",
-    memo: "球速150km/h超、変化球のキレが抜群",
-    videoLinks: ["https://youtube.com/watch?v=example1"],
-  },
-  {
-    id: 2,
-    name: "佐藤次郎",
-    team: "△△大学",
-    position: ["内野手"],
-    category: "大学",
-    evaluation: "2-3位",
-    draftYear: "2025",
-    battingThrowing: "右投左打",
-    hometown: "大阪府",
-    careerPath: "プロ志望",
-    memo: "守備範囲が広く、打撃センスも良好",
-    videoLinks: ["https://youtube.com/watch?v=example2"],
-  },
-  {
-    id: 3,
-    name: "鈴木三郎",
-    team: "××社会人",
-    position: ["外野手"],
-    category: "社会人",
-    evaluation: "4-5位",
-    draftYear: "2025",
-    battingThrowing: "左投左打",
-    hometown: "愛知県",
-    careerPath: "プロ志望",
-    memo: "長打力があり、走力も申し分ない",
-    videoLinks: [],
-  },
-];
 
 const evaluationColors = {
   "1位競合確実": "bg-red-500 text-white",
@@ -71,8 +27,12 @@ export default function Players() {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedPosition, setSelectedPosition] = useState("all");
   const [selectedEvaluation, setSelectedEvaluation] = useState("all");
-  const [selectedPlayer, setSelectedPlayer] = useState<typeof mockPlayers[0] | null>(null);
-  const [players, setPlayers] = useState(mockPlayers);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [players, setPlayers] = useState<Player[]>([]);
+
+  useEffect(() => {
+    setPlayers(getPlayers());
+  }, []);
 
   const filteredPlayers = players.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -127,10 +87,10 @@ export default function Players() {
                 <SelectValue placeholder="年度" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全て</SelectItem>
-                <SelectItem value="2025">2025年</SelectItem>
-                <SelectItem value="2026">2026年</SelectItem>
-                <SelectItem value="2027">2027年</SelectItem>
+                <SelectItem value="all">全ての年度</SelectItem>
+                <SelectItem value="2025">2025年度</SelectItem>
+                <SelectItem value="2026">2026年度</SelectItem>
+                <SelectItem value="2027">2027年度</SelectItem>
               </SelectContent>
             </Select>
             
@@ -139,9 +99,9 @@ export default function Players() {
                 <SelectValue placeholder="所属" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全て</SelectItem>
-                <SelectItem value="高校">高校</SelectItem>
-                <SelectItem value="大学">大学</SelectItem>
+                <SelectItem value="all">全ての所属</SelectItem>
+                <SelectItem value="高校">高校生</SelectItem>
+                <SelectItem value="大学">大学生</SelectItem>
                 <SelectItem value="社会人">社会人</SelectItem>
                 <SelectItem value="独立リーグ">独立リーグ</SelectItem>
                 <SelectItem value="その他">その他</SelectItem>
@@ -153,7 +113,7 @@ export default function Players() {
                 <SelectValue placeholder="ポジション" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全て</SelectItem>
+                <SelectItem value="all">全てのポジション</SelectItem>
                 <SelectItem value="投手">投手</SelectItem>
                 <SelectItem value="捕手">捕手</SelectItem>
                 <SelectItem value="内野手">内野手</SelectItem>
@@ -166,7 +126,7 @@ export default function Players() {
                 <SelectValue placeholder="評価" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全て</SelectItem>
+                <SelectItem value="all">全ての評価</SelectItem>
                 <SelectItem value="1位競合確実">1位競合確実</SelectItem>
                 <SelectItem value="一本釣り〜外れ1位">一本釣り〜外れ1位</SelectItem>
                 <SelectItem value="2-3位">2-3位</SelectItem>
@@ -350,7 +310,9 @@ export default function Players() {
                       <AlertDialogCancel>キャンセル</AlertDialogCancel>
                       <AlertDialogAction
                         onClick={() => {
-                          setPlayers(prev => prev.filter(p => p.id !== selectedPlayer.id));
+                          if (selectedPlayer && deletePlayer(selectedPlayer.id)) {
+                            setPlayers(getPlayers());
+                          }
                           setSelectedPlayer(null);
                         }}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"

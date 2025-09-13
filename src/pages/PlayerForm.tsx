@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { addPlayer, updatePlayer, getPlayerById } from "@/lib/playerStorage";
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"];
 const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
@@ -22,6 +23,10 @@ const evaluations = [
 ];
 
 export default function PlayerForm() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const isEditing = !!id;
+  
   const [formData, setFormData] = useState({
     name: "",
     draftYear: "2025",
@@ -36,6 +41,27 @@ export default function PlayerForm() {
   });
 
   const [videoLinks, setVideoLinks] = useState([""]);
+
+  useEffect(() => {
+    if (isEditing && id) {
+      const player = getPlayerById(parseInt(id));
+      if (player) {
+        setFormData({
+          name: player.name,
+          draftYear: player.draftYear,
+          category: player.category,
+          team: player.team,
+          positions: player.position,
+          battingThrowing: player.battingThrowing || "",
+          hometown: player.hometown || "",
+          careerPath: player.careerPath || "",
+          evaluation: player.evaluation,
+          memo: player.memo || "",
+        });
+        setVideoLinks(player.videoLinks.length > 0 ? player.videoLinks : [""]);
+      }
+    }
+  }, [isEditing, id]);
 
   const togglePosition = (position: string) => {
     setFormData(prev => ({
@@ -60,8 +86,31 @@ export default function PlayerForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: データ保存処理
-    console.log("保存データ:", formData, videoLinks);
+    
+    const playerData = {
+      name: formData.name,
+      draftYear: formData.draftYear,
+      category: formData.category,
+      team: formData.team,
+      position: formData.positions,
+      battingThrowing: formData.battingThrowing,
+      hometown: formData.hometown,
+      careerPath: formData.careerPath,
+      evaluation: formData.evaluation,
+      memo: formData.memo,
+      videoLinks: videoLinks.filter(link => link.trim() !== ""),
+    };
+
+    try {
+      if (isEditing && id) {
+        updatePlayer(parseInt(id), playerData);
+      } else {
+        addPlayer(playerData);
+      }
+      navigate("/players");
+    } catch (error) {
+      console.error("Failed to save player:", error);
+    }
   };
 
   return (
@@ -75,7 +124,9 @@ export default function PlayerForm() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-xl font-bold text-primary">新規選手追加</h1>
+            <h1 className="text-xl font-bold text-primary">
+              {isEditing ? "選手情報編集" : "新規選手追加"}
+            </h1>
           </div>
           
           <div className="flex space-x-2">
