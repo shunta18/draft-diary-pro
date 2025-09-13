@@ -1,4 +1,4 @@
-import { Users, Trophy, Calendar, BarChart3 } from "lucide-react";
+import { Users, Trophy, Calendar, Settings } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +6,27 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
 const Index = () => {
+  // 現在の年度を計算（10月20日以降は次年度）
+  const getCurrentDraftYear = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const month = now.getMonth() + 1; // 0-based なので +1
+    const day = now.getDate();
+    
+    // 10月20日以降は次年度のドラフト
+    if (month > 10 || (month === 10 && day >= 20)) {
+      return currentYear + 1;
+    }
+    return currentYear;
+  };
+
+  const currentDraftYear = getCurrentDraftYear();
+  
+  // TODO: 実際のデータから取得する（現在はダミーデータ）
+  const totalPlayers = 0; // 実際の選手数
+  const totalWatching = 0; // 実際の観戦回数
+  const completedDrafts = 0; // 実際の構想完成数
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       <Navigation />
@@ -30,30 +51,24 @@ const Index = () => {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-3 gap-4">
           <StatCard
             title="総登録選手"
-            value="127"
+            value={totalPlayers.toString()}
             icon={<Users className="h-5 w-5" />}
-            description="2025年ドラフト候補"
+            description={`${currentDraftYear}年ドラフト候補`}
           />
           <StatCard
             title="今年の観戦"
-            value="23"
+            value={totalWatching.toString()}
             icon={<Calendar className="h-5 w-5" />}
             description="観戦回数"
           />
           <StatCard
             title="構想完成"
-            value="8"
+            value={completedDrafts.toString()}
             icon={<Trophy className="h-5 w-5" />}
             description="球団構想"
-          />
-          <StatCard
-            title="評価済み"
-            value="89"
-            icon={<BarChart3 className="h-5 w-5" />}
-            description="選手評価"
           />
         </div>
 
@@ -72,7 +87,7 @@ const Index = () => {
                   ドラフト候補選手の情報を管理・評価
                 </p>
                 <div className="mt-4 text-xs text-accent font-medium">
-                  127名登録済み →
+                  {totalPlayers}名登録済み →
                 </div>
               </CardContent>
             </Card>
@@ -91,7 +106,7 @@ const Index = () => {
                   各球団のドラフト戦略を練る
                 </p>
                 <div className="mt-4 text-xs text-accent font-medium">
-                  8球団構想済み →
+                  {completedDrafts}球団構想済み →
                 </div>
               </CardContent>
             </Card>
@@ -110,36 +125,22 @@ const Index = () => {
                   試合観戦の記録と感想を残す
                 </p>
                 <div className="mt-4 text-xs text-accent font-medium">
-                  今年23回観戦 →
+                  今年{totalWatching}回観戦 →
                 </div>
               </CardContent>
             </Card>
           </Link>
         </div>
 
-        {/* Recent Activity */}
-        <Card className="gradient-card border-0 shadow-soft">
-          <CardHeader>
-            <CardTitle className="text-primary">最近の活動</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center space-x-3 text-sm">
-              <div className="w-2 h-2 bg-accent rounded-full"></div>
-              <span className="text-muted-foreground">今日</span>
-              <span className="text-foreground">田中太郎選手の評価を更新</span>
-            </div>
-            <div className="flex items-center space-x-3 text-sm">
-              <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <span className="text-muted-foreground">2日前</span>
-              <span className="text-foreground">甲子園での観戦記録を追加</span>
-            </div>
-            <div className="flex items-center space-x-3 text-sm">
-              <div className="w-2 h-2 bg-secondary rounded-full"></div>
-              <span className="text-muted-foreground">1週間前</span>
-              <span className="text-foreground">読売ジャイアンツのドラフト構想を更新</span>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Settings Section */}
+        <div className="flex justify-center">
+          <Link to="/settings">
+            <Button variant="outline" className="flex items-center space-x-2">
+              <Settings className="h-4 w-4" />
+              <span>設定</span>
+            </Button>
+          </Link>
+        </div>
       </div>
     </div>
   );
