@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { ArrowLeft, Plus, Search, Filter } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Link } from "react-router-dom";
 
 // モックデータ
@@ -49,16 +50,21 @@ const evaluationColors = {
 
 export default function Players() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedYear, setSelectedYear] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedPosition, setSelectedPosition] = useState("all");
+  const [selectedEvaluation, setSelectedEvaluation] = useState("all");
+  const [selectedPlayer, setSelectedPlayer] = useState<typeof mockPlayers[0] | null>(null);
 
   const filteredPlayers = mockPlayers.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.team.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesYear = player.draftYear === selectedYear;
+    const matchesYear = selectedYear === "all" || player.draftYear === selectedYear;
     const matchesCategory = selectedCategory === "all" || player.category === selectedCategory;
+    const matchesPosition = selectedPosition === "all" || player.position.some(pos => pos === selectedPosition);
+    const matchesEvaluation = selectedEvaluation === "all" || player.evaluation === selectedEvaluation;
     
-    return matchesSearch && matchesYear && matchesCategory;
+    return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
   });
 
   return (
@@ -73,17 +79,6 @@ export default function Players() {
               </Button>
             </Link>
             <h1 className="text-xl font-bold text-primary">選手リスト</h1>
-            
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="年度選択" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="2025">2025年</SelectItem>
-                <SelectItem value="2026">2026年</SelectItem>
-                <SelectItem value="2027">2027年</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           
           <Link to="/players/new">
@@ -108,10 +103,22 @@ export default function Players() {
             />
           </div>
           
-          <div className="flex space-x-2">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:space-x-2 sm:grid-cols-none">
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue placeholder="年度" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全て</SelectItem>
+                <SelectItem value="2025">2025年</SelectItem>
+                <SelectItem value="2026">2026年</SelectItem>
+                <SelectItem value="2027">2027年</SelectItem>
+              </SelectContent>
+            </Select>
+            
             <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-32">
-                <SelectValue placeholder="所属別" />
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue placeholder="所属" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全て</SelectItem>
@@ -122,13 +129,45 @@ export default function Players() {
                 <SelectItem value="その他">その他</SelectItem>
               </SelectContent>
             </Select>
+            
+            <Select value={selectedPosition} onValueChange={setSelectedPosition}>
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue placeholder="ポジション" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全て</SelectItem>
+                <SelectItem value="投手">投手</SelectItem>
+                <SelectItem value="捕手">捕手</SelectItem>
+                <SelectItem value="内野手">内野手</SelectItem>
+                <SelectItem value="外野手">外野手</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedEvaluation} onValueChange={setSelectedEvaluation}>
+              <SelectTrigger className="w-full sm:w-32">
+                <SelectValue placeholder="評価" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全て</SelectItem>
+                <SelectItem value="1位競合確実">1位競合確実</SelectItem>
+                <SelectItem value="一本釣り〜外れ1位">一本釣り〜外れ1位</SelectItem>
+                <SelectItem value="2-3位">2-3位</SelectItem>
+                <SelectItem value="4-5位">4-5位</SelectItem>
+                <SelectItem value="6位以下">6位以下</SelectItem>
+                <SelectItem value="育成">育成</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Players List */}
         <div className="space-y-3">
           {filteredPlayers.map((player) => (
-            <Card key={player.id} className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer">
+            <Card 
+              key={player.id} 
+              className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer"
+              onClick={() => setSelectedPlayer(player)}
+            >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
@@ -167,6 +206,78 @@ export default function Players() {
           )}
         </div>
       </div>
+      
+      {/* Player Detail Dialog */}
+      <Dialog open={!!selectedPlayer} onOpenChange={() => setSelectedPlayer(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span className="text-primary font-bold">{selectedPlayer?.name}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setSelectedPlayer(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedPlayer && (
+            <div className="space-y-4">
+              {/* Basic Info */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary" className="text-xs">
+                    {selectedPlayer.category}
+                  </Badge>
+                  <Badge 
+                    className={`${evaluationColors[selectedPlayer.evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
+                  >
+                    {selectedPlayer.evaluation}
+                  </Badge>
+                </div>
+                
+                <div className="space-y-2 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedPlayer.team}</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span>{selectedPlayer.draftYear}年ドラフト</span>
+                  </div>
+                  
+                  <div>
+                    <span className="text-muted-foreground">ポジション: </span>
+                    <span>{selectedPlayer.position.join("・")}</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex space-x-2 pt-4">
+                <Link to={`/players/${selectedPlayer.id}/edit`} className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    編集
+                  </Button>
+                </Link>
+                <Button 
+                  variant="destructive" 
+                  className="flex-1"
+                  onClick={() => {
+                    // Delete functionality would go here
+                    setSelectedPlayer(null);
+                  }}
+                >
+                  削除
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
