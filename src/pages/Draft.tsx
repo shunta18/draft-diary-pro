@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
 import { getPlayers } from "@/lib/playerStorage";
+import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 
 // 球団データ
 const teams = [
@@ -34,8 +35,10 @@ interface DraftSelection {
 interface DraftData {
   [teamName: string]: {
     plans: { [planKey: string]: string };
+    strategyMemos: { [planKey: string]: string };
     draftPositions: { [planKey: string]: { [position: string]: DraftSelection } };
     devPositions: { [planKey: string]: { [position: string]: DraftSelection } };
+    positionRequirements: { [planKey: string]: { [position: string]: string } };
   };
 }
 
@@ -79,8 +82,10 @@ export default function Draft() {
   // Get current team data
   const currentTeamData = selectedTeam ? draftData[selectedTeam] : null;
   const plans = currentTeamData?.plans || { "プランA": "プランA", "プランB": "プランB", "プランC": "プランC" };
+  const strategyMemos = currentTeamData?.strategyMemos || {};
   const draftPositions = currentTeamData?.draftPositions?.[currentPlan] || {};
   const devPositions = currentTeamData?.devPositions?.[currentPlan] || {};
+  const positionRequirements = currentTeamData?.positionRequirements?.[currentPlan] || {};
 
   // Update team data
   const updateTeamData = (teamName: string, updates: Partial<DraftData[string]>) => {
@@ -88,8 +93,10 @@ export default function Draft() {
       ...draftData,
       [teamName]: {
         plans: { "プランA": "プランA", "プランB": "プランB", "プランC": "プランC" },
+        strategyMemos: {},
         draftPositions: {},
         devPositions: {},
+        positionRequirements: {},
         ...draftData[teamName],
         ...updates
       }
@@ -112,6 +119,25 @@ export default function Draft() {
     if (!selectedTeam) return;
     const newPlans = { ...plans, [planKey]: newName };
     updateTeamData(selectedTeam, { plans: newPlans });
+  };
+
+  // Update strategy memo
+  const updateStrategyMemo = (planKey: string, memo: string) => {
+    if (!selectedTeam) return;
+    const newMemos = { ...strategyMemos, [planKey]: memo };
+    updateTeamData(selectedTeam, { strategyMemos: newMemos });
+  };
+
+  // Update position requirement
+  const updatePositionRequirement = (position: string, requirement: string) => {
+    if (!selectedTeam) return;
+    const newRequirements = { ...positionRequirements, [position]: requirement };
+    updateTeamData(selectedTeam, {
+      positionRequirements: {
+        ...currentTeamData?.positionRequirements,
+        [currentPlan]: newRequirements
+      }
+    });
   };
 
   // Update draft selection
@@ -244,10 +270,23 @@ export default function Draft() {
                       </Button>
                     )}
                   </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                 ))}
+               </div>
+               
+               {/* Strategy Memo */}
+               <div className="mt-4">
+                 <label className="text-sm font-medium text-muted-foreground">
+                   {plans[currentPlan]}の戦略メモ
+                 </label>
+                 <textarea
+                   className="w-full mt-2 p-3 text-sm border rounded-lg bg-background/50 min-h-[100px]"
+                   placeholder="このプランの戦略や狙いを記録してください..."
+                   value={strategyMemos[currentPlan] || ""}
+                   onChange={(e) => updateStrategyMemo(currentPlan, e.target.value)}
+                 />
+               </div>
+             </CardContent>
+           </Card>
 
           {/* Draft Positions */}
           <Card className="gradient-card border-0 shadow-soft">
@@ -267,51 +306,56 @@ export default function Draft() {
             </CardHeader>
             <CardContent className="space-y-4">
               {draftRounds.map((round) => (
-                <div key={round} className="border rounded-lg p-4 bg-card/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold">{round}位</h4>
-                    {round > 5 && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setDraftRounds(draftRounds.filter(r => r !== round))}
-                      >
-                        削除
-                      </Button>
-                    )}
-                  </div>
+                 <div key={round} className="border rounded-lg p-4 bg-card/50">
+                   <div className="flex items-center justify-between mb-2">
+                     <div className="flex items-center space-x-4">
+                       <h4 className="font-semibold">{round}位</h4>
+                       <div className="flex items-center space-x-2">
+                         <label className="text-xs text-muted-foreground">希望ポジション:</label>
+                         <input
+                           type="text"
+                           className="px-2 py-1 text-xs border rounded w-24"
+                           placeholder="投手, 内野手等"
+                           value={positionRequirements[`${round}位`] || ""}
+                           onChange={(e) => updatePositionRequirement(`${round}位`, e.target.value)}
+                         />
+                       </div>
+                     </div>
+                     {round > 5 && (
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={() => setDraftRounds(draftRounds.filter(r => r !== round))}
+                       >
+                         削除
+                       </Button>
+                     )}
+                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                     {['本命', '候補1', '候補2', '候補3'].map((type) => {
                       const currentSelection = draftPositions[`${round}位`]?.[type as keyof DraftSelection];
                       const selectedPlayer = typeof currentSelection === 'number' ? players.find(p => p.id === currentSelection) : null;
                       
-                      return (
-                        <div key={type} className="space-y-1">
-                          <label className="text-xs text-muted-foreground">{type}</label>
-                          <Select
-                            value={currentSelection?.toString() || "none"}
-                            onValueChange={(value) => updateDraftSelection(`${round}位`, type as keyof DraftSelection, value === "none" ? undefined : parseInt(value))}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="選手選択" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">選択なし</SelectItem>
-                              {players.map((player) => (
-                                <SelectItem key={player.id} value={player.id.toString()}>
-                                  {player.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {selectedPlayer && (
-                            <div className="text-xs text-muted-foreground">
-                              {selectedPlayer.position} - {selectedPlayer.team}
-                            </div>
-                          )}
-                        </div>
-                      );
+                       return (
+                         <div key={type} className="space-y-1">
+                           <label className="text-xs text-muted-foreground">{type}</label>
+                           <PlayerSelectionDialog
+                             players={players}
+                             selectedPlayerId={typeof currentSelection === 'number' ? currentSelection : undefined}
+                             onSelect={(playerId) => updateDraftSelection(`${round}位`, type as keyof DraftSelection, playerId)}
+                           >
+                             <Button variant="outline" className="w-full h-8 text-xs justify-start">
+                               {selectedPlayer ? selectedPlayer.name : "選手を選択"}
+                             </Button>
+                           </PlayerSelectionDialog>
+                           {selectedPlayer && (
+                             <div className="text-xs text-muted-foreground">
+                               {selectedPlayer.position.join(', ')} - {selectedPlayer.team}
+                             </div>
+                           )}
+                         </div>
+                       );
                     })}
                   </div>
                   
@@ -355,51 +399,56 @@ export default function Draft() {
             </CardHeader>
             <CardContent className="space-y-4">
               {devRounds.map((round) => (
-                <div key={round} className="border rounded-lg p-4 bg-card/50">
-                  <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-semibold">育成{round}位</h4>
-                    {round > 3 && (
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => setDevRounds(devRounds.filter(r => r !== round))}
-                      >
-                        削除
-                      </Button>
-                    )}
-                  </div>
+                 <div key={round} className="border rounded-lg p-4 bg-card/50">
+                   <div className="flex items-center justify-between mb-2">
+                     <div className="flex items-center space-x-4">
+                       <h4 className="font-semibold">育成{round}位</h4>
+                       <div className="flex items-center space-x-2">
+                         <label className="text-xs text-muted-foreground">希望ポジション:</label>
+                         <input
+                           type="text"
+                           className="px-2 py-1 text-xs border rounded w-24"
+                           placeholder="投手, 内野手等"
+                           value={positionRequirements[`育成${round}位`] || ""}
+                           onChange={(e) => updatePositionRequirement(`育成${round}位`, e.target.value)}
+                         />
+                       </div>
+                     </div>
+                     {round > 3 && (
+                       <Button 
+                         variant="outline" 
+                         size="sm"
+                         onClick={() => setDevRounds(devRounds.filter(r => r !== round))}
+                       >
+                         削除
+                       </Button>
+                     )}
+                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                     {['本命', '候補1', '候補2', '候補3'].map((type) => {
                       const currentSelection = devPositions[`育成${round}位`]?.[type as keyof DraftSelection];
                       const selectedPlayer = typeof currentSelection === 'number' ? players.find(p => p.id === currentSelection) : null;
                       
-                      return (
-                        <div key={type} className="space-y-1">
-                          <label className="text-xs text-muted-foreground">{type}</label>
-                          <Select
-                            value={currentSelection?.toString() || "none"}
-                            onValueChange={(value) => updateDevSelection(`育成${round}位`, type as keyof DraftSelection, value === "none" ? undefined : parseInt(value))}
-                          >
-                            <SelectTrigger className="h-8 text-xs">
-                              <SelectValue placeholder="選手選択" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="none">選択なし</SelectItem>
-                              {players.map((player) => (
-                                <SelectItem key={player.id} value={player.id.toString()}>
-                                  {player.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {selectedPlayer && (
-                            <div className="text-xs text-muted-foreground">
-                              {selectedPlayer.position} - {selectedPlayer.team}
-                            </div>
-                          )}
-                        </div>
-                      );
+                       return (
+                         <div key={type} className="space-y-1">
+                           <label className="text-xs text-muted-foreground">{type}</label>
+                           <PlayerSelectionDialog
+                             players={players}
+                             selectedPlayerId={typeof currentSelection === 'number' ? currentSelection : undefined}
+                             onSelect={(playerId) => updateDevSelection(`育成${round}位`, type as keyof DraftSelection, playerId)}
+                           >
+                             <Button variant="outline" className="w-full h-8 text-xs justify-start">
+                               {selectedPlayer ? selectedPlayer.name : "選手を選択"}
+                             </Button>
+                           </PlayerSelectionDialog>
+                           {selectedPlayer && (
+                             <div className="text-xs text-muted-foreground">
+                               {selectedPlayer.position.join(', ')} - {selectedPlayer.team}
+                             </div>
+                           )}
+                         </div>
+                       );
                     })}
                   </div>
                   
