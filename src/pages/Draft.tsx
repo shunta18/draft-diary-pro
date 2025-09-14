@@ -290,14 +290,14 @@ export default function Draft() {
                         <div key={type} className="space-y-1">
                           <label className="text-xs text-muted-foreground">{type}</label>
                           <Select
-                            value={currentSelection?.toString() || ""}
-                            onValueChange={(value) => updateDraftSelection(`${round}位`, type as keyof DraftSelection, value ? parseInt(value) : undefined)}
+                            value={currentSelection?.toString() || "none"}
+                            onValueChange={(value) => updateDraftSelection(`${round}位`, type as keyof DraftSelection, value === "none" ? undefined : parseInt(value))}
                           >
                             <SelectTrigger className="h-8 text-xs">
                               <SelectValue placeholder="選手選択" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">選択なし</SelectItem>
+                              <SelectItem value="none">選択なし</SelectItem>
                               {players.map((player) => (
                                 <SelectItem key={player.id} value={player.id.toString()}>
                                   {player.name}
@@ -378,14 +378,14 @@ export default function Draft() {
                         <div key={type} className="space-y-1">
                           <label className="text-xs text-muted-foreground">{type}</label>
                           <Select
-                            value={currentSelection?.toString() || ""}
-                            onValueChange={(value) => updateDevSelection(`育成${round}位`, type as keyof DraftSelection, value ? parseInt(value) : undefined)}
+                            value={currentSelection?.toString() || "none"}
+                            onValueChange={(value) => updateDevSelection(`育成${round}位`, type as keyof DraftSelection, value === "none" ? undefined : parseInt(value))}
                           >
                             <SelectTrigger className="h-8 text-xs">
                               <SelectValue placeholder="選手選択" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">選択なし</SelectItem>
+                              <SelectItem value="none">選択なし</SelectItem>
                               {players.map((player) => (
                                 <SelectItem key={player.id} value={player.id.toString()}>
                                   {player.name}
