@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Star, Edit } from "lucide-react";
+import { ArrowLeft, Star, Edit, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,6 +24,15 @@ const teams = [
 export default function Draft() {
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [favorites] = useState<string[]>(["読売ジャイアンツ", "阪神タイガース"]);
+  const [currentPlan, setCurrentPlan] = useState<string>("プランA");
+  const [plans, setPlans] = useState<{[key: string]: string}>({
+    "プランA": "プランA",
+    "プランB": "プランB", 
+    "プランC": "プランC"
+  });
+  const [editingPlan, setEditingPlan] = useState<string>("");
+  const [draftRounds, setDraftRounds] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [devRounds, setDevRounds] = useState<number[]>([1, 2, 3]);
 
   const favoriteTeams = teams.filter(team => favorites.includes(team.name));
   const otherTeams = teams.filter(team => !favorites.includes(team.name));
@@ -75,17 +84,36 @@ export default function Draft() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle className="text-primary">構想パターン</CardTitle>
-                <Button variant="outline" size="sm">
-                  <Edit className="h-4 w-4 mr-2" />
-                  編集
-                </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="flex space-x-2">
-                <Button variant="default" size="sm">本命プラン</Button>
-                <Button variant="outline" size="sm">プランB</Button>
-                <Button variant="outline" size="sm">+ 新規</Button>
+              <div className="flex flex-wrap gap-2">
+                {Object.keys(plans).map((planKey) => (
+                  <div key={planKey} className="flex items-center">
+                    {editingPlan === planKey ? (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="text"
+                          value={plans[planKey]}
+                          onChange={(e) => setPlans({...plans, [planKey]: e.target.value})}
+                          className="px-2 py-1 text-sm border rounded"
+                          onBlur={() => setEditingPlan("")}
+                          onKeyDown={(e) => e.key === 'Enter' && setEditingPlan("")}
+                          autoFocus
+                        />
+                      </div>
+                    ) : (
+                      <Button 
+                        variant={currentPlan === planKey ? "default" : "outline"} 
+                        size="sm"
+                        onClick={() => setCurrentPlan(planKey)}
+                        onDoubleClick={() => setEditingPlan(planKey)}
+                      >
+                        {plans[planKey]}
+                      </Button>
+                    )}
+                  </div>
+                ))}
               </div>
             </CardContent>
           </Card>
@@ -93,14 +121,33 @@ export default function Draft() {
           {/* Draft Positions */}
           <Card className="gradient-card border-0 shadow-soft">
             <CardHeader>
-              <CardTitle className="text-primary">ドラフト枠</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-primary">ドラフト枠</CardTitle>
+                {draftRounds.length > 5 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setDraftRounds(draftRounds.slice(0, -1))}
+                  >
+                    削除
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[1, 2, 3, 4, 5].map((round) => (
+              {draftRounds.map((round) => (
                 <div key={round} className="border rounded-lg p-4 bg-card/50">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold">{round}位</h4>
-                    <Button variant="outline" size="sm">+</Button>
+                    {round > 5 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setDraftRounds(draftRounds.filter(r => r !== round))}
+                      >
+                        削除
+                      </Button>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
@@ -127,20 +174,47 @@ export default function Draft() {
                   </div>
                 </div>
               ))}
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setDraftRounds([...draftRounds, Math.max(...draftRounds) + 1])}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                ドラフト枠を追加
+              </Button>
             </CardContent>
           </Card>
 
           {/* Development Draft */}
           <Card className="gradient-card border-0 shadow-soft">
             <CardHeader>
-              <CardTitle className="text-primary">育成枠</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-primary">育成枠</CardTitle>
+                {devRounds.length > 3 && (
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => setDevRounds(devRounds.slice(0, -1))}
+                  >
+                    削除
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[1, 2, 3].map((round) => (
+              {devRounds.map((round) => (
                 <div key={round} className="border rounded-lg p-4 bg-card/50">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-semibold">育成{round}位</h4>
-                    <Button variant="outline" size="sm">+</Button>
+                    {round > 3 && (
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setDevRounds(devRounds.filter(r => r !== round))}
+                      >
+                        削除
+                      </Button>
+                    )}
                   </div>
                   
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
@@ -167,6 +241,14 @@ export default function Draft() {
                   </div>
                 </div>
               ))}
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => setDevRounds([...devRounds, Math.max(...devRounds) + 1])}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                育成枠を追加
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -222,42 +304,26 @@ export default function Draft() {
             </CardHeader>
             <CardContent className="space-y-2">
               {favoriteTeams.map((team) => (
-                <Button
+                <div
                   key={team.name}
-                  variant="outline"
-                  className="w-full justify-between transition-smooth hover:shadow-soft"
+                  className="relative overflow-hidden rounded-lg cursor-pointer transition-smooth hover:shadow-soft"
+                  style={{
+                    background: `linear-gradient(135deg, hsl(${team.colors.primary} / 0.8), hsl(${team.colors.secondary} / 0.6))`
+                  }}
                   onClick={() => setSelectedTeam(team.name)}
                 >
-                  <div className="flex items-center space-x-3">
-                    <Star className="h-4 w-4 text-accent" />
-                    <span>{team.name}</span>
+                  <div className="p-4 flex items-center justify-between text-white">
+                    <div className="flex items-center space-x-3">
+                      <Star className="h-4 w-4" />
+                      <span className="font-medium">{team.name}</span>
+                    </div>
+                    <span>→</span>
                   </div>
-                  <span>→</span>
-                </Button>
+                </div>
               ))}
             </CardContent>
           </Card>
         )}
-
-        {/* All Teams */}
-        <Card className="gradient-card border-0 shadow-soft">
-          <CardHeader>
-            <CardTitle className="text-primary">全球団</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-2">
-            {otherTeams.map((team) => (
-              <Button
-                key={team.name}
-                variant="outline"
-                className="justify-between transition-smooth hover:shadow-soft"
-                onClick={() => setSelectedTeam(team.name)}
-              >
-                <span>{team.name}</span>
-                <span>→</span>
-              </Button>
-            ))}
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
