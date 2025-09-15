@@ -30,9 +30,9 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
   const filteredPlayers = players.filter(player => {
     return (
       player.name.toLowerCase().includes(searchName.toLowerCase()) &&
-      (filterPosition === "" || player.position.includes(filterPosition)) &&
-      (filterTeam === "" || player.team === filterTeam) &&
-      (filterEvaluation === "" || player.evaluation === filterEvaluation)
+      (filterPosition === "" || filterPosition === "all" || player.position.includes(filterPosition)) &&
+      (filterTeam === "" || filterTeam === "all" || player.team === filterTeam) &&
+      (filterEvaluation === "" || filterEvaluation === "all" || player.evaluation === filterEvaluation)
     );
   });
 
@@ -81,7 +81,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
                   <SelectValue placeholder="全ポジション" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全ポジション</SelectItem>
+                  <SelectItem value="all">全ポジション</SelectItem>
                   {positions.map((position) => (
                     <SelectItem key={position} value={position}>
                       {position}
@@ -98,7 +98,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
                   <SelectValue placeholder="全チーム" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全チーム</SelectItem>
+                  <SelectItem value="all">全チーム</SelectItem>
                   {teams.map((team) => (
                     <SelectItem key={team} value={team}>
                       {team}
@@ -115,7 +115,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
                   <SelectValue placeholder="全評価" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">全評価</SelectItem>
+                  <SelectItem value="all">全評価</SelectItem>
                   {evaluations.map((evaluation) => (
                     <SelectItem key={evaluation} value={evaluation}>
                       {evaluation}
