@@ -1,17 +1,22 @@
-import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { DiaryEntry, addDiaryEntry, updateDiaryEntry, getDiaryEntryById } from "@/lib/diaryStorage";
 
 export default function DiaryForm() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
+  
+  const editingEntryId = location.state?.editingEntryId;
+  const isEditing = !!editingEntryId;
   
   const [formData, setFormData] = useState({
     date: "",
@@ -21,20 +26,77 @@ export default function DiaryForm() {
     score: "",
     playerComments: "",
     overallImpression: "",
+    videoLinks: [] as string[],
   });
+
+  const [newVideoLink, setNewVideoLink] = useState("");
+
+  useEffect(() => {
+    if (isEditing) {
+      const entry = getDiaryEntryById(editingEntryId);
+      if (entry) {
+        setFormData({
+          date: entry.date.replace(/\//g, '-'),
+          venue: entry.venue,
+          category: entry.category,
+          matchCard: entry.matchCard,
+          score: entry.score,
+          playerComments: entry.playerComments,
+          overallImpression: entry.overallImpression,
+          videoLinks: entry.videoLinks || [],
+        });
+      }
+    }
+  }, [isEditing, editingEntryId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Here you would normally save to localStorage or API
-    console.log("Saving diary entry:", formData);
+    const entryData = {
+      ...formData,
+      date: formData.date.replace(/-/g, '/'),
+    };
     
-    toast({
-      title: "観戦記録を保存しました",
-      description: "記録が正常に保存されました。",
-    });
-    
-    navigate("/diary");
+    try {
+      if (isEditing) {
+        updateDiaryEntry(editingEntryId, entryData);
+        toast({
+          title: "観戦記録を更新しました",
+          description: "記録が正常に更新されました。",
+        });
+      } else {
+        addDiaryEntry(entryData);
+        toast({
+          title: "観戦記録を保存しました",
+          description: "記録が正常に保存されました。",
+        });
+      }
+      
+      navigate("/diary");
+    } catch (error) {
+      toast({
+        title: "エラーが発生しました",
+        description: "記録の保存に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const addVideoLink = () => {
+    if (newVideoLink.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        videoLinks: [...prev.videoLinks, newVideoLink.trim()]
+      }));
+      setNewVideoLink("");
+    }
+  };
+
+  const removeVideoLink = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      videoLinks: prev.videoLinks.filter((_, i) => i !== index)
+    }));
   };
 
   const updateFormData = (field: string, value: string) => {
@@ -52,7 +114,9 @@ export default function DiaryForm() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-xl font-bold text-primary">新規観戦記録</h1>
+            <h1 className="text-xl font-bold text-primary">
+              {isEditing ? "観戦記録編集" : "新規観戦記録"}
+            </h1>
           </div>
         </div>
       </div>
@@ -60,7 +124,7 @@ export default function DiaryForm() {
       <div className="p-4">
         <Card className="gradient-card border-0 shadow-soft">
           <CardHeader>
-            <CardTitle>観戦記録</CardTitle>
+            <CardTitle>{isEditing ? "観戦記録編集" : "観戦記録"}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -150,9 +214,44 @@ export default function DiaryForm() {
                 />
               </div>
 
+              {/* Video Links */}
+              <div className="space-y-2">
+                <Label>動画リンク（任意）</Label>
+                <div className="space-y-2">
+                  {formData.videoLinks.map((link, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <Input value={link} readOnly />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeVideoLink(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  <div className="flex space-x-2">
+                    <Input
+                      placeholder="YouTube、ニコニコ動画などのURL"
+                      value={newVideoLink}
+                      onChange={(e) => setNewVideoLink(e.target.value)}
+                    />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={addVideoLink}
+                      disabled={!newVideoLink.trim()}
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
               <div className="flex space-x-2 pt-4">
                 <Button type="submit" className="flex-1 gradient-accent border-0 shadow-soft hover:shadow-glow transition-smooth">
-                  保存
+                  {isEditing ? "更新" : "保存"}
                 </Button>
                 <Link to="/diary">
                   <Button type="button" variant="outline" className="px-6">

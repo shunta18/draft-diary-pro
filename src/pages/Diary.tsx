@@ -1,46 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ArrowLeft, Plus, Search, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import DiaryDetailDialog from "@/components/DiaryDetailDialog";
-
-// モックデータ
-const mockDiaryEntries = [
-  {
-    id: 1,
-    date: "2025/09/10",
-    venue: "甲子園",
-    category: "高校",
-    matchCard: "○○高校 vs △△高校",
-    score: "7-3",
-    playerComments: "田中太郎の投球が素晴らしかった。球速150km/h台を連発し、コントロールも抜群。",
-    overallImpression: "両チームとも好ゲームだった。特に△△高校の佐藤選手も注目したい。",
-  },
-  {
-    id: 2,
-    date: "2025/09/05",
-    venue: "東京ドーム",
-    category: "大学",
-    matchCard: "××大学 vs ◇◇大学",
-    score: "5-2",
-    playerComments: "佐藤次郎の打撃力が印象的。長打力もあり、ドラフト上位候補。",
-    overallImpression: "大学野球のレベルの高さを感じた試合。投手陣の質も高い。",
-  },
-  {
-    id: 3,
-    date: "2025/08/28",
-    venue: "明治神宮球場",
-    category: "社会人",
-    matchCard: "▲▲社会人 vs ◆◆社会人",
-    score: "4-1",
-    playerComments: "鈴木三郎の守備力が光った。肩も強く、将来性を感じる。",
-    overallImpression: "社会人野球の堅実な試合運び。選手の完成度が高い。",
-  },
-];
+import { DiaryEntry, getDiaryEntries } from "@/lib/diaryStorage";
 
 const categoryColors = {
   "高校": "bg-blue-500 text-white",
@@ -51,13 +18,24 @@ const categoryColors = {
 };
 
 export default function Diary() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("2025-09");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedEntry, setSelectedEntry] = useState<typeof mockDiaryEntries[0] | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
 
-  const filteredEntries = mockDiaryEntries.filter((entry) => {
+  useEffect(() => {
+    setDiaryEntries(getDiaryEntries());
+  }, []);
+
+  const handleEdit = (entry: DiaryEntry) => {
+    setIsDetailOpen(false);
+    navigate("/diary/form", { state: { editingEntryId: entry.id } });
+  };
+
+  const filteredEntries = diaryEntries.filter((entry) => {
     const matchesSearch = entry.matchCard.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entry.venue.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesMonth = entry.date.startsWith(selectedMonth.replace("-", "/"));
@@ -191,6 +169,7 @@ export default function Diary() {
         entry={selectedEntry}
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
+        onEdit={handleEdit}
       />
     </div>
   );
