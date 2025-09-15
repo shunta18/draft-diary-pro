@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Star, Edit, Plus } from "lucide-react";
+import { ArrowLeft, Star, Edit, Plus, Share2, Twitter, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -128,6 +128,36 @@ export default function Draft() {
     updateTeamData(selectedTeam, { strategyMemos: newMemos });
   };
 
+  // SNS sharing functions
+  const shareToPlatform = (platform: string, planKey: string) => {
+    const teamName = selectedTeam;
+    const planName = plans[planKey];
+    const memo = strategyMemos[planKey];
+    
+    let shareText = `${teamName}の${planName}構想`;
+    if (memo) {
+      shareText += `\n${memo}`;
+    }
+    
+    switch (platform) {
+      case 'twitter':
+        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+        window.open(twitterUrl, '_blank');
+        break;
+      case 'line':
+        const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(shareText)}`;
+        window.open(lineUrl, '_blank');
+        break;
+      case 'copy':
+        navigator.clipboard.writeText(shareText).then(() => {
+          alert('テキストをクリップボードにコピーしました！');
+        }).catch(() => {
+          alert('コピーに失敗しました');
+        });
+        break;
+    }
+  };
+
   // Update position requirement
   const updatePositionRequirement = (position: string, requirement: string) => {
     if (!selectedTeam) return;
@@ -246,7 +276,7 @@ export default function Draft() {
             <CardContent>
               <div className="flex flex-wrap gap-2">
                 {Object.keys(plans).map((planKey) => (
-                  <div key={planKey} className="flex items-center">
+                  <div key={planKey} className="flex items-center space-x-2">
                     {editingPlan === planKey ? (
                       <div className="flex items-center space-x-2">
                         <input
@@ -260,14 +290,45 @@ export default function Draft() {
                         />
                       </div>
                     ) : (
-                      <Button 
-                        variant={currentPlan === planKey ? "default" : "outline"} 
-                        size="sm"
-                        onClick={() => setCurrentPlan(planKey)}
-                        onDoubleClick={() => setEditingPlan(planKey)}
-                      >
-                        {plans[planKey]}
-                      </Button>
+                      <>
+                        <Button 
+                          variant={currentPlan === planKey ? "default" : "outline"} 
+                          size="sm"
+                          onClick={() => setCurrentPlan(planKey)}
+                          onDoubleClick={() => setEditingPlan(planKey)}
+                        >
+                          {plans[planKey]}
+                        </Button>
+                        <div className="flex items-center space-x-1">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => shareToPlatform('twitter', planKey)}
+                            title="Twitterでシェア"
+                          >
+                            <Twitter className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => shareToPlatform('line', planKey)}
+                            title="LINEでシェア"
+                          >
+                            <MessageSquare className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => shareToPlatform('copy', planKey)}
+                            title="URLをコピー"
+                          >
+                            <Share2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </>
                     )}
                   </div>
                  ))}

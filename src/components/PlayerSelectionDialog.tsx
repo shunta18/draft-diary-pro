@@ -18,12 +18,12 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
   const [isOpen, setIsOpen] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [filterPosition, setFilterPosition] = useState("");
-  const [filterTeam, setFilterTeam] = useState("");
+  const [filterCategory, setFilterCategory] = useState("");
   const [filterEvaluation, setFilterEvaluation] = useState("");
 
   // Get unique values for filters
   const positions = [...new Set(players.flatMap(p => p.position))];
-  const teams = [...new Set(players.map(p => p.team))];
+  const categories = [...new Set(players.map(p => p.category))];
   const evaluations = [...new Set(players.map(p => p.evaluation))];
 
   // Filter players based on search criteria
@@ -31,7 +31,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
     return (
       player.name.toLowerCase().includes(searchName.toLowerCase()) &&
       (filterPosition === "" || filterPosition === "all" || player.position.includes(filterPosition)) &&
-      (filterTeam === "" || filterTeam === "all" || player.team === filterTeam) &&
+      (filterCategory === "" || filterCategory === "all" || player.category === filterCategory) &&
       (filterEvaluation === "" || filterEvaluation === "all" || player.evaluation === filterEvaluation)
     );
   });
@@ -44,7 +44,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
   const clearFilters = () => {
     setSearchName("");
     setFilterPosition("");
-    setFilterTeam("");
+    setFilterCategory("");
     setFilterEvaluation("");
   };
 
@@ -92,16 +92,16 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
             </div>
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">所属</label>
-              <Select value={filterTeam} onValueChange={setFilterTeam}>
+              <label className="text-sm font-medium">カテゴリ</label>
+              <Select value={filterCategory} onValueChange={setFilterCategory}>
                 <SelectTrigger>
-                  <SelectValue placeholder="全チーム" />
+                  <SelectValue placeholder="全カテゴリ" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">全チーム</SelectItem>
-                  {teams.map((team) => (
-                    <SelectItem key={team} value={team}>
-                      {team}
+                  <SelectItem value="all">全カテゴリ</SelectItem>
+                  {categories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
                     </SelectItem>
                   ))}
                 </SelectContent>
