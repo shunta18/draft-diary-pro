@@ -8,6 +8,7 @@ import Players from "./pages/Players";
 import PlayerForm from "./pages/PlayerForm";
 import Draft from "./pages/Draft";
 import Diary from "./pages/Diary";
+import DiaryForm from "./pages/DiaryForm";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/players/:id/edit" element={<PlayerForm />} />
           <Route path="/draft" element={<Draft />} />
           <Route path="/diary" element={<Diary />} />
+          <Route path="/diary/form" element={<DiaryForm />} />
           <Route path="/settings" element={<Settings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

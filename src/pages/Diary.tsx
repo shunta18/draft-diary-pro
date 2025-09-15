@@ -2,10 +2,11 @@ import { useState } from "react";
 import { ArrowLeft, Plus, Search, Calendar, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
+import DiaryDetailDialog from "@/components/DiaryDetailDialog";
 
 // モックデータ
 const mockDiaryEntries = [
@@ -53,6 +54,8 @@ export default function Diary() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("2025-09");
   const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedEntry, setSelectedEntry] = useState<typeof mockDiaryEntries[0] | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const filteredEntries = mockDiaryEntries.filter((entry) => {
     const matchesSearch = entry.matchCard.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -77,7 +80,7 @@ export default function Diary() {
             <h1 className="text-xl font-bold text-primary">観戦日記</h1>
           </div>
           
-          <Link to="/diary/new">
+          <Link to="/diary/form">
             <Button className="gradient-accent border-0 shadow-soft hover:shadow-glow transition-smooth">
               <Plus className="h-4 w-4 mr-2" />
               新規記録
@@ -130,51 +133,41 @@ export default function Diary() {
         {/* Diary Entries */}
         <div className="space-y-3">
           {filteredEntries.map((entry) => (
-            <Card key={entry.id} className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer">
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-3">
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
-                        <span className="font-medium">{entry.date}</span>
+            <Card 
+              key={entry.id} 
+              className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer"
+              onClick={() => {
+                setSelectedEntry(entry);
+                setIsDetailOpen(true);
+              }}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-bold text-base text-primary truncate mb-2">{entry.matchCard}</h3>
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <div className="flex items-center space-x-1">
+                        <Calendar className="h-3 w-3" />
+                        <span>{entry.date}</span>
                       </div>
-                      <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4" />
-                        <span>{entry.venue}</span>
+                      <div className="flex items-center space-x-1">
+                        <MapPin className="h-3 w-3" />
+                        <span className="truncate">{entry.venue}</span>
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-3">
-                      <h3 className="font-bold text-lg text-primary">{entry.matchCard}</h3>
                       {entry.score && (
-                        <span className="text-sm font-medium text-muted-foreground">
-                          スコア: {entry.score}
-                        </span>
+                        <span className="font-medium text-primary">{entry.score}</span>
                       )}
                     </div>
                   </div>
                   
-                  <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium`}>
+                  <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium ml-2 shrink-0`}>
                     {entry.category}
                   </Badge>
                 </div>
-              </CardHeader>
-              
-              <CardContent className="pt-0">
-                <div className="space-y-2">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">注目選手:</p>
-                    <p className="text-sm text-foreground line-clamp-2">{entry.playerComments}</p>
-                  </div>
-                  
-                  {entry.overallImpression && (
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground mb-1">全体的な感想:</p>
-                      <p className="text-sm text-foreground line-clamp-1">{entry.overallImpression}</p>
-                    </div>
-                  )}
-                </div>
+                
+                <p className="text-sm text-muted-foreground line-clamp-2">
+                  {entry.playerComments}
+                </p>
               </CardContent>
             </Card>
           ))}
@@ -183,7 +176,7 @@ export default function Diary() {
             <Card className="gradient-card border-0 shadow-soft">
               <CardContent className="p-8 text-center">
                 <p className="text-muted-foreground">該当する観戦記録が見つかりません</p>
-                <Link to="/diary/new">
+                <Link to="/diary/form">
                   <Button variant="outline" className="mt-4">
                     最初の観戦記録を作成
                   </Button>
@@ -193,6 +186,12 @@ export default function Diary() {
           )}
         </div>
       </div>
+
+      <DiaryDetailDialog 
+        entry={selectedEntry}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+      />
     </div>
   );
 }
