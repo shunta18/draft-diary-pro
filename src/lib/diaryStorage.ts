@@ -7,7 +7,7 @@ export interface DiaryEntry {
   score: string;
   playerComments: string;
   overallImpression: string;
-  videoLinks: string[];
+  videos: string[];
 }
 
 const STORAGE_KEY = 'baseball_scout_diary';
@@ -23,7 +23,7 @@ const defaultDiaryEntries: DiaryEntry[] = [
     score: "7-3",
     playerComments: "田中太郎の投球が素晴らしかった。球速150km/h台を連発し、コントロールも抜群。",
     overallImpression: "両チームとも好ゲームだった。特に△△高校の佐藤選手も注目したい。",
-    videoLinks: [],
+    videos: [],
   },
   {
     id: 2,
@@ -34,7 +34,7 @@ const defaultDiaryEntries: DiaryEntry[] = [
     score: "5-2",
     playerComments: "佐藤次郎の打撃力が印象的。長打力もあり、ドラフト上位候補。",
     overallImpression: "大学野球のレベルの高さを感じた試合。投手陣の質も高い。",
-    videoLinks: [],
+    videos: [],
   },
   {
     id: 3,
@@ -45,7 +45,7 @@ const defaultDiaryEntries: DiaryEntry[] = [
     score: "4-1",
     playerComments: "鈴木三郎の守備力が光った。肩も強く、将来性を感じる。",
     overallImpression: "社会人野球の堅実な試合運び。選手の完成度が高い。",
-    videoLinks: [],
+    videos: [],
   },
 ];
 

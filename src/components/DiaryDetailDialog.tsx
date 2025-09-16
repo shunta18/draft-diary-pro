@@ -59,34 +59,16 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit }: Di
               <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium`}>
                 {entry.category}
               </Badge>
-              <div className="flex space-x-1">
-                {onEdit && (
-                  <Button 
-                    variant="outline" 
-                    size="icon"
-                    onClick={() => onEdit(entry)}
-                    className="h-8 w-8"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                )}
+              {onEdit && (
                 <Button 
                   variant="outline" 
                   size="icon"
-                  onClick={() => handleShare('twitter')}
+                  onClick={() => onEdit(entry)}
                   className="h-8 w-8"
                 >
-                  <Share2 className="h-4 w-4" />
+                  <Edit className="h-4 w-4" />
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => handleShare('copy')}
-                  className="h-8 w-8"
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
+              )}
             </div>
           </div>
         </DialogHeader>
@@ -129,22 +111,20 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit }: Di
             </div>
           )}
 
-          {/* Video Links */}
-          {entry.videoLinks && entry.videoLinks.length > 0 && (
+          {/* Videos */}
+          {entry.videos && entry.videos.length > 0 && (
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">動画</h3>
               <div className="space-y-2">
-                {entry.videoLinks.map((link, index) => (
+                {entry.videos.map((video, index) => (
                   <div key={index} className="p-3 bg-muted/50 rounded-lg">
-                    <a 
-                      href={link} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="flex items-center space-x-2 text-primary hover:underline"
+                    <video 
+                      controls 
+                      className="w-full max-h-64 rounded"
+                      src={video}
                     >
-                      <ExternalLink className="h-4 w-4" />
-                      <span>動画 {index + 1}</span>
-                    </a>
+                      お使いのブラウザは動画の再生に対応していません。
+                    </video>
                   </div>
                 ))}
               </div>

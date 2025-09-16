@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import { ArrowLeft, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,10 +26,10 @@ export default function DiaryForm() {
     score: "",
     playerComments: "",
     overallImpression: "",
-    videoLinks: [] as string[],
+    videos: [] as string[],
   });
 
-  const [newVideoLink, setNewVideoLink] = useState("");
+  const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
 
   useEffect(() => {
     if (isEditing) {
@@ -43,18 +43,29 @@ export default function DiaryForm() {
           score: entry.score,
           playerComments: entry.playerComments,
           overallImpression: entry.overallImpression,
-          videoLinks: entry.videoLinks || [],
+          videos: entry.videos || [],
         });
       }
     }
   }, [isEditing, editingEntryId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Handle video file uploads
+    const videoUrls: string[] = [...formData.videos];
+    if (videoFiles) {
+      for (let i = 0; i < videoFiles.length; i++) {
+        const file = videoFiles[i];
+        const videoUrl = URL.createObjectURL(file);
+        videoUrls.push(videoUrl);
+      }
+    }
     
     const entryData = {
       ...formData,
       date: formData.date.replace(/-/g, '/'),
+      videos: videoUrls,
     };
     
     try {
@@ -82,20 +93,14 @@ export default function DiaryForm() {
     }
   };
 
-  const addVideoLink = () => {
-    if (newVideoLink.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        videoLinks: [...prev.videoLinks, newVideoLink.trim()]
-      }));
-      setNewVideoLink("");
-    }
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVideoFiles(e.target.files);
   };
 
-  const removeVideoLink = (index: number) => {
+  const removeVideo = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      videoLinks: prev.videoLinks.filter((_, i) => i !== index)
+      videos: prev.videos.filter((_, i) => i !== index)
     }));
   };
 
@@ -192,14 +197,13 @@ export default function DiaryForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="playerComments">注目選手・コメント</Label>
+                <Label htmlFor="playerComments">注目選手・コメント（任意）</Label>
                 <Textarea
                   id="playerComments"
                   placeholder="田中太郎の投球が素晴らしかった。球速150km/h台を連発し..."
                   value={formData.playerComments}
                   onChange={(e) => updateFormData("playerComments", e.target.value)}
                   rows={4}
-                  required
                 />
               </div>
 
@@ -214,36 +218,42 @@ export default function DiaryForm() {
                 />
               </div>
 
-              {/* Video Links */}
+              {/* Videos */}
               <div className="space-y-2">
-                <Label>動画リンク（任意）</Label>
+                <Label>動画（任意）</Label>
                 <div className="space-y-2">
-                  {formData.videoLinks.map((link, index) => (
+                  {formData.videos.map((video, index) => (
                     <div key={index} className="flex items-center space-x-2">
-                      <Input value={link} readOnly />
+                      <div className="flex-1 p-2 bg-muted/50 rounded">
+                        <video controls className="w-full max-h-32 rounded" src={video}>
+                          動画を再生できません
+                        </video>
+                      </div>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
-                        onClick={() => removeVideoLink(index)}
+                        onClick={() => removeVideo(index)}
                       >
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
                   ))}
-                  <div className="flex space-x-2">
+                  <div className="flex items-center space-x-2">
                     <Input
-                      placeholder="YouTube、ニコニコ動画などのURL"
-                      value={newVideoLink}
-                      onChange={(e) => setNewVideoLink(e.target.value)}
+                      type="file"
+                      accept="video/*"
+                      multiple
+                      onChange={handleVideoUpload}
+                      className="flex-1"
                     />
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={addVideoLink}
-                      disabled={!newVideoLink.trim()}
+                      onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
                     >
-                      <Plus className="h-4 w-4" />
+                      <Upload className="h-4 w-4 mr-2" />
+                      選択
                     </Button>
                   </div>
                 </div>
