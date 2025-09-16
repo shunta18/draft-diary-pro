@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,6 +44,14 @@ export default function Players() {
     
     return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
   });
+
+  const resetFilters = () => {
+    setSearchTerm("");
+    setSelectedYear("all");
+    setSelectedCategory("all");
+    setSelectedPosition("all");
+    setSelectedEvaluation("all");
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -135,6 +143,15 @@ export default function Players() {
                 <SelectItem value="育成">育成</SelectItem>
               </SelectContent>
             </Select>
+            
+            <Button 
+              variant="outline" 
+              onClick={resetFilters}
+              className="w-full sm:w-auto px-3"
+            >
+              <RotateCcw className="h-4 w-4 mr-2" />
+              リセット
+            </Button>
           </div>
         </div>
 

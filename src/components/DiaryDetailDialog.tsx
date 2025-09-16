@@ -55,7 +55,7 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit }: Di
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle className="text-xl">{entry.matchCard}</DialogTitle>
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-3">
               <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium`}>
                 {entry.category}
               </Badge>
