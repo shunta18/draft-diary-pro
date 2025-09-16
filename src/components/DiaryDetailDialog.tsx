@@ -53,24 +53,27 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit }: Di
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl">{entry.matchCard}</DialogTitle>
-            <div className="flex items-center space-x-3">
+          <div className="flex items-start justify-between gap-4">
+            <DialogTitle className="text-xl flex-1 pr-2">{entry.matchCard}</DialogTitle>
+            <div className="flex items-center gap-2 flex-shrink-0">
               <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium`}>
                 {entry.category}
               </Badge>
-              {onEdit && (
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => onEdit(entry)}
-                  className="h-8 w-8"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
+          {onEdit && (
+            <div className="flex justify-end mt-3">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onEdit(entry)}
+                className="h-8 px-3"
+              >
+                <Edit className="h-4 w-4 mr-1" />
+                編集
+              </Button>
+            </div>
+          )}
         </DialogHeader>
         
         <div className="space-y-6">
