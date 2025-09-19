@@ -1,16 +1,17 @@
-import { ArrowLeft, User, Database, HelpCircle, Info, LogOut, Shield, Settings as SettingsIcon } from "lucide-react";
+import { ArrowLeft, User, Database, HelpCircle, Info, LogOut, Shield, Settings as SettingsIcon, Trash2, ExternalLink, FileText, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 
 
 export default function Settings() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, deleteAccount } = useAuth();
   const { toast } = useToast();
 
   // Redirect to auth page if not logged in
@@ -40,6 +41,22 @@ export default function Settings() {
       toast({
         title: "エラー",
         description: "ログアウトに失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteAccount();
+      toast({
+        title: "アカウント削除完了",
+        description: "アカウントが正常に削除されました。",
+      });
+    } catch (error: any) {
+      toast({
+        title: "エラー",
+        description: "アカウント削除に失敗しました。",
         variant: "destructive",
       });
     }
@@ -228,67 +245,134 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Support */}
+        {/* Legal & Support */}
         <Card className="gradient-card border-0 shadow-soft">
           <CardHeader>
             <CardTitle className="text-primary flex items-center space-x-2">
               <HelpCircle className="h-5 w-5" />
-              <span>サポート</span>
+              <span>サポート・利用規約</span>
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-1">
             <Button
               variant="ghost"
               className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
+              asChild
             >
-              <div className="flex items-start space-x-3 w-full">
-                <HelpCircle className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                <div className="flex-1 text-left">
-                  <div className="font-medium">利用規約</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    サービス利用規約の確認
+              <a href="/terms" target="_blank" rel="noopener noreferrer">
+                <div className="flex items-start space-x-3 w-full">
+                  <FileText className="h-5 w-5 mt-0.5 text-muted-foreground" />
+                  <div className="flex-1 text-left">
+                    <div className="font-medium">利用規約</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      サービス利用規約の確認
+                    </div>
                   </div>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <span className="text-muted-foreground">→</span>
-              </div>
+              </a>
             </Button>
             <Separator className="my-1" />
             <Button
               variant="ghost"
               className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
+              asChild
             >
-              <div className="flex items-start space-x-3 w-full">
-                <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                <div className="flex-1 text-left">
-                  <div className="font-medium">お問い合わせ</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    サポートチームに連絡
+              <a href="/privacy" target="_blank" rel="noopener noreferrer">
+                <div className="flex items-start space-x-3 w-full">
+                  <Shield className="h-5 w-5 mt-0.5 text-muted-foreground" />
+                  <div className="flex-1 text-left">
+                    <div className="font-medium">プライバシーポリシー</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      個人情報の取り扱いについて
+                    </div>
                   </div>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
                 </div>
-                <span className="text-muted-foreground">→</span>
-              </div>
+              </a>
+            </Button>
+            <Separator className="my-1" />
+            <Button
+              variant="ghost"
+              className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
+              asChild
+            >
+              <a href="mailto:support@example.com">
+                <div className="flex items-start space-x-3 w-full">
+                  <Mail className="h-5 w-5 mt-0.5 text-muted-foreground" />
+                  <div className="flex-1 text-left">
+                    <div className="font-medium">お問い合わせ</div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      サポートチームに連絡
+                    </div>
+                  </div>
+                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
+                </div>
+              </a>
             </Button>
           </CardContent>
         </Card>
 
-        {/* Logout */}
+        {/* Account Actions */}
         <Card className="gradient-card border-0 shadow-soft">
-          <CardContent className="p-4">
+          <CardHeader>
+            <CardTitle className="text-primary flex items-center space-x-2">
+              <User className="h-5 w-5" />
+              <span>アカウント操作</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
             <Button
               onClick={handleSignOut}
               variant="ghost"
-              className="w-full justify-start h-auto p-4 transition-smooth hover:bg-destructive/10 text-destructive hover:text-destructive"
+              className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
             >
               <div className="flex items-start space-x-3 w-full">
-                <LogOut className="h-5 w-5 mt-0.5 text-destructive" />
+                <LogOut className="h-5 w-5 mt-0.5 text-muted-foreground" />
                 <div className="flex-1 text-left">
-                  <div className="font-medium text-destructive">ログアウト</div>
+                  <div className="font-medium">ログアウト</div>
                   <div className="text-sm text-muted-foreground mt-1">
                     アカウントからログアウトします
                   </div>
                 </div>
               </div>
             </Button>
+            <Separator className="my-1" />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start h-auto p-4 transition-smooth hover:bg-destructive/10 text-destructive hover:text-destructive"
+                >
+                  <div className="flex items-start space-x-3 w-full">
+                    <Trash2 className="h-5 w-5 mt-0.5 text-destructive" />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium text-destructive">アカウント削除</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        アカウントとすべてのデータを完全に削除
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>アカウントを削除しますか？</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    この操作は取り消せません。アカウントとすべての関連データ（選手データ、観戦記録、ドラフト構想）が完全に削除されます。
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteAccount}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    削除する
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
 

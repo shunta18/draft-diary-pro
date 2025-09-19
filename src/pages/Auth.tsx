@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -16,71 +11,12 @@ export default function Auth() {
   const { user, signInWithGoogle, signInWithTwitter } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
 
   // Redirect if already authenticated
   if (user) {
     return <Navigate to="/" replace />;
   }
 
-  const handleEmailSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      const redirectUrl = `${window.location.origin}/`;
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl
-        }
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "アカウント作成完了",
-        description: "確認メールを送信しました。メールをご確認ください。",
-      });
-    } catch (error: any) {
-      toast({
-        title: "エラー",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEmailSignIn = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      
-      if (error) throw error;
-      
-      toast({
-        title: "ログイン成功",
-        description: "アカウントにログインしました。",
-      });
-    } catch (error: any) {
-      toast({
-        title: "エラー",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSocialLogin = async (provider: 'google' | 'twitter') => {
     setLoading(true);
@@ -123,8 +59,14 @@ export default function Auth() {
             <CardTitle className="text-2xl text-primary">BaaS 野球管理ツール</CardTitle>
           </CardHeader>
           <CardContent>
+            <div className="text-center mb-6">
+              <p className="text-muted-foreground">
+                外部プロバイダーを使用してログインしてください
+              </p>
+            </div>
+
             {/* Social Login Buttons */}
-            <div className="space-y-3 mb-6">
+            <div className="space-y-3">
               <Button
                 onClick={() => handleSocialLogin('google')}
                 disabled={loading}
@@ -151,82 +93,6 @@ export default function Auth() {
                 X (Twitter)でログイン
               </Button>
             </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <Separator />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">または</span>
-              </div>
-            </div>
-
-            {/* Email/Password Forms */}
-            <Tabs defaultValue="signin" className="mt-6">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="signin">ログイン</TabsTrigger>
-                <TabsTrigger value="signup">新規登録</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="signin">
-                <form onSubmit={handleEmailSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email">メールアドレス</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="example@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="password">パスワード</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "ログイン中..." : "ログイン"}
-                  </Button>
-                </form>
-              </TabsContent>
-              
-              <TabsContent value="signup">
-                <form onSubmit={handleEmailSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">メールアドレス</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="example@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">パスワード</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <Button type="submit" className="w-full" disabled={loading}>
-                    {loading ? "登録中..." : "新規登録"}
-                  </Button>
-                </form>
-              </TabsContent>
-            </Tabs>
           </CardContent>
         </Card>
       </div>

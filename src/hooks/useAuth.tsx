@@ -9,6 +9,7 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithTwitter: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -65,6 +66,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
   };
 
+  const deleteAccount = async () => {
+    if (!user) throw new Error('ユーザーがログインしていません');
+    
+    // Delete user account (this will also trigger cascading deletes in the database)
+    const { error } = await supabase.rpc('delete_user');
+    if (error) throw error;
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -72,7 +81,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signInWithGoogle,
       signInWithTwitter,
-      signOut
+      signOut,
+      deleteAccount
     }}>
       {children}
     </AuthContext.Provider>
