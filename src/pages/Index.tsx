@@ -4,8 +4,41 @@ import { StatCard } from "@/components/StatCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { getPlayers } from "@/lib/playerStorage";
+import { getDiaryEntries } from "@/lib/diaryStorage";
+import { useState, useEffect } from "react";
 
 const Index = () => {
+  const [totalPlayers, setTotalPlayers] = useState(0);
+  const [totalWatching, setTotalWatching] = useState(0);
+  const [completedDrafts, setCompletedDrafts] = useState(0);
+
+  useEffect(() => {
+    // 選手数を取得
+    const players = getPlayers();
+    setTotalPlayers(players.length);
+
+    // 観戦記録数を取得（今年の分のみ）
+    const diaryEntries = getDiaryEntries();
+    const currentYear = new Date().getFullYear();
+    const thisYearEntries = diaryEntries.filter(entry => 
+      entry.date.includes(currentYear.toString())
+    );
+    setTotalWatching(thisYearEntries.length);
+
+    // ドラフト構想数を取得
+    try {
+      const draftData = localStorage.getItem('draftData');
+      if (draftData) {
+        const parsedData = JSON.parse(draftData);
+        const teamCount = Object.keys(parsedData).length;
+        setCompletedDrafts(teamCount);
+      }
+    } catch {
+      setCompletedDrafts(0);
+    }
+  }, []);
+
   // 現在の年度を計算（10月20日以降は次年度）
   const getCurrentDraftYear = () => {
     const now = new Date();
@@ -21,11 +54,6 @@ const Index = () => {
   };
 
   const currentDraftYear = getCurrentDraftYear();
-  
-  // TODO: 実際のデータから取得する（現在はダミーデータ）
-  const totalPlayers = 0; // 実際の選手数
-  const totalWatching = 0; // 実際の観戦回数
-  const completedDrafts = 0; // 実際の構想完成数
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
