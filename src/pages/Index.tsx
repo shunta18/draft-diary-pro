@@ -14,6 +14,18 @@ const Index = () => {
   const [completedDrafts, setCompletedDrafts] = useState(0);
 
   useEffect(() => {
+    // 一度だけデフォルトデータをクリア（既存ユーザー向け）
+    const hasBeenCleared = localStorage.getItem('diary_default_cleared');
+    if (!hasBeenCleared) {
+      // デフォルトデータが混在している可能性があるのでクリア
+      const currentEntries = JSON.parse(localStorage.getItem('baseball_scout_diary') || '[]');
+      const userEntries = currentEntries.filter((entry: any) => 
+        entry.id !== 1 && entry.id !== 2 && entry.id !== 3 // デフォルトデータのIDを除外
+      );
+      localStorage.setItem('baseball_scout_diary', JSON.stringify(userEntries));
+      localStorage.setItem('diary_default_cleared', 'true');
+    }
+
     // 選手数を取得
     const players = getPlayers();
     setTotalPlayers(players.length);

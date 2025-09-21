@@ -12,42 +12,8 @@ export interface DiaryEntry {
 
 const STORAGE_KEY = 'baseball_scout_diary';
 
-// モックデータ
-const defaultDiaryEntries: DiaryEntry[] = [
-  {
-    id: 1,
-    date: "2025/09/10",
-    venue: "甲子園",
-    category: "高校",
-    matchCard: "○○高校 vs △△高校",
-    score: "7-3",
-    playerComments: "田中太郎の投球が素晴らしかった。球速150km/h台を連発し、コントロールも抜群。",
-    overallImpression: "両チームとも好ゲームだった。特に△△高校の佐藤選手も注目したい。",
-    videos: [],
-  },
-  {
-    id: 2,
-    date: "2025/09/05",
-    venue: "東京ドーム",
-    category: "大学",
-    matchCard: "××大学 vs ◇◇大学",
-    score: "5-2",
-    playerComments: "佐藤次郎の打撃力が印象的。長打力もあり、ドラフト上位候補。",
-    overallImpression: "大学野球のレベルの高さを感じた試合。投手陣の質も高い。",
-    videos: [],
-  },
-  {
-    id: 3,
-    date: "2025/08/28",
-    venue: "明治神宮球場",
-    category: "社会人",
-    matchCard: "▲▲社会人 vs ◆◆社会人",
-    score: "4-1",
-    playerComments: "鈴木三郎の守備力が光った。肩も強く、将来性を感じる。",
-    overallImpression: "社会人野球の堅実な試合運び。選手の完成度が高い。",
-    videos: [],
-  },
-];
+// デフォルトデータは空配列に変更
+const defaultDiaryEntries: DiaryEntry[] = [];
 
 export const getDiaryEntries = (): DiaryEntry[] => {
   try {
@@ -59,8 +25,7 @@ export const getDiaryEntries = (): DiaryEntry[] => {
     console.error('Failed to load diary entries from storage:', error);
   }
   
-  // 初回のみデフォルトデータを保存
-  saveDiaryEntries(defaultDiaryEntries);
+  // 空の配列を返す（デフォルトデータは自動保存しない）
   return defaultDiaryEntries;
 };
 
