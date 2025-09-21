@@ -12,6 +12,7 @@ import Diary from "./pages/Diary";
 import DiaryForm from "./pages/DiaryForm";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
             <Route path="/diary" element={<Diary />} />
             <Route path="/diary/form" element={<DiaryForm />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/terms" element={<Terms />} />
             <Route path="/auth" element={<Auth />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

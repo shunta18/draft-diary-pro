@@ -201,49 +201,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* App Settings */}
-        <Card className="gradient-card border-0 shadow-soft">
-          <CardHeader>
-            <CardTitle className="text-primary flex items-center space-x-2">
-              <SettingsIcon className="h-5 w-5" />
-              <span>アプリ設定</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
-            >
-              <div className="flex items-start space-x-3 w-full">
-                <HelpCircle className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                <div className="flex-1 text-left">
-                  <div className="font-medium">通知設定</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    プッシュ通知やメール通知の設定
-                  </div>
-                </div>
-                <span className="text-muted-foreground">→</span>
-              </div>
-            </Button>
-            <Separator className="my-1" />
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
-            >
-              <div className="flex items-start space-x-3 w-full">
-                <Info className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                <div className="flex-1 text-left">
-                  <div className="font-medium">プライバシー設定</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    データの共有設定と可視性
-                  </div>
-                </div>
-                <span className="text-muted-foreground">→</span>
-              </div>
-            </Button>
-          </CardContent>
-        </Card>
-
         {/* Legal & Support */}
         <Card className="gradient-card border-0 shadow-soft">
           <CardHeader>
@@ -258,7 +215,7 @@ export default function Settings() {
               className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
               asChild
             >
-              <a href="/terms" target="_blank" rel="noopener noreferrer">
+              <Link to="/terms">
                 <div className="flex items-start space-x-3 w-full">
                   <FileText className="h-5 w-5 mt-0.5 text-muted-foreground" />
                   <div className="flex-1 text-left">
@@ -269,7 +226,7 @@ export default function Settings() {
                   </div>
                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
                 </div>
-              </a>
+              </Link>
             </Button>
             <Separator className="my-1" />
             <Button
