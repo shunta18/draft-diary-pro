@@ -41,24 +41,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signInWithOAuth({
+    console.log('Google OAuth redirect URL:', redirectUrl);
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: redirectUrl
       }
     });
-    if (error) throw error;
+    console.log('Google OAuth response:', { data, error });
+    if (error) {
+      console.error('Google OAuth error details:', error);
+      throw error;
+    }
   };
 
   const signInWithTwitter = async () => {
     const redirectUrl = `${window.location.origin}/`;
-    const { error } = await supabase.auth.signInWithOAuth({
+    console.log('Twitter OAuth redirect URL:', redirectUrl);
+    const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'twitter',
       options: {
         redirectTo: redirectUrl
       }
     });
-    if (error) throw error;
+    console.log('Twitter OAuth response:', { data, error });
+    if (error) {
+      console.error('Twitter OAuth error details:', error);
+      throw error;
+    }
   };
 
   const signOut = async () => {
