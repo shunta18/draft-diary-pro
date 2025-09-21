@@ -20,16 +20,21 @@ const Index = () => {
 
     // 観戦記録数を取得（今年の分のみ）
     const storedEntries = localStorage.getItem('baseball_scout_diary');
+    console.log('Stored entries in Index:', storedEntries);
+    
     if (storedEntries) {
       // ローカルストレージにデータがある場合のみカウント
       const diaryEntries = getDiaryEntries();
+      console.log('All diary entries in Index:', diaryEntries);
       const currentYear = new Date().getFullYear();
       const thisYearEntries = diaryEntries.filter(entry => 
         entry.date.includes(currentYear.toString())
       );
+      console.log('This year entries in Index:', thisYearEntries);
       setTotalWatching(thisYearEntries.length);
     } else {
       // まだ観戦記録を作成していない場合は0
+      console.log('No stored entries, setting to 0');
       setTotalWatching(0);
     }
 

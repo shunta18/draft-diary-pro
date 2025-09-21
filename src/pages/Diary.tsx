@@ -27,7 +27,9 @@ export default function Diary() {
   const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
 
   useEffect(() => {
-    setDiaryEntries(getDiaryEntries());
+    const entries = getDiaryEntries();
+    console.log('All diary entries in Diary page:', entries);
+    setDiaryEntries(entries);
   }, []);
 
   const handleEdit = (entry: DiaryEntry) => {
@@ -45,8 +47,12 @@ export default function Diary() {
     const matchesMonth = entry.date.startsWith(selectedMonth.replace("-", "/"));
     const matchesCategory = selectedCategory === "all" || entry.category === selectedCategory;
     
+    console.log('Filtering entry:', entry.date, 'selectedMonth:', selectedMonth, 'matchesMonth:', matchesMonth);
+    
     return matchesSearch && matchesMonth && matchesCategory;
   });
+
+  console.log('Filtered entries:', filteredEntries);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
