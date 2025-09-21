@@ -1,15 +1,17 @@
-import { Calendar, MapPin, Edit, Share2, Copy, ExternalLink } from "lucide-react";
+import { Calendar, MapPin, Edit, Share2, Copy, ExternalLink, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { DiaryEntry } from "@/lib/diaryStorage";
+import { DiaryEntry, deleteDiaryEntry } from "@/lib/diaryStorage";
 
 interface DiaryDetailDialogProps {
   entry: DiaryEntry | null;
   isOpen: boolean;
   onClose: () => void;
   onEdit?: (entry: DiaryEntry) => void;
+  onDelete?: () => void;
 }
 
 
@@ -21,7 +23,7 @@ const categoryColors = {
   "その他": "bg-gray-500 text-white",
 };
 
-export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit }: DiaryDetailDialogProps) {
+export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDelete }: DiaryDetailDialogProps) {
   const { toast } = useToast();
   
   if (!entry) return null;
@@ -49,6 +51,23 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit }: Di
     }
   };
 
+  const handleDelete = () => {
+    if (entry && deleteDiaryEntry(entry.id)) {
+      toast({
+        title: "削除完了",
+        description: "観戦記録を削除しました。",
+      });
+      onDelete?.();
+      onClose();
+    } else {
+      toast({
+        title: "エラー",
+        description: "削除に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
@@ -61,17 +80,50 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit }: Di
               </Badge>
             </div>
           </div>
-          {onEdit && (
-            <div className="flex justify-end mt-3">
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onEdit(entry)}
-                className="h-8 px-3"
-              >
-                <Edit className="h-4 w-4 mr-1" />
-                編集
-              </Button>
+          {(onEdit || onDelete) && (
+            <div className="flex justify-end gap-2 mt-3">
+              {onEdit && (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => onEdit(entry)}
+                  className="h-8 px-3"
+                >
+                  <Edit className="h-4 w-4 mr-1" />
+                  編集
+                </Button>
+              )}
+              {onDelete && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      className="h-8 px-3"
+                    >
+                      <Trash2 className="h-4 w-4 mr-1" />
+                      削除
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>観戦記録を削除しますか？</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        「{entry.matchCard}」の観戦記録を削除します。この操作は取り消せません。
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        削除
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           )}
         </DialogHeader>

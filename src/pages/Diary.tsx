@@ -35,6 +35,10 @@ export default function Diary() {
     navigate("/diary/form", { state: { editingEntryId: entry.id } });
   };
 
+  const handleDelete = () => {
+    setDiaryEntries(getDiaryEntries());
+  };
+
   const filteredEntries = diaryEntries.filter((entry) => {
     const matchesSearch = entry.matchCard.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entry.venue.toLowerCase().includes(searchTerm.toLowerCase());
@@ -170,6 +174,7 @@ export default function Diary() {
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         onEdit={handleEdit}
+        onDelete={handleDelete}
       />
     </div>
   );
