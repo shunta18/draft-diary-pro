@@ -1,96 +1,88 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+
+interface User {
+  id: string;
+  email: string;
+  name?: string;
+}
 
 interface AuthContextType {
   user: User | null;
-  session: Session | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
-  signInWithTwitter: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<void>;
+  signUp: (email: string, password: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
   deleteAccount: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const STORAGE_KEY = 'auth_user';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    // Check for existing user in localStorage
+    try {
+      const storedUser = localStorage.getItem(STORAGE_KEY);
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
       }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    } catch (error) {
+      console.error('Error loading user from localStorage:', error);
+    }
+    setLoading(false);
   }, []);
 
-  const signInWithGoogle = async () => {
-    const redirectUrl = `${window.location.origin}/`;
-    console.log('Google OAuth redirect URL:', redirectUrl);
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl
-      }
-    });
-    console.log('Google OAuth response:', { data, error });
-    if (error) {
-      console.error('Google OAuth error details:', error);
-      throw error;
+  const signIn = async (email: string, password: string) => {
+    // Mock authentication for demo purposes
+    if (email && password) {
+      const user: User = {
+        id: Date.now().toString(),
+        email,
+        name: email.split('@')[0]
+      };
+      setUser(user);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    } else {
+      throw new Error('メールアドレスとパスワードを入力してください');
     }
   };
 
-  const signInWithTwitter = async () => {
-    const redirectUrl = `${window.location.origin}/`;
-    console.log('Twitter OAuth redirect URL:', redirectUrl);
-    const { data, error } = await supabase.auth.signInWithOAuth({
-      provider: 'twitter',
-      options: {
-        redirectTo: redirectUrl
-      }
-    });
-    console.log('Twitter OAuth response:', { data, error });
-    if (error) {
-      console.error('Twitter OAuth error details:', error);
-      throw error;
+  const signUp = async (email: string, password: string, name?: string) => {
+    // Mock registration for demo purposes
+    if (email && password) {
+      const user: User = {
+        id: Date.now().toString(),
+        email,
+        name: name || email.split('@')[0]
+      };
+      setUser(user);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    } else {
+      throw new Error('メールアドレスとパスワードを入力してください');
     }
   };
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   const deleteAccount = async () => {
     if (!user) throw new Error('ユーザーがログインしていません');
-    
-    // Delete user account (this will also trigger cascading deletes in the database)
-    const { error } = await supabase.rpc('delete_user');
-    if (error) throw error;
+    setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
   };
 
   return (
     <AuthContext.Provider value={{
       user,
-      session,
       loading,
-      signInWithGoogle,
-      signInWithTwitter,
+      signIn,
+      signUp,
       signOut,
       deleteAccount
     }}>

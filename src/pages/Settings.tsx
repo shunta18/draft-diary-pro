@@ -123,20 +123,19 @@ export default function Settings() {
           <CardContent>
             <div className="flex items-center space-x-4 mb-4">
               <Avatar className="h-16 w-16">
-                <AvatarImage src={user?.user_metadata?.avatar_url} alt="プロフィール画像" />
                 <AvatarFallback className="bg-primary/10 text-primary text-xl">
                   {user?.email?.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">
-                  {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'ユーザー'}
+                  {user?.name || user?.email?.split('@')[0] || 'ユーザー'}
                 </h3>
                 <p className="text-muted-foreground text-sm">{user?.email}</p>
                 <div className="flex items-center space-x-2 mt-2">
-                  {getProviderIcon(user?.app_metadata?.provider || 'email')}
+                  {getProviderIcon('email')}
                   <Badge variant="secondary" className="text-xs">
-                    {getProviderName(user?.app_metadata?.provider || 'email')}で認証済み
+                    {getProviderName('email')}で認証済み
                   </Badge>
                 </div>
               </div>
@@ -146,13 +145,13 @@ export default function Settings() {
               <div>
                 <span className="text-muted-foreground">登録日:</span>
                 <p className="font-medium">
-                  {user?.created_at ? new Date(user.created_at).toLocaleDateString('ja-JP') : '-'}
+                  {new Date().toLocaleDateString('ja-JP')}
                 </p>
               </div>
               <div>
                 <span className="text-muted-foreground">最終ログイン:</span>
                 <p className="font-medium">
-                  {user?.last_sign_in_at ? new Date(user.last_sign_in_at).toLocaleDateString('ja-JP') : '-'}
+                  {new Date().toLocaleDateString('ja-JP')}
                 </p>
               </div>
             </div>
