@@ -253,7 +253,7 @@ export default function Settings() {
               className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
               asChild
             >
-              <a href="mailto:support@example.com">
+              <a href="mailto:17j1230@gmail.com">
                 <div className="flex items-start space-x-3 w-full">
                   <Mail className="h-5 w-5 mt-0.5 text-muted-foreground" />
                   <div className="flex-1 text-left">
