@@ -87,16 +87,16 @@ const Index = () => {
             description={`${currentDraftYear}年ドラフト候補`}
           />
           <StatCard
-            title="今年の観戦"
-            value={totalWatching.toString()}
-            icon={<Calendar className="h-5 w-5" />}
-            description="観戦回数"
-          />
-          <StatCard
             title="構想完成"
             value={completedDrafts.toString()}
             icon={<Trophy className="h-5 w-5" />}
             description="球団構想"
+          />
+          <StatCard
+            title="今年の観戦"
+            value={totalWatching.toString()}
+            icon={<Calendar className="h-5 w-5" />}
+            description="観戦回数"
           />
         </div>
 
