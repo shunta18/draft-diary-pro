@@ -158,49 +158,6 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        {/* Data Management */}
-        <Card className="gradient-card border-0 shadow-soft">
-          <CardHeader>
-            <CardTitle className="text-primary flex items-center space-x-2">
-              <Database className="h-5 w-5" />
-              <span>データ管理</span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1">
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
-            >
-              <div className="flex items-start space-x-3 w-full">
-                <Database className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                <div className="flex-1 text-left">
-                  <div className="font-medium">データエクスポート</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    選手データや観戦記録をダウンロード
-                  </div>
-                </div>
-                <span className="text-muted-foreground">→</span>
-              </div>
-            </Button>
-            <Separator className="my-1" />
-            <Button
-              variant="ghost"
-              className="w-full justify-start h-auto p-4 transition-smooth hover:bg-secondary/50"
-            >
-              <div className="flex items-start space-x-3 w-full">
-                <Shield className="h-5 w-5 mt-0.5 text-muted-foreground" />
-                <div className="flex-1 text-left">
-                  <div className="font-medium">データバックアップ</div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    自動バックアップの設定と履歴
-                  </div>
-                </div>
-                <span className="text-muted-foreground">→</span>
-              </div>
-            </Button>
-          </CardContent>
-        </Card>
-
         {/* Legal & Support */}
         <Card className="gradient-card border-0 shadow-soft">
           <CardHeader>
