@@ -19,12 +19,19 @@ const Index = () => {
     setTotalPlayers(players.length);
 
     // 観戦記録数を取得（今年の分のみ）
-    const diaryEntries = getDiaryEntries();
-    const currentYear = new Date().getFullYear();
-    const thisYearEntries = diaryEntries.filter(entry => 
-      entry.date.includes(currentYear.toString())
-    );
-    setTotalWatching(thisYearEntries.length);
+    const storedEntries = localStorage.getItem('baseball_scout_diary');
+    if (storedEntries) {
+      // ローカルストレージにデータがある場合のみカウント
+      const diaryEntries = getDiaryEntries();
+      const currentYear = new Date().getFullYear();
+      const thisYearEntries = diaryEntries.filter(entry => 
+        entry.date.includes(currentYear.toString())
+      );
+      setTotalWatching(thisYearEntries.length);
+    } else {
+      // まだ観戦記録を作成していない場合は0
+      setTotalWatching(0);
+    }
 
     // ドラフト構想数を取得
     try {
