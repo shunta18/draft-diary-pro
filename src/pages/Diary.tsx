@@ -160,9 +160,16 @@ export default function Diary() {
                     </div>
                   </div>
                   
-                  <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium ml-2 shrink-0`}>
-                    {entry.category}
-                  </Badge>
+                  <div className="flex items-center space-x-2">
+                    <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium shrink-0`}>
+                      {entry.category}
+                    </Badge>
+                    {entry.id === 1 && (
+                      <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300 shrink-0">
+                        サンプル
+                      </Badge>
+                    )}
+                  </div>
                 </div>
                 
                 <p className="text-sm text-muted-foreground line-clamp-2">

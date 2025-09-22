@@ -171,6 +171,11 @@ export default function Players() {
                       <Badge variant="secondary" className="text-xs">
                         {player.category}
                       </Badge>
+                      {player.id === 1 && (
+                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
+                          サンプル
+                        </Badge>
+                      )}
                     </div>
                     
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
@@ -215,7 +220,7 @@ export default function Players() {
             <div className="space-y-6">
               {/* Basic Info */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 flex-wrap">
                   <Badge variant="secondary" className="text-xs">
                     {selectedPlayer.category}
                   </Badge>
@@ -224,6 +229,11 @@ export default function Players() {
                   >
                     {selectedPlayer.evaluation}
                   </Badge>
+                  {selectedPlayer.id === 1 && (
+                    <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
+                      サンプル
+                    </Badge>
+                  )}
                 </div>
                 
                 <div className="grid grid-cols-1 gap-3 text-sm">
