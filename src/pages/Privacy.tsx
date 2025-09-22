@@ -10,7 +10,7 @@ export default function Privacy() {
       <div className="bg-card border-b shadow-soft">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
-            <Link to="/settings">
+            <Link to="/">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
