@@ -31,13 +31,17 @@ export const getDiaryEntries = (): DiaryEntry[] => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored) {
-      return JSON.parse(stored);
+      const entries = JSON.parse(stored);
+      // データがあればそれを返す
+      if (entries.length > 0) {
+        return entries;
+      }
     }
   } catch (error) {
     console.error('Failed to load diary entries from storage:', error);
   }
   
-  // 初回のみデフォルトデータを保存
+  // データがない場合はデフォルトデータを保存して返す
   saveDiaryEntries(defaultDiaryEntries);
   return defaultDiaryEntries;
 };
