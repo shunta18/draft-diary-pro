@@ -84,104 +84,127 @@ const Index = () => {
       <Navigation />
       
       <div className="p-4 space-y-6">
-        {/* Hero Section */}
-        <div className="text-center py-8 space-y-4">
-          <div className="inline-flex items-center space-x-2 px-4 py-2 bg-accent/10 rounded-full">
-            <Trophy className="h-5 w-5 text-accent" />
-            <span className="text-sm font-medium text-accent">野球ファンのための管理ツール</span>
+        {/* Hero Section - コンパクト化 */}
+        <div className="text-center py-4 space-y-3">
+          <div className="inline-flex items-center space-x-2 px-3 py-1.5 bg-accent/10 rounded-full">
+            <Trophy className="h-4 w-4 text-accent" />
+            <span className="text-xs font-medium text-accent">野球ファンのための管理ツール</span>
           </div>
           
-          <h1 className="text-3xl md:text-4xl font-bold text-primary leading-tight">
+          <h1 className="text-2xl md:text-3xl font-bold text-primary leading-tight">
             ドラフト候補選手を
             <br />
             <span className="gradient-field bg-clip-text text-transparent">徹底管理</span>
           </h1>
           
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
             選手情報の管理から観戦記録まで、野球ファンのすべてを一つのアプリで
           </p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            title="総登録選手"
-            value={totalPlayers.toString()}
-            icon={<Users className="h-5 w-5" />}
-            description={`${currentDraftYear}年ドラフト候補`}
-          />
-          <StatCard
-            title="構想完成"
-            value={completedDrafts.toString()}
-            icon={<Trophy className="h-5 w-5" />}
-            description="球団構想"
-          />
-          <StatCard
-            title="今年の観戦"
-            value={totalWatching.toString()}
-            icon={<Calendar className="h-5 w-5" />}
-            description="観戦回数"
-          />
+        {/* Quick Action Buttons - 上部に配置 */}
+        <div className="grid grid-cols-3 gap-3">
+          <Link to="/players">
+            <Button className="w-full h-12 flex flex-col items-center justify-center space-y-1 text-xs">
+              <Users className="h-4 w-4" />
+              <span>選手リスト</span>
+            </Button>
+          </Link>
+          <Link to="/draft">
+            <Button variant="secondary" className="w-full h-12 flex flex-col items-center justify-center space-y-1 text-xs">
+              <Trophy className="h-4 w-4" />
+              <span>ドラフト構想</span>
+            </Button>
+          </Link>
+          <Link to="/diary">
+            <Button variant="outline" className="w-full h-12 flex flex-col items-center justify-center space-y-1 text-xs">
+              <Calendar className="h-4 w-4" />
+              <span>観戦日記</span>
+            </Button>
+          </Link>
         </div>
 
-        {/* Main Navigation Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link to="/players">
-            <Card className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer group">
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center group-hover:bg-primary/20 transition-smooth">
-                  <Users className="h-8 w-8 text-primary" />
-                </div>
-                <CardTitle className="text-primary">選手リスト</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground text-sm">
-                  ドラフト候補選手の情報を管理・評価
-                </p>
-                <div className="mt-4 text-xs text-accent font-medium">
-                  {totalPlayers}名登録済み →
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+        {/* Stats Cards - 小さくして3列配置 */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="bg-card/50 border border-border/40 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Users className="h-4 w-4 text-accent" />
+            </div>
+            <div className="text-lg font-bold text-primary">{totalPlayers}</div>
+            <div className="text-xs text-muted-foreground">登録選手</div>
+          </div>
+          <div className="bg-card/50 border border-border/40 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Trophy className="h-4 w-4 text-accent" />
+            </div>
+            <div className="text-lg font-bold text-primary">{completedDrafts}</div>
+            <div className="text-xs text-muted-foreground">構想完成</div>
+          </div>
+          <div className="bg-card/50 border border-border/40 rounded-lg p-3 text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Calendar className="h-4 w-4 text-accent" />
+            </div>
+            <div className="text-lg font-bold text-primary">{totalWatching}</div>
+            <div className="text-xs text-muted-foreground">今年の観戦</div>
+          </div>
+        </div>
 
-          <Link to="/draft">
-            <Card className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer group">
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-16 h-16 bg-accent/10 rounded-full flex items-center justify-center group-hover:bg-accent/20 transition-smooth">
-                  <Trophy className="h-8 w-8 text-accent" />
-                </div>
-                <CardTitle className="text-primary">ドラフト構想</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground text-sm">
-                  各球団のドラフト戦略を練る
-                </p>
-                <div className="mt-4 text-xs text-accent font-medium">
-                  {completedDrafts}球団構想済み →
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+        {/* Detailed Feature Cards - より小さく */}
+        <div className="space-y-4">
+          <h2 className="text-lg font-semibold text-primary text-center">機能詳細</h2>
+          
+          <div className="grid grid-cols-1 gap-3">
+            <Link to="/players">
+              <Card className="border-border/40 bg-card/30 hover:bg-card/50 transition-colors cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
+                      <Users className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-primary">選手リスト</h3>
+                      <p className="text-sm text-muted-foreground">ドラフト候補選手の情報を管理・評価</p>
+                      <p className="text-xs text-accent mt-1">{totalPlayers}名登録済み</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
 
-          <Link to="/diary">
-            <Card className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer group">
-              <CardHeader className="text-center pb-4">
-                <div className="mx-auto w-16 h-16 bg-secondary/30 rounded-full flex items-center justify-center group-hover:bg-secondary/40 transition-smooth">
-                  <Calendar className="h-8 w-8 text-primary" />
-                </div>
-                <CardTitle className="text-primary">観戦日記</CardTitle>
-              </CardHeader>
-              <CardContent className="text-center">
-                <p className="text-muted-foreground text-sm">
-                  試合観戦の記録と感想を残す
-                </p>
-                <div className="mt-4 text-xs text-accent font-medium">
-                  今年{totalWatching}回観戦 →
-                </div>
-              </CardContent>
-            </Card>
-          </Link>
+            <Link to="/draft">
+              <Card className="border-border/40 bg-card/30 hover:bg-card/50 transition-colors cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-accent/10 rounded-full flex items-center justify-center">
+                      <Trophy className="h-5 w-5 text-accent" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-primary">ドラフト構想</h3>
+                      <p className="text-sm text-muted-foreground">各球団のドラフト戦略を練る</p>
+                      <p className="text-xs text-accent mt-1">{completedDrafts}球団構想済み</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+
+            <Link to="/diary">
+              <Card className="border-border/40 bg-card/30 hover:bg-card/50 transition-colors cursor-pointer">
+                <CardContent className="p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-10 h-10 bg-secondary/30 rounded-full flex items-center justify-center">
+                      <Calendar className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-medium text-primary">観戦日記</h3>
+                      <p className="text-sm text-muted-foreground">試合観戦の記録と感想を残す</p>
+                      <p className="text-xs text-accent mt-1">今年{totalWatching}回観戦</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          </div>
         </div>
 
         {/* Settings Section */}
