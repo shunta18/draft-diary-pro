@@ -20,7 +20,7 @@ const categoryColors = {
 export default function Diary() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMonth, setSelectedMonth] = useState("2025-09");
+  const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
@@ -44,7 +44,7 @@ export default function Diary() {
   const filteredEntries = diaryEntries.filter((entry) => {
     const matchesSearch = entry.matchCard.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entry.venue.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesMonth = entry.date.startsWith(selectedMonth.replace("-", "/"));
+    const matchesMonth = selectedMonth === "all" || entry.date.startsWith(selectedMonth);
     const matchesCategory = selectedCategory === "all" || entry.category === selectedCategory;
     
     console.log('Filtering entry:', entry.date, 'selectedMonth:', selectedMonth, 'matchesMonth:', matchesMonth);
@@ -96,9 +96,21 @@ export default function Diary() {
                 <SelectValue placeholder="年月選択" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2025-09">2025年9月</SelectItem>
-                <SelectItem value="2025-08">2025年8月</SelectItem>
-                <SelectItem value="2025-07">2025年7月</SelectItem>
+                <SelectItem value="all">全て</SelectItem>
+                <SelectItem value="2025">2025年</SelectItem>
+                <SelectItem value="2024">2024年</SelectItem>
+                <SelectItem value="2023">2023年</SelectItem>
+                <SelectItem value="2022">2022年</SelectItem>
+                <SelectItem value="2021">2021年</SelectItem>
+                <SelectItem value="2020">2020年</SelectItem>
+                <SelectItem value="2019">2019年</SelectItem>
+                <SelectItem value="2018">2018年</SelectItem>
+                <SelectItem value="2017">2017年</SelectItem>
+                <SelectItem value="2016">2016年</SelectItem>
+                <SelectItem value="2015">2015年</SelectItem>
+                <SelectItem value="2014">2014年</SelectItem>
+                <SelectItem value="2013">2013年</SelectItem>
+                <SelectItem value="2012">2012年</SelectItem>
               </SelectContent>
             </Select>
             
