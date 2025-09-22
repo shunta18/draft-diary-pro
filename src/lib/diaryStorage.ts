@@ -12,8 +12,20 @@ export interface DiaryEntry {
 
 const STORAGE_KEY = 'baseball_scout_diary';
 
-// デフォルトデータは空配列に変更
-const defaultDiaryEntries: DiaryEntry[] = [];
+// デフォルトデータ
+const defaultDiaryEntries: DiaryEntry[] = [
+  {
+    id: 1,
+    date: "2012-08-09",
+    venue: "甲子園",
+    category: "高校",
+    matchCard: "今治西(愛媛代表)対桐光学園(神奈川代表)",
+    score: "今治西0-7桐光",
+    playerComments: "桐光学園の2年生、松井裕樹。県予選で強豪横浜高校相手に9回3安打3失点で完投。準決勝、決勝も完投。",
+    overallImpression: "注目選手の松井裕樹が9回2安打完封。奪三振22で大会記録。まだ2年生だが、来年のドラフト1位候補。",
+    videos: [],
+  },
+];
 
 export const getDiaryEntries = (): DiaryEntry[] => {
   try {
@@ -25,7 +37,8 @@ export const getDiaryEntries = (): DiaryEntry[] => {
     console.error('Failed to load diary entries from storage:', error);
   }
   
-  // 空の配列を返す（デフォルトデータは自動保存しない）
+  // 初回のみデフォルトデータを保存
+  saveDiaryEntries(defaultDiaryEntries);
   return defaultDiaryEntries;
 };
 
