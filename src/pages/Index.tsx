@@ -14,16 +14,18 @@ const Index = () => {
   const [completedDrafts, setCompletedDrafts] = useState(0);
 
   useEffect(() => {
-    // 一度だけデフォルトデータをクリア（既存ユーザー向け）
-    const hasBeenCleared = localStorage.getItem('diary_default_cleared');
-    if (!hasBeenCleared) {
-      // デフォルトデータが混在している可能性があるのでクリア
-      const currentEntries = JSON.parse(localStorage.getItem('baseball_scout_diary') || '[]');
-      const userEntries = currentEntries.filter((entry: any) => 
-        entry.id !== 1 && entry.id !== 2 && entry.id !== 3 // デフォルトデータのIDを除外
-      );
-      localStorage.setItem('baseball_scout_diary', JSON.stringify(userEntries));
-      localStorage.setItem('diary_default_cleared', 'true');
+    // 既存の選手データをクリアして新しいデフォルトデータに更新
+    const hasBeenUpdated = localStorage.getItem('players_updated_to_matsui');
+    if (!hasBeenUpdated) {
+      localStorage.removeItem('baseball_scout_players');
+      localStorage.setItem('players_updated_to_matsui', 'true');
+    }
+
+    // 既存の観戦日記データをクリアして新しいデフォルトデータに更新  
+    const diaryUpdated = localStorage.getItem('diary_updated_to_matsui');
+    if (!diaryUpdated) {
+      localStorage.removeItem('baseball_scout_diary');
+      localStorage.setItem('diary_updated_to_matsui', 'true');
     }
 
     // 選手数を取得
