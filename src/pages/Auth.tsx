@@ -161,6 +161,35 @@ export default function Auth() {
                 </form>
               </TabsContent>
             </Tabs>
+            
+            {/* Footer Links */}
+            <div className="mt-6 pt-4 border-t border-border/50">
+              <div className="flex flex-col space-y-2 text-center">
+                <p className="text-xs text-muted-foreground mb-2">
+                  サイトのご利用について
+                </p>
+                <div className="flex justify-center space-x-4 text-xs">
+                  <Link 
+                    to="/terms" 
+                    className="text-primary hover:text-primary/80 underline transition-colors"
+                  >
+                    利用規約
+                  </Link>
+                  <Link 
+                    to="/privacy" 
+                    className="text-primary hover:text-primary/80 underline transition-colors"
+                  >
+                    プライバシーポリシー
+                  </Link>
+                  <a 
+                    href="mailto:17j1230@gmail.com" 
+                    className="text-primary hover:text-primary/80 underline transition-colors"
+                  >
+                    お問い合わせ
+                  </a>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
