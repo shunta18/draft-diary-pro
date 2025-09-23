@@ -59,9 +59,9 @@ const saveDraftData = (data: DraftData) => {
 const getFavorites = (): string[] => {
   try {
     const stored = localStorage.getItem('favoriteTeams');
-    return stored ? JSON.parse(stored) : ["読売ジャイアンツ", "阪神タイガース"];
+    return stored ? JSON.parse(stored) : [];
   } catch {
-    return ["読売ジャイアンツ", "阪神タイガース"];
+    return [];
   }
 };
 
@@ -577,16 +577,16 @@ export default function Draft() {
         </Card>
 
         {/* Favorite Teams */}
-        {favoriteTeams.length > 0 && (
-          <Card className="gradient-card border-0 shadow-soft">
-            <CardHeader>
-              <CardTitle className="text-primary flex items-center space-x-2">
-                <Star className="h-5 w-5 text-accent" />
-                <span>お気に入り球団</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {favoriteTeams.map((team) => (
+        <Card className="gradient-card border-0 shadow-soft">
+          <CardHeader>
+            <CardTitle className="text-primary flex items-center space-x-2">
+              <Star className="h-5 w-5 text-accent" />
+              <span>お気に入り球団</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {favoriteTeams.length > 0 ? (
+              favoriteTeams.map((team) => (
                 <div
                   key={team.name}
                   className="relative overflow-hidden rounded-lg cursor-pointer transition-smooth hover:shadow-soft"
@@ -603,10 +603,18 @@ export default function Draft() {
                     <span>→</span>
                   </div>
                 </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+              ))
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Star className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                <p className="text-sm">
+                  球団を選択して右上の★マークから<br />
+                  お気に入りすると表示されます
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
