@@ -28,7 +28,7 @@ export const Navigation = () => {
     <div className="bg-card border-b shadow-soft">
       <div className="flex items-center justify-between p-4">
         <h1 className="text-xl font-bold text-primary">
-          BaaS 野球管理ツール
+          BaaS プロ野球ドラフト管理ツール
         </h1>
         
         <Sheet open={open} onOpenChange={setOpen}>

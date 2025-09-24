@@ -82,7 +82,7 @@ export default function Auth() {
       <div className="flex items-center justify-center p-4 mt-8">
         <Card className="w-full max-w-md gradient-card border-0 shadow-soft">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-primary">BaaS 野球管理ツール</CardTitle>
+            <CardTitle className="text-2xl text-primary">BaaS プロ野球ドラフト管理ツール</CardTitle>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">

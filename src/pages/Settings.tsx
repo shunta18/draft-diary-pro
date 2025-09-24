@@ -293,7 +293,7 @@ export default function Settings() {
         <Card className="gradient-card border-0 shadow-soft">
           <CardContent className="p-4 text-center">
             <div className="text-sm text-muted-foreground space-y-1">
-              <p>BaaS 野球管理ツール</p>
+              <p>BaaS プロ野球ドラフト管理ツール</p>
               <p>バージョン 1.0.0</p>
               <p>© 2025 BaaS Baseball</p>
             </div>
