@@ -24,7 +24,7 @@ export default function Privacy() {
         <Card className="gradient-card border-0 shadow-soft">
           <CardHeader>
             <CardTitle className="text-2xl text-primary text-center">
-              BaaS 野球管理ツール プライバシーポリシー
+              BaaS プロ野球ドラフト管理ツール プライバシーポリシー
             </CardTitle>
             <p className="text-center text-muted-foreground">
               最終更新：2025年9月

@@ -24,7 +24,7 @@ export default function Terms() {
         <Card className="gradient-card border-0 shadow-soft">
           <CardHeader>
             <CardTitle className="text-2xl text-primary text-center">
-              BaaS 野球管理ツール 利用規約
+              BaaS プロ野球ドラフト管理ツール 利用規約
             </CardTitle>
             <p className="text-center text-muted-foreground">
               最終更新：2025年9月
@@ -34,7 +34,7 @@ export default function Terms() {
             <section>
               <h2 className="text-lg font-semibold text-primary mb-3">1. サービス概要</h2>
               <p className="text-muted-foreground leading-relaxed">
-                BaaS 野球管理ツール（以下「本サービス」）は、野球のドラフト候補選手管理、ドラフト構想作成、試合観戦記録などの機能を無料で提供します。
+                BaaS プロ野球ドラフト管理ツール（以下「本サービス」）は、野球のドラフト候補選手管理、ドラフト構想作成、試合観戦記録などの機能を無料で提供します。
               </p>
             </section>
 
