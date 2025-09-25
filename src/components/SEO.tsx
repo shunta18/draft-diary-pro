@@ -19,7 +19,7 @@ export const SEO = ({
   type = "website",
   structuredData
 }: SEOProps) => {
-  const fullTitle = `${title} | BaaS プロ野球ドラフト管理ツール`;
+  const fullTitle = `${title} | BaaS 野球スカウトノート`;
   
   return (
     <Helmet>
@@ -38,7 +38,7 @@ export const SEO = ({
       <meta property="og:type" content={type} />
       <meta property="og:image" content={image} />
       <meta property="og:url" content={url} />
-      <meta property="og:site_name" content="BaaS プロ野球ドラフト管理ツール" />
+      <meta property="og:site_name" content="BaaS 野球スカウトノート" />
       
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content="summary_large_image" />
