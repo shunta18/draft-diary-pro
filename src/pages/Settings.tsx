@@ -145,13 +145,13 @@ export default function Settings() {
               <div>
                 <span className="text-muted-foreground">登録日:</span>
                 <p className="font-medium">
-                  {new Date().toLocaleDateString('ja-JP')}
+                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('ja-JP') : '-'}
                 </p>
               </div>
               <div>
                 <span className="text-muted-foreground">最終ログイン:</span>
                 <p className="font-medium">
-                  {new Date().toLocaleDateString('ja-JP')}
+                  {user?.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString('ja-JP') : '-'}
                 </p>
               </div>
             </div>
