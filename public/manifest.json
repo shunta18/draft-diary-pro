@@ -1,0 +1,23 @@
+{
+  "name": "BaaS プロ野球ドラフト管理ツール",
+  "short_name": "BaaS野球ツール",
+  "description": "野球ファンのためのドラフト候補選手管理・評価・観戦記録アプリ",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e40af",
+  "icons": [
+    {
+      "src": "/placeholder.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/placeholder.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ],
+  "categories": ["sports", "productivity"],
+  "lang": "ja"
+}

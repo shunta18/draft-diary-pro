@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link } from "react-router-dom";
 import { getPlayers } from "@/lib/playerStorage";
 import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
+import { SEO } from "@/components/SEO";
 
 // 球団データ
 const teams = [
@@ -539,8 +540,29 @@ export default function Draft() {
     );
   }
 
+  const draftStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "プロ野球12球団ドラフト構想",
+    "description": "プロ野球12球団のドラフト指名予想・構想作成ツール",
+    "memberOf": teams.map(team => ({
+      "@type": "SportsTeam",
+      "name": team.name,
+      "sport": "Baseball"
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <SEO 
+        title="ドラフト構想"
+        description="プロ野球12球団のドラフト指名予想を作成。球団別の戦略的ドラフト構想をシミュレーション。育成ドラフトにも対応。"
+        keywords={[
+          "ドラフト構想", "ドラフト予想", "プロ野球12球団", "指名予想", 
+          "育成ドラフト", "球団戦略", "ドラフト会議"
+        ]}
+        structuredData={draftStructuredData}
+      />
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
         <div className="flex items-center justify-between p-4">

@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link, useNavigate } from "react-router-dom";
 import DiaryDetailDialog from "@/components/DiaryDetailDialog";
 import { DiaryEntry, getDiaryEntries } from "@/lib/diaryStorage";
+import { SEO } from "@/components/SEO";
 
 const categoryColors = {
   "高校": "bg-blue-500 text-white",
@@ -54,8 +55,35 @@ export default function Diary() {
 
   console.log('Filtered entries:', filteredEntries);
 
+  const diaryStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    "name": "野球観戦日記",
+    "description": "高校野球、大学野球、社会人野球の観戦記録",
+    "blogPost": filteredEntries.slice(0, 5).map(entry => ({
+      "@type": "BlogPosting",
+      "headline": entry.matchCard,
+      "dateCreated": entry.date,
+      "description": entry.overallImpression,
+      "location": entry.venue,
+      "author": {
+        "@type": "Person",
+        "name": "野球ファン"
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <SEO 
+        title="観戦日記"
+        description={`野球観戦記録${filteredEntries.length}件を管理。高校野球、大学野球、社会人野球の詳細な観戦レポートと選手評価。`}
+        keywords={[
+          "野球観戦日記", "観戦記録", "高校野球観戦", "大学野球観戦", 
+          "社会人野球観戦", "野球レポート", "選手観察"
+        ]}
+        structuredData={diaryStructuredData}
+      />
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
         <div className="flex items-center justify-between p-4">

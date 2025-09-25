@@ -1,6 +1,7 @@
 import { Users, Trophy, Calendar, Settings } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
+import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -81,8 +82,37 @@ const Index = () => {
 
   const currentDraftYear = getCurrentDraftYear();
 
+  const homeStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "BaaS プロ野球ドラフト管理ツール",
+    "description": "野球ファンのためのドラフト候補選手管理・評価・観戦記録アプリ",
+    "url": "https://draft-diary-pro.vercel.app",
+    "applicationCategory": "SportsApplication",
+    "operatingSystem": "All",
+    "author": {
+      "@type": "Organization",
+      "name": "BaaS Baseball"
+    },
+    "featureList": [
+      "ドラフト候補選手管理",
+      "選手評価・スカウティング",
+      "観戦記録・日記",
+      "ドラフト構想作成"
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
+      <SEO 
+        title="ホーム"
+        description="プロ野球ドラフト候補選手の管理、評価、観戦記録を効率的に行える野球ファン向けツール。スカウティングデータの蓄積からドラフト構想の作成まで完全サポート。"
+        keywords={[
+          "プロ野球", "ドラフト", "選手管理", "スカウティング", "野球", 
+          "観戦記録", "日記", "評価", "候補選手", "BaaS"
+        ]}
+        structuredData={homeStructuredData}
+      />
       <Navigation />
       
       <div className="p-4 space-y-6">

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link, useNavigate } from "react-router-dom";
 import { getPlayers, deletePlayer, type Player } from "@/lib/playerStorage";
+import { SEO } from "@/components/SEO";
 
 
 const evaluationColors = {
@@ -53,8 +54,36 @@ export default function Players() {
     setSelectedEvaluation("all");
   };
 
+  const playersStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "ドラフト候補選手一覧",
+    "description": "プロ野球ドラフト候補選手の詳細データベース",
+    "numberOfItems": filteredPlayers.length,
+    "itemListElement": filteredPlayers.slice(0, 10).map((player, index) => ({
+      "@type": "Person",
+      "position": index + 1,
+      "name": player.name,
+      "description": `${player.team} - ${player.position}`,
+      "additionalProperty": {
+        "@type": "PropertyValue",
+        "name": "評価",
+        "value": player.evaluation
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <SEO 
+        title="選手一覧"
+        description={`ドラフト候補選手${filteredPlayers.length}名の詳細データベース。高校生、大学生、社会人野球の有望選手情報を完全網羅。`}
+        keywords={[
+          "ドラフト候補選手", "野球選手データベース", "高校野球", "大学野球", 
+          "社会人野球", "選手評価", "スカウティング", "プロ野球"
+        ]}
+        structuredData={playersStructuredData}
+      />
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
         <div className="flex items-center justify-between p-4">
