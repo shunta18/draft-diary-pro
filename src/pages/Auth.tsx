@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
+import logoIcon from "@/assets/logo.png";
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
@@ -81,8 +82,11 @@ export default function Auth() {
 
       <div className="flex items-center justify-center p-4 mt-8">
         <Card className="w-full max-w-md gradient-card border-0 shadow-soft">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-primary">BaaS プロ野球ドラフト管理ツール</CardTitle>
+           <CardHeader className="text-center">
+            <div className="flex items-center justify-center space-x-2 mb-2">
+              <img src={logoIcon} alt="ロゴ" className="h-8 w-8" />
+              <CardTitle className="text-2xl text-primary">BaaS 野球スカウトノート</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="signin" className="w-full">
