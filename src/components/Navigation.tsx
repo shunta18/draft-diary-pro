@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import logoIcon from "@/assets/logo.png";
 
 interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
@@ -27,9 +28,12 @@ export const Navigation = () => {
   return (
     <div className="bg-card border-b shadow-soft">
       <div className="flex items-center justify-between p-4">
-        <h1 className="text-xl font-bold text-primary">
-          BaaS プロ野球ドラフト管理ツール
-        </h1>
+        <div className="flex items-center space-x-2">
+          <img src={logoIcon} alt="ロゴ" className="h-8 w-8" />
+          <h1 className="text-xl font-bold text-primary">
+            BaaS 野球スカウトノート
+          </h1>
+        </div>
         
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>

@@ -1,6 +1,6 @@
 {
-  "name": "BaaS プロ野球ドラフト管理ツール",
-  "short_name": "BaaS野球ツール",
+  "name": "BaaS 野球スカウトノート",
+  "short_name": "野球スカウトノート",
   "description": "野球ファンのためのドラフト候補選手管理・評価・観戦記録アプリ",
   "start_url": "/",
   "display": "standalone",
