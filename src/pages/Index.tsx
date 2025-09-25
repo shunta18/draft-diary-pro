@@ -4,15 +4,22 @@ import { StatCard } from "@/components/StatCard";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { getPlayers } from "@/lib/playerStorage";
 import { getDiaryEntries } from "@/lib/diaryStorage";
 import { useState, useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const { user } = useAuth();
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [totalWatching, setTotalWatching] = useState(0);
   const [completedDrafts, setCompletedDrafts] = useState(0);
+
+  // 認証されていない場合はAuthページにリダイレクト
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   useEffect(() => {
     // 既存の選手データをクリアして新しいデフォルトデータに更新
