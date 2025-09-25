@@ -306,6 +306,13 @@ export default function Players() {
                       <span>{selectedPlayer.careerPath}</span>
                     </div>
                   )}
+
+                  {selectedPlayer.usage && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-muted-foreground">起用法:</span>
+                      <span>{selectedPlayer.usage}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 

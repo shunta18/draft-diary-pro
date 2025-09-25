@@ -9,6 +9,7 @@ export interface Player {
   battingThrowing?: string;
   hometown?: string;
   careerPath?: string;
+  usage?: string;
   memo?: string;
   videoLinks: string[];
 }

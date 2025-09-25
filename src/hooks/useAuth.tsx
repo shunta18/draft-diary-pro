@@ -4,6 +4,8 @@ interface User {
   id: string;
   email: string;
   name?: string;
+  createdAt: string;
+  lastLoginAt: string;
 }
 
 interface AuthContextType {
@@ -39,11 +41,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signIn = async (email: string, password: string) => {
     // Mock authentication for demo purposes
     if (email && password) {
-      const user: User = {
-        id: Date.now().toString(),
-        email,
-        name: email.split('@')[0]
-      };
+      // Check if user exists in localStorage to preserve registration date
+      const existingUser = localStorage.getItem(STORAGE_KEY);
+      let user: User;
+      
+      if (existingUser) {
+        // Existing user - update last login
+        const parsedUser = JSON.parse(existingUser);
+        user = {
+          ...parsedUser,
+          lastLoginAt: new Date().toISOString()
+        };
+      } else {
+        // New user
+        user = {
+          id: Date.now().toString(),
+          email,
+          name: email.split('@')[0],
+          createdAt: new Date().toISOString(),
+          lastLoginAt: new Date().toISOString()
+        };
+      }
+      
       setUser(user);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
     } else {
@@ -57,7 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const user: User = {
         id: Date.now().toString(),
         email,
-        name: name || email.split('@')[0]
+        name: name || email.split('@')[0],
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString()
       };
       setUser(user);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
