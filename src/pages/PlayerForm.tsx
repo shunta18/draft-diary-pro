@@ -36,6 +36,7 @@ export default function PlayerForm() {
     battingThrowing: "",
     hometown: "",
     careerPath: "",
+    usage: "",
     evaluation: "",
     memo: "",
   });
@@ -55,6 +56,7 @@ export default function PlayerForm() {
           battingThrowing: player.battingThrowing || "",
           hometown: player.hometown || "",
           careerPath: player.careerPath || "",
+          usage: player.usage || "",
           evaluation: player.evaluation,
           memo: player.memo || "",
         });
@@ -96,6 +98,7 @@ export default function PlayerForm() {
       battingThrowing: formData.battingThrowing,
       hometown: formData.hometown,
       careerPath: formData.careerPath,
+      usage: formData.usage,
       evaluation: formData.evaluation,
       memo: formData.memo,
       videoLinks: videoLinks.filter(link => link.trim() !== ""),
@@ -280,6 +283,17 @@ export default function PlayerForm() {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="usage">起用法</Label>
+                <Input
+                  id="usage"
+                  value={formData.usage}
+                  onChange={(e) => setFormData(prev => ({ ...prev, usage: e.target.value }))}
+                  placeholder="先発、中継ぎ、抑え、代打、代走など"
+                  className="shadow-soft"
+                />
               </div>
             </CardContent>
           </Card>
