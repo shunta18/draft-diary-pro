@@ -14,12 +14,13 @@ export const SEO = ({
   title, 
   description, 
   keywords = [], 
-  image = `${window.location.origin}/og-thumbnail.jpg`,
+  image = "https://draft-diary-pro.vercel.app/og-thumbnail.jpg",
   url = window.location.href,
   type = "website",
   structuredData
 }: SEOProps) => {
   const fullTitle = `${title} | BaaS 野球スカウトノート`;
+  const timestamp = Date.now();
   
   return (
     <Helmet>
@@ -36,7 +37,7 @@ export const SEO = ({
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content={type} />
-      <meta property="og:image" content={image} />
+      <meta property="og:image" content={`${image}?v=${timestamp}`} />
       <meta property="og:image:width" content="1200" />
       <meta property="og:image:height" content="630" />
       <meta property="og:url" content={url} />
@@ -45,7 +46,7 @@ export const SEO = ({
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@lovable_dev" />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:image" content={`https://draft-diary-pro.vercel.app/og-thumbnail-twitter.jpg?v=${timestamp}`} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       
