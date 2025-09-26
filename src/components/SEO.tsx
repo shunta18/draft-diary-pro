@@ -14,7 +14,7 @@ export const SEO = ({
   title, 
   description, 
   keywords = [], 
-  image = "https://lovable.dev/opengraph-image-p98pqg.png",
+  image = "/og-thumbnail.jpg",
   url = window.location.href,
   type = "website",
   structuredData
