@@ -1,10 +1,11 @@
-import { Users, Trophy, Calendar, Settings } from "lucide-react";
+import { Users, Trophy, Calendar, Settings, UserPlus } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Link, Navigate } from "react-router-dom";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Link } from "react-router-dom";
 import { getPlayers } from "@/lib/playerStorage";
 import { getDiaryEntries } from "@/lib/diaryStorage";
 import { useState, useEffect } from "react";
@@ -15,11 +16,6 @@ const Index = () => {
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [totalWatching, setTotalWatching] = useState(0);
   const [completedDrafts, setCompletedDrafts] = useState(0);
-
-  // 認証されていない場合はAuthページにリダイレクト
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
 
   useEffect(() => {
     // 既存の選手データをクリアして新しいデフォルトデータに更新
@@ -140,6 +136,20 @@ const Index = () => {
             選手情報の管理から観戦記録まで、野球ファンのすべてを一つのアプリで
           </p>
         </div>
+
+        {/* Guest User Notice */}
+        {!user && (
+          <Alert className="bg-accent/5 border-accent/20">
+            <UserPlus className="h-4 w-4 text-accent" />
+            <AlertDescription className="text-sm">
+              <span className="font-medium text-accent">お試し利用中：</span>
+              <Link to="/auth" className="text-accent hover:underline ml-1">
+                アカウント登録
+              </Link>
+              すると、選手情報や観戦記録を永続的に保存できます。
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Stats Cards - 小さくして3列配置 */}
         <div className="grid grid-cols-3 gap-3">
