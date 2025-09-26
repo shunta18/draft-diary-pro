@@ -14,7 +14,7 @@ export const SEO = ({
   title, 
   description, 
   keywords = [], 
-  image = `${window.location.origin}/og-thumbnail.jpg`,
+  image = `${window.location.origin}/og-thumbnail.jpg?v=${Date.now()}`,
   url = window.location.href,
   type = "website",
   structuredData
