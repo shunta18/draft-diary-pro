@@ -45,7 +45,7 @@ export const SEO = ({
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@lovable_dev" />
-      <meta name="twitter:image" content={image} />
+      <meta name="twitter:image" content={`${window.location.origin}/og-thumbnail-twitter.jpg?v=${Date.now()}`} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       
