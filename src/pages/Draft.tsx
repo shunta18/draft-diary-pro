@@ -7,6 +7,10 @@ import { Link } from "react-router-dom";
 import { getPlayers } from "@/lib/playerStorage";
 import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 import { SEO } from "@/components/SEO";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { getDraftData as getSupabaseDraftData, saveDraftData as saveSupabaseDraftData } from "@/lib/supabase-storage";
 
 // 球団データ
 const teams = [
@@ -44,17 +48,21 @@ interface DraftData {
 }
 
 // Storage functions
-const getDraftData = (): DraftData => {
+const getDraftData = async (): Promise<DraftData> => {
   try {
-    const stored = localStorage.getItem('draftData');
-    return stored ? JSON.parse(stored) : {};
+    const data = await getSupabaseDraftData();
+    return data || {};
   } catch {
     return {};
   }
 };
 
-const saveDraftData = (data: DraftData) => {
-  localStorage.setItem('draftData', JSON.stringify(data));
+const saveDraftData = async (data: DraftData): Promise<boolean> => {
+  try {
+    return await saveSupabaseDraftData(data);
+  } catch {
+    return false;
+  }
 };
 
 const getFavorites = (): string[] => {
@@ -71,14 +79,43 @@ const saveFavorites = (favorites: string[]) => {
 };
 
 export default function Draft() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedTeam, setSelectedTeam] = useState<string>("");
   const [favorites, setFavorites] = useState<string[]>(getFavorites());
   const [currentPlan, setCurrentPlan] = useState<string>("プランA");
-  const [draftData, setDraftData] = useState<DraftData>(getDraftData());
+  const [draftData, setDraftData] = useState<DraftData>({});
   const [editingPlan, setEditingPlan] = useState<string>("");
   const [draftRounds, setDraftRounds] = useState<number[]>([1, 2, 3, 4, 5]);
   const [devRounds, setDevRounds] = useState<number[]>([1, 2, 3]);
+  const [isLoading, setIsLoading] = useState(true);
   const [players, setPlayers] = useState(getPlayers());
+
+  // Load draft data from Supabase
+  useEffect(() => {
+    const loadDraftData = async () => {
+      if (!user) return;
+      
+      try {
+        const data = await getDraftData();
+        setDraftData(data);
+      } catch (error) {
+        console.error('Failed to load draft data:', error);
+        toast({
+          title: "エラー",
+          description: "ドラフト構想データの読み込みに失敗しました",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (!loading) {
+      loadDraftData();
+    }
+  }, [user, loading, toast]);
 
   // Get current team data
   const currentTeamData = selectedTeam ? draftData[selectedTeam] : null;
@@ -89,7 +126,7 @@ export default function Draft() {
   const positionRequirements = currentTeamData?.positionRequirements?.[currentPlan] || {};
 
   // Update team data
-  const updateTeamData = (teamName: string, updates: Partial<DraftData[string]>) => {
+  const updateTeamData = async (teamName: string, updates: Partial<DraftData[string]>) => {
     const newData = {
       ...draftData,
       [teamName]: {
@@ -103,7 +140,17 @@ export default function Draft() {
       }
     };
     setDraftData(newData);
-    saveDraftData(newData);
+    
+    try {
+      await saveDraftData(newData);
+    } catch (error) {
+      console.error('Failed to save draft data:', error);
+      toast({
+        title: "エラー",
+        description: "ドラフト構想データの保存に失敗しました",
+        variant: "destructive",
+      });
+    }
   };
 
   // Toggle favorite
@@ -551,6 +598,103 @@ export default function Draft() {
       "sport": "Baseball"
     }))
   };
+
+  if (loading || isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">読み込み中...</p>
+      </div>
+    );
+  }
+
+  if (!user) {
+    navigate('/auth');
+    return null;
+  }
+
+  if (!selectedTeam) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <SEO 
+          title="ドラフト構想"
+          description="プロ野球12球団のドラフト指名予想を作成。球団別の戦略的ドラフト構想をシミュレーション。育成ドラフトにも対応。"
+          keywords={[
+            "ドラフト構想", "ドラフト予想", "プロ野球12球団", "指名予想", 
+            "育成ドラフト", "球団戦略", "ドラフト会議"
+          ]}
+          structuredData={draftStructuredData}
+        />
+        {/* Header */}
+        <div className="bg-card border-b shadow-soft">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center space-x-4">
+              <Link to="/">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <h1 className="text-xl font-bold text-primary">ドラフト構想</h1>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-4 space-y-6">
+          <Card className="gradient-card border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="text-primary">球団を選択してください</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                <SelectTrigger className="w-full shadow-soft">
+                  <SelectValue placeholder="ドラフト構想球団を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teams.map((team) => (
+                    <SelectItem key={team.name} value={team.name}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          {/* Favorite Teams */}
+          <Card className="gradient-card border-0 shadow-soft">
+            <CardHeader>
+              <CardTitle className="text-primary flex items-center gap-2">
+                <Star className="h-5 w-5 text-yellow-500" />
+                お気に入り球団
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {favorites.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {favorites.map((teamName) => (
+                    <Button
+                      key={teamName}
+                      variant="outline"
+                      className="text-sm h-auto px-3 py-2"
+                      onClick={() => setSelectedTeam(teamName)}
+                    >
+                      {teamName}
+                    </Button>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted-foreground text-sm">
+                    球団を選択して右上の★マークから<br />
+                    お気に入りすると表示されます
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
