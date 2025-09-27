@@ -15,14 +15,53 @@ const Index = () => {
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [totalWatching, setTotalWatching] = useState(0);
   const [completedDrafts, setCompletedDrafts] = useState(0);
+  const [dataKey, setDataKey] = useState(0); // データの再読み込みトリガー
+
+  // ページ表示時にデータを再読み込みする
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setDataKey(prev => prev + 1); // データ再読み込みをトリガー
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // ページがフォーカスを得た時も再読み込み
+    const handleFocus = () => {
+      setDataKey(prev => prev + 1);
+    };
+    
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('Loading data on Index page');
+      console.log('User:', user);
+      
       if (!user) {
-        // ゲストユーザーの場合はサンプルデータを表示
+        // ゲストユーザーの場合はローカルストレージからドラフトデータを読み込み
         setTotalPlayers(1); // サンプル選手1名
         setTotalWatching(0);
-        setCompletedDrafts(0);
+        
+        try {
+          const stored = localStorage.getItem('draftData');
+          console.log('Raw localStorage data:', stored);
+          const localDraftData = stored ? JSON.parse(stored) : {};
+          console.log('Parsed localStorage data:', localDraftData);
+          const draftsCount = Object.keys(localDraftData).length;
+          console.log('Completed drafts count:', draftsCount);
+          setCompletedDrafts(draftsCount);
+        } catch (error) {
+          console.error('Error loading localStorage data:', error);
+          setCompletedDrafts(0);
+        }
         return;
       }
 
@@ -39,6 +78,7 @@ const Index = () => {
         setTotalWatching(thisYearEntries.length);
 
         const draftData = await getDraftData();
+        console.log('Supabase draft data:', draftData);
         setCompletedDrafts(Object.keys(draftData).length);
       } catch (error) {
         console.error('Failed to load data:', error);
@@ -49,7 +89,7 @@ const Index = () => {
     };
 
     loadData();
-  }, [user]);
+  }, [user, dataKey]); // dataKeyを依存配列に追加
 
   // 現在の年度を計算（10月20日以降は次年度）
   const getCurrentDraftYear = () => {
