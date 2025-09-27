@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link, useNavigate } from "react-router-dom";
-import { getPlayers, deletePlayer, type Player } from "@/lib/playerStorage";
+import { getPlayers, deletePlayer, type Player } from "@/lib/supabase-storage";
 import { SEO } from "@/components/SEO";
+import { useAuth } from "@/hooks/useAuth";
 
 
 const evaluationColors = {
@@ -23,6 +24,7 @@ const evaluationColors = {
 
 export default function Players() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -30,17 +32,37 @@ export default function Players() {
   const [selectedEvaluation, setSelectedEvaluation] = useState("all");
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setPlayers(getPlayers());
-  }, []);
+    const loadPlayers = async () => {
+      setLoading(true);
+      try {
+        if (user) {
+          const data = await getPlayers();
+          setPlayers(data);
+        } else {
+          // ゲストユーザーの場合はローカルデータを表示
+          const localPlayers = JSON.parse(localStorage.getItem('baseball_scout_players') || '[]');
+          setPlayers(localPlayers);
+        }
+      } catch (error) {
+        console.error('Failed to load players:', error);
+        setPlayers([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPlayers();
+  }, [user]);
 
   const filteredPlayers = players.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.team.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesYear = selectedYear === "all" || player.draftYear === selectedYear;
+    const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
     const matchesCategory = selectedCategory === "all" || player.category === selectedCategory;
-    const matchesPosition = selectedPosition === "all" || player.position.some(pos => pos === selectedPosition);
+    const matchesPosition = selectedPosition === "all" || player.position === selectedPosition;
     const matchesEvaluation = selectedEvaluation === "all" || player.evaluation === selectedEvaluation;
     
     return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
@@ -211,13 +233,13 @@ export default function Players() {
                     )}
                   </div>
                   
-                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                    <span>{player.team}</span>
-                    <span>•</span>
-                    <span>{player.position.join("・")}</span>
-                    <span>•</span>
-                    <span>{player.draftYear}年</span>
-                  </div>
+                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                      <span>{player.team}</span>
+                      <span>•</span>
+                      <span>{player.position}</span>
+                      <span>•</span>
+                      <span>{player.year || 2025}年</span>
+                    </div>
                 </div>
               </CardContent>
             </Card>
@@ -270,75 +292,32 @@ export default function Players() {
                   <div className="flex items-center space-x-2">
                     <Calendar className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">ドラフト年度:</span>
-                    <span>{selectedPlayer.draftYear}年</span>
+                    <span>{selectedPlayer.year || 2025}年</span>
                   </div>
                   
                   <div className="flex items-center space-x-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">ポジション:</span>
-                    <span>{selectedPlayer.position.join("・")}</span>
+                    <span>{selectedPlayer.position}</span>
                   </div>
 
-                  {selectedPlayer.battingThrowing && (
+                  {selectedPlayer.batting_hand && selectedPlayer.throwing_hand && (
                     <div className="flex items-center space-x-2">
                       <Target className="h-4 w-4 text-muted-foreground" />
                       <span className="text-muted-foreground">投打:</span>
-                      <span>{selectedPlayer.battingThrowing}</span>
+                      <span>{selectedPlayer.throwing_hand}投{selectedPlayer.batting_hand}打</span>
                     </div>
                   )}
 
-                  {selectedPlayer.hometown && (
+                  {selectedPlayer.height && selectedPlayer.weight && (
                     <div className="flex items-center space-x-2">
-                      <LocationIcon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">出身地:</span>
-                      <span>{selectedPlayer.hometown}</span>
-                    </div>
-                  )}
-
-                  {selectedPlayer.careerPath && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-muted-foreground">進路先:</span>
-                      <span>{selectedPlayer.careerPath}</span>
-                    </div>
-                  )}
-
-                  {selectedPlayer.usage && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-muted-foreground">起用法:</span>
-                      <span>{selectedPlayer.usage}</span>
+                      <span className="text-muted-foreground">身長・体重:</span>
+                      <span>{selectedPlayer.height}cm / {selectedPlayer.weight}kg</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              {/* Memo */}
-              {selectedPlayer.memo && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm text-muted-foreground">メモ</h4>
-                  <p className="text-sm bg-muted p-3 rounded-md">{selectedPlayer.memo}</p>
-                </div>
-              )}
-
-              {/* Video Links */}
-              {selectedPlayer.videoLinks && selectedPlayer.videoLinks.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-medium text-sm text-muted-foreground">動画リンク</h4>
-                  <div className="space-y-2">
-                    {selectedPlayer.videoLinks.map((link, index) => (
-                      <a 
-                        key={index}
-                        href={link} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm text-primary hover:underline block truncate"
-                      >
-                        {link}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
               {/* Action Buttons */}
               <div className="flex space-x-2 pt-4">
                 <Button 
@@ -367,9 +346,10 @@ export default function Players() {
                     <AlertDialogFooter>
                       <AlertDialogCancel>キャンセル</AlertDialogCancel>
                       <AlertDialogAction
-                        onClick={() => {
-                          if (selectedPlayer && deletePlayer(selectedPlayer.id)) {
-                            setPlayers(getPlayers());
+                        onClick={async () => {
+                          if (selectedPlayer && await deletePlayer(selectedPlayer.id!)) {
+                            const updatedPlayers = await getPlayers();
+                            setPlayers(updatedPlayers);
                           }
                           setSelectedPlayer(null);
                         }}
