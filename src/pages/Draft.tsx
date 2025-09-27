@@ -92,33 +92,33 @@ export default function Draft() {
   const [isLoading, setIsLoading] = useState(true);
   const [players, setPlayers] = useState(getPlayers());
 
-  // Load draft data from Supabase
+  // Load draft data from Supabase or localStorage
   useEffect(() => {
     if (loading) return; // Wait for auth state to be determined
     
     const loadDraftData = async () => {
-      if (!user) {
-        setIsLoading(false);
-        return;
-      }
-      
       try {
-        const data = await getDraftData();
-        setDraftData(data);
+        if (user) {
+          // Logged in: load from Supabase
+          const data = await getDraftData();
+          setDraftData(data);
+        } else {
+          // Not logged in: load from localStorage
+          const stored = localStorage.getItem('draftData');
+          setDraftData(stored ? JSON.parse(stored) : {});
+        }
       } catch (error) {
         console.error('Failed to load draft data:', error);
-        toast({
-          title: "エラー",
-          description: "ドラフト構想データの読み込みに失敗しました",
-          variant: "destructive",
-        });
+        // Fallback to localStorage if Supabase fails
+        const stored = localStorage.getItem('draftData');
+        setDraftData(stored ? JSON.parse(stored) : {});
       } finally {
         setIsLoading(false);
       }
     };
 
     loadDraftData();
-  }, [user, loading, toast]);
+  }, [user, loading]);
 
   // Get current team data
   const currentTeamData = selectedTeam ? draftData[selectedTeam] : null;
@@ -144,15 +144,21 @@ export default function Draft() {
     };
     setDraftData(newData);
     
-    try {
-      await saveDraftData(newData);
-    } catch (error) {
-      console.error('Failed to save draft data:', error);
-      toast({
-        title: "エラー",
-        description: "ドラフト構想データの保存に失敗しました",
-        variant: "destructive",
-      });
+    if (user) {
+      // Logged in: save to Supabase
+      try {
+        await saveDraftData(newData);
+      } catch (error) {
+        console.error('Failed to save draft data:', error);
+        toast({
+          title: "エラー",
+          description: "ドラフト構想データの保存に失敗しました",
+          variant: "destructive",
+        });
+      }
+    } else {
+      // Not logged in: save to localStorage
+      localStorage.setItem('draftData', JSON.stringify(newData));
     }
   };
 
@@ -317,6 +323,33 @@ export default function Draft() {
         </div>
 
         <div className="p-4 space-y-4">
+          {/* Login Notice for Guest Users */}
+          {!user && (
+            <Card className="bg-yellow-50 border-yellow-200 shadow-soft">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-yellow-100 p-2 rounded-full">
+                    <Star className="h-5 w-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-yellow-800">ゲストモードでご利用中</h3>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      構想の作成・編集は可能ですが、データは一時的に保存されます。<br />
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-yellow-800 underline"
+                        onClick={() => navigate('/auth')}
+                      >
+                        ログイン
+                      </Button>
+                      すると、すべてのデータが永続的に保存されます。
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          
           {/* Pattern Management */}
           <Card className="gradient-card border-0 shadow-soft">
             <CardHeader>
@@ -610,11 +643,6 @@ export default function Draft() {
     );
   }
 
-  if (!user) {
-    navigate('/auth');
-    return null;
-  }
-
   if (!selectedTeam) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -636,8 +664,19 @@ export default function Draft() {
                   <ArrowLeft className="h-5 w-5" />
                 </Button>
               </Link>
-              <h1 className="text-xl font-bold text-primary">ドラフト構想</h1>
-            </div>
+            <h1 className="text-xl font-bold text-primary">ドラフト構想</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            {!user && (
+              <Button 
+                variant="default" 
+                size="sm"
+                onClick={() => navigate('/auth')}
+              >
+                ログイン
+              </Button>
+            )}
+          </div>
           </div>
         </div>
 
