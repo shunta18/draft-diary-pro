@@ -13,6 +13,16 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { getDraftData as getSupabaseDraftData, saveDraftData as saveSupabaseDraftData } from "@/lib/supabase-storage";
 
+// Helper function to normalize position data
+const normalizePosition = (position: string | string[]): string[] => {
+  return Array.isArray(position) ? position : [position];
+};
+
+// Helper function to get position as string for display
+const getPositionDisplay = (position: string | string[]): string => {
+  return Array.isArray(position) ? position.join(', ') : position;
+};
+
 // 球団データ
 const teams = [
   { name: "読売ジャイアンツ", colors: { primary: "16 85% 50%", secondary: "0 0% 0%" } },
@@ -515,11 +525,11 @@ export default function Draft() {
                                {selectedPlayer ? selectedPlayer.name : "選手を選択"}
                              </Button>
                            </PlayerSelectionDialog>
-                           {selectedPlayer && (
-                             <div className="text-xs text-muted-foreground">
-                               {selectedPlayer.position.join(', ')} - {selectedPlayer.team}
-                             </div>
-                           )}
+                            {selectedPlayer && (
+                              <div className="text-xs text-muted-foreground">
+                                {getPositionDisplay(selectedPlayer.position)} - {selectedPlayer.team}
+                              </div>
+                            )}
                          </div>
                        );
                     })}
@@ -608,11 +618,11 @@ export default function Draft() {
                                {selectedPlayer ? selectedPlayer.name : "選手を選択"}
                              </Button>
                            </PlayerSelectionDialog>
-                           {selectedPlayer && (
-                             <div className="text-xs text-muted-foreground">
-                               {selectedPlayer.position.join(', ')} - {selectedPlayer.team}
-                             </div>
-                           )}
+                            {selectedPlayer && (
+                              <div className="text-xs text-muted-foreground">
+                                {getPositionDisplay(selectedPlayer.position)} - {selectedPlayer.team}
+                              </div>
+                            )}
                          </div>
                        );
                     })}
