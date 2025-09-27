@@ -354,6 +354,38 @@ export default function Draft() {
         </div>
 
         <div className="p-4 space-y-4">
+          {/* Save Button */}
+          <div className="flex justify-end">
+            <Button 
+              onClick={async () => {
+                if (user && selectedTeam) {
+                  try {
+                    await saveDraftData(draftData);
+                    toast({
+                      title: "保存完了",
+                      description: `${selectedTeam}のドラフト構想を保存しました`,
+                    });
+                  } catch (error) {
+                    toast({
+                      title: "エラー",
+                      description: "保存に失敗しました",
+                      variant: "destructive",
+                    });
+                  }
+                } else if (!user && selectedTeam) {
+                  localStorage.setItem('draftData', JSON.stringify(draftData));
+                  toast({
+                    title: "保存完了",
+                    description: `${selectedTeam}のドラフト構想を一時保存しました`,
+                  });
+                }
+              }}
+              className="flex items-center space-x-2"
+            >
+              <span>構想を保存</span>
+            </Button>
+          </div>
+          
           {/* Login Notice for Guest Users */}
           {!user && (
             <Card className="bg-yellow-50 border-yellow-200 shadow-soft">

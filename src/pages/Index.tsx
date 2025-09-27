@@ -19,10 +19,17 @@ const Index = () => {
   useEffect(() => {
     const loadData = async () => {
       if (!user) {
-        // ゲストユーザーの場合はサンプルデータを表示
+        // ゲストユーザーの場合はローカルストレージからドラフトデータを読み込み
         setTotalPlayers(1); // サンプル選手1名
         setTotalWatching(0);
-        setCompletedDrafts(0);
+        
+        try {
+          const stored = localStorage.getItem('draftData');
+          const localDraftData = stored ? JSON.parse(stored) : {};
+          setCompletedDrafts(Object.keys(localDraftData).length);
+        } catch {
+          setCompletedDrafts(0);
+        }
         return;
       }
 
