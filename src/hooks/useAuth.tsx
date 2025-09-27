@@ -77,6 +77,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       
+      // Clear local storage data
+      localStorage.removeItem('baseball_scout_players');
+      localStorage.removeItem('baseball_scout_diary');
+      localStorage.removeItem('draftData');
+      
       // Clear local state regardless of server response
       setSession(null);
       setUser(null);
@@ -87,6 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error;
       }
     } catch (error: any) {
+      // Clear local storage data even if there's an error
+      localStorage.removeItem('baseball_scout_players');
+      localStorage.removeItem('baseball_scout_diary');
+      localStorage.removeItem('draftData');
+      
       // Clear local state even if there's an error
       setSession(null);
       setUser(null);

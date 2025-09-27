@@ -19,19 +19,10 @@ const Index = () => {
   useEffect(() => {
     const loadData = async () => {
       if (!user) {
-        // ゲストユーザーの場合はローカルデータを表示
-        const localPlayers = JSON.parse(localStorage.getItem('baseball_scout_players') || '[]');
-        const localDiary = JSON.parse(localStorage.getItem('baseball_scout_diary') || '[]');
-        const localDraft = JSON.parse(localStorage.getItem('draftData') || '{}');
-        
-        setTotalPlayers(localPlayers.length);
-        
-        const currentYear = new Date().getFullYear();
-        const thisYearEntries = localDiary.filter((entry: any) => 
-          entry.date.includes(currentYear.toString())
-        );
-        setTotalWatching(thisYearEntries.length);
-        setCompletedDrafts(Object.keys(localDraft).length);
+        // ゲストユーザーの場合はサンプルデータを表示
+        setTotalPlayers(1); // サンプル選手1名
+        setTotalWatching(0);
+        setCompletedDrafts(0);
         return;
       }
 

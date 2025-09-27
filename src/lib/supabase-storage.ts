@@ -13,6 +13,10 @@ export interface Player {
   throwing_hand?: string;
   height?: number;
   weight?: number;
+  memo?: string;
+  hometown?: string;
+  career_path?: string;
+  usage?: string;
 }
 
 export interface DiaryEntry {
