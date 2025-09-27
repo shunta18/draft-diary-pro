@@ -310,23 +310,12 @@ export default function DiaryForm() {
                       </Button>
                     </div>
                   ))}
-                  <div className="flex items-center space-x-2">
-                    <Input
-                      type="file"
-                      accept="video/*"
-                      multiple
-                      onChange={handleVideoUpload}
-                      className="flex-1"
-                    />
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => (document.querySelector('input[type="file"]') as HTMLInputElement)?.click()}
-                    >
-                      <Upload className="h-4 w-4 mr-2" />
-                      選択
-                    </Button>
-                  </div>
+                  <Input
+                    type="file"
+                    accept="video/*"
+                    multiple
+                    onChange={handleVideoUpload}
+                  />
                 </div>
               </div>
 
