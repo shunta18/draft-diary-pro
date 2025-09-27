@@ -710,18 +710,24 @@ export default function Draft() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {favorites.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {favorites.map((teamName) => (
-                    <Button
-                      key={teamName}
-                      variant="outline"
-                      className="text-sm h-auto px-3 py-2"
-                      onClick={() => setSelectedTeam(teamName)}
-                    >
-                      {teamName}
-                    </Button>
-                  ))}
+               {favorites.length > 0 ? (
+                <div className="flex flex-col gap-2">
+                  {favorites.map((teamName) => {
+                    const team = teams.find(t => t.name === teamName);
+                    return team ? (
+                      <Button
+                        key={teamName}
+                        variant="outline"
+                        className="text-sm h-auto px-4 py-3 text-white border-0 hover:opacity-90 transition-opacity"
+                        style={{
+                          background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
+                        }}
+                        onClick={() => setSelectedTeam(teamName)}
+                      >
+                        {teamName}
+                      </Button>
+                    ) : null;
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-4">
