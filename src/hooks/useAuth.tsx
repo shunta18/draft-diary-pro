@@ -104,10 +104,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const deleteAccount = async () => {
     if (!user) throw new Error('ユーザーがログインしていません');
     
-    // Call the delete_user function to remove all user data
-    const { error } = await supabase.rpc('delete_user');
-    if (error) {
-      throw new Error('アカウント削除に失敗しました');
+    try {
+      // Call the delete_user function to remove all user data
+      const { error } = await supabase.rpc('delete_user');
+      if (error) {
+        console.error('Account deletion error:', error);
+        throw new Error(`アカウント削除に失敗しました: ${error.message}`);
+      }
+      
+      // Clear local state after successful deletion
+      setSession(null);
+      setUser(null);
+    } catch (error: any) {
+      console.error('Delete account failed:', error);
+      throw error;
     }
   };
 
