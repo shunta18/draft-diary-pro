@@ -42,9 +42,16 @@ export default function Players() {
           const data = await getPlayers();
           setPlayers(data);
         } else {
-          // ゲストユーザーの場合はローカルデータを表示
-          const localPlayers = JSON.parse(localStorage.getItem('baseball_scout_players') || '[]');
-          setPlayers(localPlayers);
+          // ゲストユーザーの場合はサンプルデータを表示
+          const samplePlayer = {
+            id: 1,
+            name: "田中 太郎",
+            team: "○○大学",
+            position: "投手",
+            category: "大学",
+            evaluation: "2-3位"
+          };
+          setPlayers([samplePlayer]);
         }
       } catch (error) {
         console.error('Failed to load players:', error);
