@@ -35,40 +35,61 @@ export default function Players() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadPlayers = async () => {
-      setLoading(true);
-      try {
-        if (user) {
-          const data = await getPlayers();
-          setPlayers(data);
-        } else {
-          // ゲストユーザーの場合はサンプルデータを表示
-          const samplePlayer = {
-            id: 1,
-            name: "松井裕樹",
-            team: "桐光学園",
-            position: "投手",
-            category: "高校",
-            evaluation: "1位競合確実",
-            year: 2013,
-            batting_hand: "左",
-            throwing_hand: "左",
-            hometown: "神奈川県",
-            career_path: "プロ志望",
-            usage: "抑え",
-            memo: "高校2年時に甲子園で1試合の奪三振記録を更新。消えるスライダーが武器のドクターK"
-          };
-          setPlayers([samplePlayer]);
-        }
-      } catch (error) {
-        console.error('Failed to load players:', error);
-        setPlayers([]);
-      } finally {
-        setLoading(false);
+    loadPlayers();
+  }, [user]);
+
+  const loadPlayers = async () => {
+    setLoading(true);
+    try {
+      if (user) {
+        const data = await getPlayers();
+        setPlayers(data);
+      } else {
+        // ゲストユーザーの場合はサンプルデータを表示
+        const samplePlayer = {
+          id: 1,
+          name: "松井裕樹",
+          team: "桐光学園",
+          position: "投手",
+          category: "高校",
+          evaluation: "1位競合確実",
+          year: 2013,
+          batting_hand: "左",
+          throwing_hand: "左",
+          hometown: "神奈川県",
+          career_path: "プロ志望",
+          usage: "抑え",
+          memo: "高校2年時に甲子園で1試合の奪三振記録を更新。消えるスライダーが武器のドクターK"
+        };
+        setPlayers([samplePlayer]);
+      }
+    } catch (error) {
+      console.error('Failed to load players:', error);
+      setPlayers([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ページ表示時にも最新データを取得するようにする
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        loadPlayers();
       }
     };
-
-    loadPlayers();
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', () => {
+      if (user) loadPlayers();
+    });
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', () => {
+        if (user) loadPlayers();
+      });
+    };
   }, [user]);
 
   const filteredPlayers = players.filter((player) => {
@@ -133,7 +154,10 @@ export default function Players() {
           </div>
           
           <Link to="/players/new">
-            <Button className="gradient-accent border-0 shadow-soft hover:shadow-glow transition-smooth">
+            <Button 
+              variant="secondary"
+              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+            >
               <Plus className="h-4 w-4 mr-2" />
               新規追加
             </Button>

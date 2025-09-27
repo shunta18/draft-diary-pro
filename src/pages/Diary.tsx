@@ -97,7 +97,10 @@ export default function Diary() {
           </div>
           
           <Link to="/diary/form">
-            <Button className="gradient-accent border-0 shadow-soft hover:shadow-glow transition-smooth">
+            <Button 
+              variant="secondary"
+              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+            >
               <Plus className="h-4 w-4 mr-2" />
               新規記録
             </Button>
