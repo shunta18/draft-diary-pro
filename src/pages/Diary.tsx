@@ -7,7 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import DiaryDetailDialog from "@/components/DiaryDetailDialog";
-import { DiaryEntry, getDiaryEntries } from "@/lib/diaryStorage";
+import { DiaryEntry, getDiaryEntries as getLocalDiaryEntries } from "@/lib/diaryStorage";
+import { getDiaryEntries, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
+import { useAuth } from "@/hooks/useAuth";
 import { SEO } from "@/components/SEO";
 
 const categoryColors = {
@@ -20,30 +22,80 @@ const categoryColors = {
 
 export default function Diary() {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | null>(null);
+  const [selectedEntry, setSelectedEntry] = useState<DiaryEntry | SupabaseDiaryEntry | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const [diaryEntries, setDiaryEntries] = useState<DiaryEntry[]>([]);
+  const [diaryEntries, setDiaryEntries] = useState<(DiaryEntry | SupabaseDiaryEntry)[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const entries = getDiaryEntries();
-    console.log('All diary entries in Diary page:', entries);
-    setDiaryEntries(entries);
-  }, []);
+    const loadDiaryEntries = async () => {
+      setIsLoading(true);
+      try {
+        if (user) {
+          // ログイン済みユーザーはSupabaseから取得
+          const entries = await getDiaryEntries();
+          setDiaryEntries(entries);
+        } else {
+          // 未ログインユーザーはローカルストレージから取得
+          const entries = getLocalDiaryEntries();
+          setDiaryEntries(entries);
+        }
+      } catch (error) {
+        console.error('Failed to load diary entries:', error);
+        // エラー時はローカルストレージから取得
+        const entries = getLocalDiaryEntries();
+        setDiaryEntries(entries);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  const handleEdit = (entry: DiaryEntry) => {
+    if (!loading) {
+      loadDiaryEntries();
+    }
+  }, [user, loading]);
+
+  const handleEdit = (entry: DiaryEntry | SupabaseDiaryEntry) => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
     setIsDetailOpen(false);
     navigate("/diary/form", { state: { editingEntryId: entry.id } });
   };
 
-  const handleDelete = () => {
-    setDiaryEntries(getDiaryEntries());
+  const handleNewRecord = () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    navigate("/diary/form");
+  };
+
+  const handleDelete = async () => {
+    setIsLoading(true);
+    try {
+      if (user) {
+        const entries = await getDiaryEntries();
+        setDiaryEntries(entries);
+      } else {
+        const entries = getLocalDiaryEntries();
+        setDiaryEntries(entries);
+      }
+    } catch (error) {
+      console.error('Failed to reload diary entries:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const filteredEntries = diaryEntries.filter((entry) => {
-    const matchesSearch = entry.matchCard.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchCard = 'match_card' in entry ? entry.match_card : entry.matchCard;
+    const matchesSearch = matchCard.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          entry.venue.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesMonth = selectedMonth === "all" || entry.date.startsWith(selectedMonth);
     const matchesCategory = selectedCategory === "all" || entry.category === selectedCategory;
@@ -60,17 +112,21 @@ export default function Diary() {
     "@type": "Blog",
     "name": "野球観戦日記",
     "description": "高校野球、大学野球、社会人野球の観戦記録",
-    "blogPost": filteredEntries.slice(0, 5).map(entry => ({
-      "@type": "BlogPosting",
-      "headline": entry.matchCard,
-      "dateCreated": entry.date,
-      "description": entry.overallImpression,
-      "location": entry.venue,
-      "author": {
-        "@type": "Person",
-        "name": "野球ファン"
-      }
-    }))
+    "blogPost": filteredEntries.slice(0, 5).map(entry => {
+      const matchCard = 'match_card' in entry ? entry.match_card : entry.matchCard;
+      const overallImpression = 'overall_impression' in entry ? entry.overall_impression : (entry as any).overallImpression;
+      return {
+        "@type": "BlogPosting",
+        "headline": matchCard,
+        "dateCreated": entry.date,
+        "description": overallImpression,
+        "location": entry.venue,
+        "author": {
+          "@type": "Person",
+          "name": "野球ファン"
+        }
+      };
+    })
   };
 
   return (
@@ -96,16 +152,28 @@ export default function Diary() {
             <h1 className="text-xl font-bold text-primary">観戦日記</h1>
           </div>
           
-          <Link to="/diary/form">
-            <Button 
-              variant="secondary"
-              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              新規記録
-            </Button>
-          </Link>
+          <Button 
+            onClick={handleNewRecord}
+            variant="secondary"
+            className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            新規記録
+          </Button>
         </div>
+        
+        {!user && !loading && (
+          <div className="px-4 pb-2">
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardContent className="p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>注意:</strong> ログインしていないため、記録はこのブラウザにのみ保存されます。
+                  アカウント間での同期をご希望の場合は、<Link to="/auth" className="underline font-medium">ログイン</Link>してください。
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       <div className="p-4 space-y-4">
@@ -163,7 +231,13 @@ export default function Diary() {
 
         {/* Diary Entries */}
         <div className="space-y-3">
-          {filteredEntries.map((entry) => (
+          {isLoading ? (
+            <Card className="gradient-card border-0 shadow-soft">
+              <CardContent className="p-8 text-center">
+                <p className="text-muted-foreground">読み込み中...</p>
+              </CardContent>
+            </Card>
+          ) : filteredEntries.map((entry) => (
             <Card 
               key={entry.id} 
               className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer"
@@ -175,7 +249,9 @@ export default function Diary() {
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-base text-primary truncate mb-2">{entry.matchCard}</h3>
+                    <h3 className="font-bold text-base text-primary truncate mb-2">
+                      {'match_card' in entry ? entry.match_card : entry.matchCard}
+                    </h3>
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <div className="flex items-center space-x-1">
                         <Calendar className="h-3 w-3" />
@@ -204,21 +280,19 @@ export default function Diary() {
                 </div>
                 
                 <p className="text-sm text-muted-foreground line-clamp-2">
-                  {entry.playerComments}
+                  {'player_comments' in entry ? entry.player_comments : (entry as any).playerComments}
                 </p>
               </CardContent>
             </Card>
           ))}
           
-          {filteredEntries.length === 0 && (
+          {!isLoading && filteredEntries.length === 0 && (
             <Card className="gradient-card border-0 shadow-soft">
               <CardContent className="p-8 text-center">
                 <p className="text-muted-foreground">該当する観戦記録が見つかりません</p>
-                <Link to="/diary/form">
-                  <Button variant="outline" className="mt-4">
+                <Button onClick={handleNewRecord} variant="outline" className="mt-4">
                     最初の観戦記録を作成
                   </Button>
-                </Link>
               </CardContent>
             </Card>
           )}
@@ -226,7 +300,7 @@ export default function Diary() {
       </div>
 
       <DiaryDetailDialog 
-        entry={selectedEntry}
+        entry={selectedEntry as any}
         isOpen={isDetailOpen}
         onClose={() => setIsDetailOpen(false)}
         onEdit={handleEdit}
