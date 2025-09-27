@@ -8,12 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { DiaryEntry, addDiaryEntry, updateDiaryEntry, getDiaryEntryById } from "@/lib/diaryStorage";
+import { DiaryEntry, addDiaryEntry as addLocalDiaryEntry, updateDiaryEntry as updateLocalDiaryEntry, getDiaryEntryById as getLocalDiaryEntryById } from "@/lib/diaryStorage";
+import { addDiaryEntry, updateDiaryEntry, getDiaryEntryById, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function DiaryForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
   
   const editingEntryId = location.state?.editingEntryId;
   const isEditing = !!editingEntryId;
@@ -32,22 +35,46 @@ export default function DiaryForm() {
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
 
   useEffect(() => {
-    if (isEditing) {
-      const entry = getDiaryEntryById(editingEntryId);
-      if (entry) {
-        setFormData({
-          date: entry.date.replace(/\//g, '-'),
-          venue: entry.venue,
-          category: entry.category,
-          matchCard: entry.matchCard,
-          score: entry.score,
-          playerComments: entry.playerComments,
-          overallImpression: entry.overallImpression,
-          videos: entry.videos || [],
-        });
+    const loadEntry = async () => {
+      if (isEditing && !loading) {
+        try {
+          let entry: DiaryEntry | SupabaseDiaryEntry | null = null;
+          
+          if (user) {
+            entry = await getDiaryEntryById(editingEntryId);
+          } else {
+            entry = getLocalDiaryEntryById(editingEntryId);
+          }
+          
+          if (entry) {
+            const matchCard = 'match_card' in entry ? entry.match_card : entry.matchCard;
+            const playerComments = 'player_comments' in entry ? entry.player_comments : (entry as any).playerComments;
+            const overallImpression = 'overall_impression' in entry ? entry.overall_impression : (entry as any).overallImpression;
+            
+            setFormData({
+              date: entry.date.replace(/\//g, '-'),
+              venue: entry.venue,
+              category: entry.category,
+              matchCard: matchCard,
+              score: entry.score,
+              playerComments: playerComments || "",
+              overallImpression: overallImpression || "",
+              videos: entry.videos || [],
+            });
+          }
+        } catch (error) {
+          console.error('Failed to load diary entry:', error);
+          toast({
+            title: "エラーが発生しました",
+            description: "記録の読み込みに失敗しました。",
+            variant: "destructive",
+          });
+        }
       }
-    }
-  }, [isEditing, editingEntryId]);
+    };
+
+    loadEntry();
+  }, [isEditing, editingEntryId, user, loading, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,28 +90,55 @@ export default function DiaryForm() {
     }
     
     const entryData = {
-      ...formData,
       date: formData.date.replace(/-/g, '/'),
+      venue: formData.venue,
+      category: formData.category,
+      match_card: formData.matchCard,
+      matchCard: formData.matchCard,
+      score: formData.score,
+      player_comments: formData.playerComments,
+      playerComments: formData.playerComments,
+      overall_impression: formData.overallImpression,
+      overallImpression: formData.overallImpression,
       videos: videoUrls,
     };
     
     try {
-      if (isEditing) {
-        updateDiaryEntry(editingEntryId, entryData);
-        toast({
-          title: "観戦記録を更新しました",
-          description: "記録が正常に更新されました。",
-        });
+      if (user) {
+        // ログイン済みユーザーはSupabaseに保存
+        if (isEditing) {
+          await updateDiaryEntry(editingEntryId, entryData);
+          toast({
+            title: "観戦記録を更新しました",
+            description: "記録が正常に更新されました。",
+          });
+        } else {
+          await addDiaryEntry(entryData);
+          toast({
+            title: "観戦記録を保存しました",
+            description: "記録が正常に保存されました。",
+          });
+        }
       } else {
-        addDiaryEntry(entryData);
-        toast({
-          title: "観戦記録を保存しました",
-          description: "記録が正常に保存されました。",
-        });
+        // 未ログインユーザーはローカルストレージに保存
+        if (isEditing) {
+          updateLocalDiaryEntry(editingEntryId, entryData);
+          toast({
+            title: "観戦記録を更新しました",
+            description: "記録がローカルに更新されました。",
+          });
+        } else {
+          addLocalDiaryEntry(entryData);
+          toast({
+            title: "観戦記録を保存しました",
+            description: "記録がローカルに保存されました。",
+          });
+        }
       }
       
       navigate("/diary");
     } catch (error) {
+      console.error('Save error:', error);
       toast({
         title: "エラーが発生しました",
         description: "記録の保存に失敗しました。",
@@ -124,6 +178,19 @@ export default function DiaryForm() {
             </h1>
           </div>
         </div>
+        
+        {!user && !loading && (
+          <div className="px-4 pb-2">
+            <Card className="border-yellow-200 bg-yellow-50">
+              <CardContent className="p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>注意:</strong> ログインしていないため、記録はこのブラウザにのみ保存されます。
+                  アカウント間での同期をご希望の場合は、<Link to="/auth" className="underline font-medium">ログイン</Link>してください。
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       <div className="p-4">
