@@ -42,6 +42,9 @@ const Index = () => {
 
   useEffect(() => {
     const loadData = async () => {
+      console.log('Loading data on Index page');
+      console.log('User:', user);
+      
       if (!user) {
         // ゲストユーザーの場合はローカルストレージからドラフトデータを読み込み
         setTotalPlayers(1); // サンプル選手1名
@@ -49,9 +52,14 @@ const Index = () => {
         
         try {
           const stored = localStorage.getItem('draftData');
+          console.log('Raw localStorage data:', stored);
           const localDraftData = stored ? JSON.parse(stored) : {};
-          setCompletedDrafts(Object.keys(localDraftData).length);
-        } catch {
+          console.log('Parsed localStorage data:', localDraftData);
+          const draftsCount = Object.keys(localDraftData).length;
+          console.log('Completed drafts count:', draftsCount);
+          setCompletedDrafts(draftsCount);
+        } catch (error) {
+          console.error('Error loading localStorage data:', error);
           setCompletedDrafts(0);
         }
         return;
@@ -70,6 +78,7 @@ const Index = () => {
         setTotalWatching(thisYearEntries.length);
 
         const draftData = await getDraftData();
+        console.log('Supabase draft data:', draftData);
         setCompletedDrafts(Object.keys(draftData).length);
       } catch (error) {
         console.error('Failed to load data:', error);

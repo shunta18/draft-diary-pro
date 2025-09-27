@@ -358,14 +358,26 @@ export default function Draft() {
           <div className="flex justify-end">
             <Button 
               onClick={async () => {
+                console.log('Save button clicked');
+                console.log('User:', user);
+                console.log('Selected team:', selectedTeam);
+                console.log('Draft data to save:', draftData);
+                
                 if (user && selectedTeam) {
                   try {
-                    await saveDraftData(draftData);
-                    toast({
-                      title: "保存完了",
-                      description: `${selectedTeam}のドラフト構想を保存しました`,
-                    });
+                    const success = await saveDraftData(draftData);
+                    console.log('Supabase save result:', success);
+                    
+                    if (success) {
+                      toast({
+                        title: "保存完了",
+                        description: `${selectedTeam}のドラフト構想を保存しました`,
+                      });
+                    } else {
+                      throw new Error('Save failed');
+                    }
                   } catch (error) {
+                    console.error('Save error:', error);
                     toast({
                       title: "エラー",
                       description: "保存に失敗しました",
@@ -374,6 +386,7 @@ export default function Draft() {
                   }
                 } else if (!user && selectedTeam) {
                   localStorage.setItem('draftData', JSON.stringify(draftData));
+                  console.log('Saved to localStorage:', draftData);
                   toast({
                     title: "保存完了",
                     description: `${selectedTeam}のドラフト構想を一時保存しました`,
