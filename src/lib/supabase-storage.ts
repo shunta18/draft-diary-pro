@@ -17,6 +17,7 @@ export interface Player {
   hometown?: string;
   career_path?: string;
   usage?: string;
+  videos?: string[];
 }
 
 export interface DiaryEntry {

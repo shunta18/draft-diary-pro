@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, X } from "lucide-react";
+import { ArrowLeft, Save, X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,29 +31,7 @@ export default function PlayerForm() {
   const { user, loading } = useAuth();
   const isEditing = !!id;
 
-  // 未認証の場合は認証ページにリダイレクト
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
-
-  // 認証状態を確認中はローディング表示
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">読み込み中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 未認証の場合は何も表示しない（リダイレクト処理中）
-  if (!user) {
-    return null;
-  }
-  
+  // All useState hooks must be declared before any early returns
   const [formData, setFormData] = useState({
     name: "",
     draftYear: "2025",
@@ -66,9 +44,18 @@ export default function PlayerForm() {
     usage: "",
     evaluation: "",
     memo: "",
+    videos: [] as string[],
   });
 
-  const [videoLinks, setVideoLinks] = useState([""]);
+  const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
+
+  // 未認証の場合は認証ページにリダイレクト
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -87,13 +74,29 @@ export default function PlayerForm() {
             usage: player.usage || "",
             evaluation: player.evaluation || "",
             memo: player.memo || "",
+            videos: player.videos || [],
           });
-          setVideoLinks([""]);
         }
       };
       loadPlayer();
     }
   }, [isEditing, id]);
+
+  // 認証状態を確認中はローディング表示
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 未認証の場合は何も表示しない（リダイレクト処理中）
+  if (!user) {
+    return null;
+  }
 
   const togglePosition = (position: string) => {
     setFormData(prev => ({
@@ -104,20 +107,39 @@ export default function PlayerForm() {
     }));
   };
 
-  const addVideoLink = () => {
-    setVideoLinks(prev => [...prev, ""]);
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVideoFiles(e.target.files);
   };
 
-  const removeVideoLink = (index: number) => {
-    setVideoLinks(prev => prev.filter((_, i) => i !== index));
+  const addVideoUrl = () => {
+    if (videoUrl.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        videos: [...prev.videos, videoUrl.trim()]
+      }));
+      setVideoUrl("");
+    }
   };
 
-  const updateVideoLink = (index: number, value: string) => {
-    setVideoLinks(prev => prev.map((link, i) => i === index ? value : link));
+  const removeVideo = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Handle video file uploads
+    const videoUrls: string[] = [...formData.videos];
+    if (videoFiles) {
+      for (let i = 0; i < videoFiles.length; i++) {
+        const file = videoFiles[i];
+        const videoUrl = URL.createObjectURL(file);
+        videoUrls.push(videoUrl);
+      }
+    }
     
     const playerData = {
       name: formData.name,
@@ -132,6 +154,7 @@ export default function PlayerForm() {
       usage: formData.usage,
       evaluation: formData.evaluation,
       memo: formData.memo,
+      videos: videoUrls,
     };
 
     try {
@@ -417,37 +440,59 @@ export default function PlayerForm() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>動画リンク</Label>
-                <div className="space-y-2 mt-2">
-                  {videoLinks.map((link, index) => (
-                    <div key={index} className="flex space-x-2">
-                      <Input
-                        value={link}
-                        onChange={(e) => updateVideoLink(index, e.target.value)}
-                        placeholder="YouTube、Twitter等のURLを入力"
-                        className="shadow-soft"
-                      />
-                      {videoLinks.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeVideoLink(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
+                <Label>動画（任意）</Label>
+                <div className="space-y-4 mt-2">
+                  {formData.videos.map((video, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <div className="flex-1 p-2 bg-muted/50 rounded">
+                        <video controls className="w-full max-h-32 rounded" src={video}>
+                          動画を再生できません
+                        </video>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeVideo(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addVideoLink}
-                    className="transition-smooth"
-                  >
-                    + 動画リンクを追加
-                  </Button>
+                  
+                  {/* URL入力 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="videoUrl">動画URL</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        id="videoUrl"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="https://example.com/video.mp4"
+                        className="shadow-soft"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addVideoUrl}
+                        disabled={!videoUrl.trim()}
+                      >
+                        追加
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* ファイルアップロード */}
+                  <div className="space-y-2">
+                    <Label>動画ファイル</Label>
+                    <Input
+                      type="file"
+                      accept="video/*"
+                      multiple
+                      onChange={handleVideoUpload}
+                      className="shadow-soft"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
