@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { addPlayer, updatePlayer, getPlayerById } from "@/lib/playerStorage";
+import { addPlayer, updatePlayer, getPlayerById } from "@/lib/supabase-storage";
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"];
 const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
@@ -45,23 +45,26 @@ export default function PlayerForm() {
 
   useEffect(() => {
     if (isEditing && id) {
-      const player = getPlayerById(parseInt(id));
-      if (player) {
-        setFormData({
-          name: player.name,
-          draftYear: player.draftYear,
-          category: player.category,
-          team: player.team,
-          positions: player.position,
-          battingThrowing: player.battingThrowing || "",
-          hometown: player.hometown || "",
-          careerPath: player.careerPath || "",
-          usage: player.usage || "",
-          evaluation: player.evaluation,
-          memo: player.memo || "",
-        });
-        setVideoLinks(player.videoLinks.length > 0 ? player.videoLinks : [""]);
-      }
+      const loadPlayer = async () => {
+        const player = await getPlayerById(parseInt(id));
+        if (player) {
+          setFormData({
+            name: player.name,
+            draftYear: player.year?.toString() || "2025",
+            category: player.category,
+            team: player.team,
+            positions: Array.isArray(player.position) ? player.position : [player.position],
+            battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
+            hometown: player.hometown || "",
+            careerPath: player.career_path || "",
+            usage: player.usage || "",
+            evaluation: player.evaluation || "",
+            memo: player.memo || "",
+          });
+          setVideoLinks([""]);
+        }
+      };
+      loadPlayer();
     }
   }, [isEditing, id]);
 
@@ -86,29 +89,29 @@ export default function PlayerForm() {
     setVideoLinks(prev => prev.map((link, i) => i === index ? value : link));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     const playerData = {
       name: formData.name,
-      draftYear: formData.draftYear,
+      year: parseInt(formData.draftYear),
       category: formData.category,
       team: formData.team,
-      position: formData.positions,
-      battingThrowing: formData.battingThrowing,
+      position: formData.positions.join(", "),
+      batting_hand: formData.battingThrowing.includes("右打") ? "右" : formData.battingThrowing.includes("左打") ? "左" : undefined,
+      throwing_hand: formData.battingThrowing.includes("右投") ? "右" : formData.battingThrowing.includes("左投") ? "左" : undefined,
       hometown: formData.hometown,
-      careerPath: formData.careerPath,
+      career_path: formData.careerPath,
       usage: formData.usage,
       evaluation: formData.evaluation,
       memo: formData.memo,
-      videoLinks: videoLinks.filter(link => link.trim() !== ""),
     };
 
     try {
       if (isEditing && id) {
-        updatePlayer(parseInt(id), playerData);
+        await updatePlayer(parseInt(id), playerData);
       } else {
-        addPlayer(playerData);
+        await addPlayer(playerData);
       }
       navigate("/players");
     } catch (error) {
