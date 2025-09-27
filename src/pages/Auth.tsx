@@ -17,7 +17,6 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
 
   // Redirect if already authenticated
   if (user) {
@@ -58,7 +57,7 @@ export default function Auth() {
     setLoading(true);
     
     try {
-      const { error } = await signUp(email, password, name);
+      const { error } = await signUp(email, password);
       if (error) {
         toast({
           title: "アカウント作成エラー",
@@ -145,16 +144,6 @@ export default function Auth() {
               
               <TabsContent value="signup" className="space-y-4">
                 <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">名前 (任意)</Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="お名前"
-                    />
-                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">メールアドレス</Label>
                     <Input
