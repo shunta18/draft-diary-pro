@@ -193,35 +193,30 @@ export default function Players() {
               onClick={() => setSelectedPlayer(player)}
             >
               <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="font-bold text-lg text-primary">{player.name}</h3>
-                      <Badge variant="secondary" className="text-xs">
-                        {player.category}
-                      </Badge>
-                      {player.id === 1 && (
-                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
-                          サンプル
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <span>{player.team}</span>
-                      <span>•</span>
-                      <span>{player.position.join("・")}</span>
-                      <span>•</span>
-                      <span>{player.draftYear}年</span>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-2 flex-wrap gap-2">
+                    <h3 className="font-bold text-lg text-primary">{player.name}</h3>
+                    <Badge variant="secondary" className="text-xs">
+                      {player.category}
+                    </Badge>
                     <Badge 
-                      className={`${evaluationColors[player.evaluation as keyof typeof evaluationColors]} font-medium`}
+                      className={`${evaluationColors[player.evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
                     >
                       {player.evaluation}
                     </Badge>
+                    {player.id === 1 && (
+                      <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
+                        サンプル
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                    <span>{player.team}</span>
+                    <span>•</span>
+                    <span>{player.position.join("・")}</span>
+                    <span>•</span>
+                    <span>{player.draftYear}年</span>
                   </div>
                 </div>
               </CardContent>
