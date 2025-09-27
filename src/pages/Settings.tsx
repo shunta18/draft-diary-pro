@@ -129,7 +129,7 @@ export default function Settings() {
               </Avatar>
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">
-                  {user?.name || user?.email?.split('@')[0] || 'ユーザー'}
+                  {user?.user_metadata?.name || user?.email?.split('@')[0] || 'ユーザー'}
                 </h3>
                 <p className="text-muted-foreground text-sm">{user?.email}</p>
                 <div className="flex items-center space-x-2 mt-2">
@@ -141,20 +141,6 @@ export default function Settings() {
               </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">登録日:</span>
-                <p className="font-medium">
-                  {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('ja-JP') : '-'}
-                </p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">最終ログイン:</span>
-                <p className="font-medium">
-                  {user?.lastLoginAt ? new Date(user.lastLoginAt).toLocaleDateString('ja-JP') : '-'}
-                </p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 

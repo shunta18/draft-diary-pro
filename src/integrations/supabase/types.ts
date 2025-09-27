@@ -14,7 +14,150 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      diary_entries: {
+        Row: {
+          category: string
+          created_at: string
+          date: string
+          id: number
+          match_card: string
+          overall_impression: string | null
+          player_comments: string | null
+          score: string
+          updated_at: string
+          user_id: string
+          venue: string
+          videos: string[] | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          date: string
+          id?: number
+          match_card: string
+          overall_impression?: string | null
+          player_comments?: string | null
+          score: string
+          updated_at?: string
+          user_id: string
+          venue: string
+          videos?: string[] | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          date?: string
+          id?: number
+          match_card?: string
+          overall_impression?: string | null
+          player_comments?: string | null
+          score?: string
+          updated_at?: string
+          user_id?: string
+          venue?: string
+          videos?: string[] | null
+        }
+        Relationships: []
+      }
+      draft_data: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      players: {
+        Row: {
+          batting_hand: string | null
+          category: string
+          created_at: string
+          height: number | null
+          id: number
+          name: string
+          position: string
+          team: string
+          throwing_hand: string | null
+          updated_at: string
+          user_id: string
+          weight: number | null
+          year: number | null
+        }
+        Insert: {
+          batting_hand?: string | null
+          category: string
+          created_at?: string
+          height?: number | null
+          id?: number
+          name: string
+          position: string
+          team: string
+          throwing_hand?: string | null
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+          year?: number | null
+        }
+        Update: {
+          batting_hand?: string | null
+          category?: string
+          created_at?: string
+          height?: number | null
+          id?: number
+          name?: string
+          position?: string
+          team?: string
+          throwing_hand?: string | null
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
