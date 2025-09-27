@@ -6,8 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
-import { getPlayers } from "@/lib/playerStorage";
-import { getDiaryEntries } from "@/lib/diaryStorage";
+import { getPlayers, getDiaryEntries, getDraftData } from "@/lib/supabase-storage";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -18,56 +17,48 @@ const Index = () => {
   const [completedDrafts, setCompletedDrafts] = useState(0);
 
   useEffect(() => {
-    // 既存の選手データをクリアして新しいデフォルトデータに更新
-    const hasBeenUpdated = localStorage.getItem('players_updated_to_matsui');
-    if (!hasBeenUpdated) {
-      localStorage.removeItem('baseball_scout_players');
-      localStorage.setItem('players_updated_to_matsui', 'true');
-    }
-
-    // 既存の観戦日記データをクリアして新しいデフォルトデータに更新  
-    const diaryUpdated = localStorage.getItem('diary_updated_to_matsui');
-    if (!diaryUpdated) {
-      localStorage.removeItem('baseball_scout_diary');
-      localStorage.setItem('diary_updated_to_matsui', 'true');
-    }
-
-    // 選手数を取得
-    const players = getPlayers();
-    setTotalPlayers(players.length);
-
-    // 観戦記録数を取得（今年の分のみ）
-    const storedEntries = localStorage.getItem('baseball_scout_diary');
-    console.log('Stored entries in Index:', storedEntries);
-    
-    if (storedEntries) {
-      // ローカルストレージにデータがある場合のみカウント
-      const diaryEntries = getDiaryEntries();
-      console.log('All diary entries in Index:', diaryEntries);
-      const currentYear = new Date().getFullYear();
-      const thisYearEntries = diaryEntries.filter(entry => 
-        entry.date.includes(currentYear.toString())
-      );
-      console.log('This year entries in Index:', thisYearEntries);
-      setTotalWatching(thisYearEntries.length);
-    } else {
-      // まだ観戦記録を作成していない場合は0
-      console.log('No stored entries, setting to 0');
-      setTotalWatching(0);
-    }
-
-    // ドラフト構想数を取得
-    try {
-      const draftData = localStorage.getItem('draftData');
-      if (draftData) {
-        const parsedData = JSON.parse(draftData);
-        const teamCount = Object.keys(parsedData).length;
-        setCompletedDrafts(teamCount);
+    const loadData = async () => {
+      if (!user) {
+        // ゲストユーザーの場合はローカルデータを表示
+        const localPlayers = JSON.parse(localStorage.getItem('baseball_scout_players') || '[]');
+        const localDiary = JSON.parse(localStorage.getItem('baseball_scout_diary') || '[]');
+        const localDraft = JSON.parse(localStorage.getItem('draftData') || '{}');
+        
+        setTotalPlayers(localPlayers.length);
+        
+        const currentYear = new Date().getFullYear();
+        const thisYearEntries = localDiary.filter((entry: any) => 
+          entry.date.includes(currentYear.toString())
+        );
+        setTotalWatching(thisYearEntries.length);
+        setCompletedDrafts(Object.keys(localDraft).length);
+        return;
       }
-    } catch {
-      setCompletedDrafts(0);
-    }
-  }, []);
+
+      // 認証済みユーザーの場合はSupabaseデータを使用
+      try {
+        const players = await getPlayers();
+        setTotalPlayers(players.length);
+
+        const diaryEntries = await getDiaryEntries();
+        const currentYear = new Date().getFullYear();
+        const thisYearEntries = diaryEntries.filter(entry => 
+          entry.date.includes(currentYear.toString())
+        );
+        setTotalWatching(thisYearEntries.length);
+
+        const draftData = await getDraftData();
+        setCompletedDrafts(Object.keys(draftData).length);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+        setTotalPlayers(0);
+        setTotalWatching(0);
+        setCompletedDrafts(0);
+      }
+    };
+
+    loadData();
+  }, [user]);
 
   // 現在の年度を計算（10月20日以降は次年度）
   const getCurrentDraftYear = () => {
