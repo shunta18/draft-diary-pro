@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { addPlayer, updatePlayer, getPlayerById } from "@/lib/supabase-storage";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"];
 const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
@@ -27,7 +28,14 @@ export default function PlayerForm() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const isEditing = !!id;
+
+  // 未認証の場合は認証ページにリダイレクト
+  if (!user) {
+    navigate("/auth");
+    return null;
+  }
   
   const [formData, setFormData] = useState({
     name: "",
@@ -110,6 +118,16 @@ export default function PlayerForm() {
     };
 
     try {
+      // フォームバリデーション
+      if (!formData.name || !formData.category || !formData.team || formData.positions.length === 0 || !formData.evaluation) {
+        toast({
+          title: "入力エラー",
+          description: "必須項目を全て入力してください。",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (isEditing && id) {
         const result = await updatePlayer(parseInt(id), playerData);
         if (result) {
@@ -135,11 +153,22 @@ export default function PlayerForm() {
       }
     } catch (error) {
       console.error("Failed to save player:", error);
-      toast({
-        title: "エラーが発生しました",
-        description: "選手の保存に失敗しました。もう一度お試しください。",
-        variant: "destructive",
-      });
+      const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
+      
+      if (errorMessage.includes("not authenticated")) {
+        toast({
+          title: "認証エラー",
+          description: "ログインが必要です。ログインページに移動します。",
+          variant: "destructive",
+        });
+        navigate("/auth");
+      } else {
+        toast({
+          title: "エラーが発生しました",
+          description: `選手の保存に失敗しました: ${errorMessage}`,
+          variant: "destructive",
+        });
+      }
     }
   };
 
