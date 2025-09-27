@@ -94,12 +94,9 @@ export default function DiaryForm() {
       venue: formData.venue,
       category: formData.category,
       match_card: formData.matchCard,
-      matchCard: formData.matchCard,
       score: formData.score,
       player_comments: formData.playerComments,
-      playerComments: formData.playerComments,
       overall_impression: formData.overallImpression,
-      overallImpression: formData.overallImpression,
       videos: videoUrls,
     };
     
@@ -121,14 +118,21 @@ export default function DiaryForm() {
         }
       } else {
         // 未ログインユーザーはローカルストレージに保存
+        const localEntryData = {
+          ...entryData,
+          matchCard: formData.matchCard,
+          playerComments: formData.playerComments,
+          overallImpression: formData.overallImpression,
+        };
+        
         if (isEditing) {
-          updateLocalDiaryEntry(editingEntryId, entryData);
+          updateLocalDiaryEntry(editingEntryId, localEntryData);
           toast({
             title: "観戦記録を更新しました",
             description: "記録がローカルに更新されました。",
           });
         } else {
-          addLocalDiaryEntry(entryData);
+          addLocalDiaryEntry(localEntryData);
           toast({
             title: "観戦記録を保存しました",
             description: "記録がローカルに保存されました。",
