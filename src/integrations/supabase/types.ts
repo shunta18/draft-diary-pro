@@ -86,45 +86,60 @@ export type Database = {
       players: {
         Row: {
           batting_hand: string | null
+          career_path: string | null
           category: string
           created_at: string
+          evaluation: string | null
           height: number | null
+          hometown: string | null
           id: number
+          memo: string | null
           name: string
           position: string
           team: string
           throwing_hand: string | null
           updated_at: string
+          usage: string | null
           user_id: string
           weight: number | null
           year: number | null
         }
         Insert: {
           batting_hand?: string | null
+          career_path?: string | null
           category: string
           created_at?: string
+          evaluation?: string | null
           height?: number | null
+          hometown?: string | null
           id?: number
+          memo?: string | null
           name: string
           position: string
           team: string
           throwing_hand?: string | null
           updated_at?: string
+          usage?: string | null
           user_id: string
           weight?: number | null
           year?: number | null
         }
         Update: {
           batting_hand?: string | null
+          career_path?: string | null
           category?: string
           created_at?: string
+          evaluation?: string | null
           height?: number | null
+          hometown?: string | null
           id?: number
+          memo?: string | null
           name?: string
           position?: string
           team?: string
           throwing_hand?: string | null
           updated_at?: string
+          usage?: string | null
           user_id?: string
           weight?: number | null
           year?: number | null
