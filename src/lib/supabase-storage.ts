@@ -210,12 +210,18 @@ export const getDiaryEntryById = async (id: number): Promise<DiaryEntry | null> 
 // Draft Data Functions
 export const getDraftData = async (): Promise<any> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('draft_data')
       .select('*')
-      .single();
+      .eq('user_id', user.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
     
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows returned"
+    if (error) throw error;
     return data?.data || {};
   } catch (error) {
     console.error('Failed to load draft data:', error);
@@ -228,14 +234,36 @@ export const saveDraftData = async (draftData: any): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    const { error } = await supabase
+    // 既存のデータがあるかチェック
+    const { data: existingData } = await supabase
       .from('draft_data')
-      .upsert({
-        user_id: user.id,
-        data: draftData
-      });
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (existingData) {
+      // 更新
+      const { error } = await supabase
+        .from('draft_data')
+        .update({
+          data: draftData,
+          updated_at: new Date().toISOString()
+        })
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+    } else {
+      // 新規作成
+      const { error } = await supabase
+        .from('draft_data')
+        .insert({
+          user_id: user.id,
+          data: draftData
+        });
+      
+      if (error) throw error;
+    }
     
-    if (error) throw error;
     return true;
   } catch (error) {
     console.error('Failed to save draft data:', error);
