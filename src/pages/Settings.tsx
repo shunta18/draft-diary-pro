@@ -38,11 +38,20 @@ export default function Settings() {
         description: "アカウントからログアウトしました。",
       });
     } catch (error: any) {
-      toast({
-        title: "エラー",
-        description: "ログアウトに失敗しました。",
-        variant: "destructive",
-      });
+      // Only show error for actual failures, not session issues
+      if (error?.message && !error.message.includes('session')) {
+        toast({
+          title: "エラー",
+          description: "ログアウトに失敗しました。",
+          variant: "destructive",
+        });
+      } else {
+        // Even if there was a session error, logout was successful
+        toast({
+          title: "ログアウト完了",
+          description: "アカウントからログアウトしました。",
+        });
+      }
     }
   };
 
