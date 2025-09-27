@@ -348,7 +348,7 @@ export default function Draft() {
               className="text-white hover:bg-white/20"
               onClick={() => toggleFavorite(team.name)}
             >
-              <Star className={`h-5 w-5 ${favorites.includes(team.name) ? 'fill-yellow-300 text-yellow-300' : 'fill-transparent text-white border border-white/50'}`} />
+              <Star className={`h-5 w-5 ${favorites.includes(team.name) ? 'fill-yellow-300 text-yellow-300' : 'fill-transparent text-white/70'}`} strokeWidth={0} />
             </Button>
           </div>
         </div>
