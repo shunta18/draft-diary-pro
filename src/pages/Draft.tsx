@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { getPlayers } from "@/lib/playerStorage";
+import { getPlayers as getLocalPlayers } from "@/lib/playerStorage";
+import { getPlayers as getSupabasePlayers } from "@/lib/supabase-storage";
 import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -90,7 +91,7 @@ export default function Draft() {
   const [draftRounds, setDraftRounds] = useState<number[]>([1, 2, 3, 4, 5]);
   const [devRounds, setDevRounds] = useState<number[]>([1, 2, 3]);
   const [isLoading, setIsLoading] = useState(true);
-  const [players, setPlayers] = useState(getPlayers());
+  const [players, setPlayers] = useState<any[]>([]);
 
   // Load draft data from Supabase or localStorage
   useEffect(() => {
@@ -273,9 +274,29 @@ export default function Draft() {
     });
   };
 
+  // Load players data
   useEffect(() => {
-    setPlayers(getPlayers());
-  }, []);
+    const loadPlayers = async () => {
+      try {
+        if (user) {
+          // Logged in: load from Supabase
+          const supabasePlayers = await getSupabasePlayers();
+          setPlayers(supabasePlayers);
+        } else {
+          // Not logged in: load from localStorage (sample data)
+          setPlayers(getLocalPlayers());
+        }
+      } catch (error) {
+        console.error('Failed to load players:', error);
+        // Fallback to localStorage if Supabase fails
+        setPlayers(getLocalPlayers());
+      }
+    };
+
+    if (!loading) {
+      loadPlayers();
+    }
+  }, [user, loading]);
 
   const favoriteTeams = teams.filter(team => favorites.includes(team.name));
   const otherTeams = teams.filter(team => !favorites.includes(team.name));
