@@ -45,10 +45,10 @@ export default function Players() {
           // ゲストユーザーの場合はサンプルデータを表示
           const samplePlayer = {
             id: 1,
-            name: "田中 太郎",
-            team: "○○大学",
+            name: "松井裕樹",
+            team: "桐蔭学園高校",
             position: "投手",
-            category: "大学",
+            category: "高校",
             evaluation: "2-3位"
           };
           setPlayers([samplePlayer]);
