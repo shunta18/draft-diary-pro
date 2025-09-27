@@ -30,13 +30,13 @@ const teams = [
   { name: "中日ドラゴンズ", colors: { primary: "220 100% 50%", secondary: "220 100% 50%" } },
   { name: "横浜DeNAベイスターズ", colors: { primary: "220 100% 50%", secondary: "0 0% 100%" } },
   { name: "広島東洋カープ", colors: { primary: "0 85% 55%", secondary: "0 85% 55%" } },
-  { name: "東京ヤクルトスワローズ", colors: { primary: "220 100% 50%", secondary: "120 100% 25%" } },
+  { name: "東京ヤクルトスワローズ", colors: { primary: "220 100% 50%", secondary: "0 0% 10%" } },
   { name: "福岡ソフトバンクホークス", colors: { primary: "45 100% 50%", secondary: "0 0% 0%" } },
-  { name: "千葉ロッテマリーンズ", colors: { primary: "220 100% 25%", secondary: "220 100% 50%" } },
-  { name: "埼玉西武ライオンズ", colors: { primary: "220 100% 50%", secondary: "0 85% 55%" } },
-  { name: "東北楽天ゴールデンイーグルス", colors: { primary: "0 85% 55%", secondary: "45 100% 50%" } },
+  { name: "千葉ロッテマリーンズ", colors: { primary: "0 0% 0%", secondary: "0 0% 100%" } },
+  { name: "埼玉西武ライオンズ", colors: { primary: "220 100% 50%", secondary: "220 100% 30%" } },
+  { name: "東北楽天ゴールデンイーグルス", colors: { primary: "350 70% 35%", secondary: "0 0% 100%" } },
   { name: "北海道日本ハムファイターズ", colors: { primary: "220 100% 50%", secondary: "0 0% 100%" } },
-  { name: "オリックスバファローズ", colors: { primary: "220 100% 50%", secondary: "45 100% 50%" } },
+  { name: "オリックスバファローズ", colors: { primary: "220 100% 20%", secondary: "45 100% 50%" } },
 ];
 
 // Draft data structure
@@ -348,7 +348,7 @@ export default function Draft() {
               className="text-white hover:bg-white/20"
               onClick={() => toggleFavorite(team.name)}
             >
-              <Star className={`h-5 w-5 ${favorites.includes(team.name) ? 'fill-current' : ''}`} />
+              <Star className={`h-5 w-5 ${favorites.includes(team.name) ? 'fill-yellow-300 text-yellow-300' : 'fill-transparent text-yellow-300'}`} strokeWidth={1.5} />
             </Button>
           </div>
         </div>
