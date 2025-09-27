@@ -129,7 +129,7 @@ export default function Settings() {
               </Avatar>
               <div className="flex-1">
                 <h3 className="font-semibold text-lg">
-                  {user?.name || user?.email?.split('@')[0] || 'ユーザー'}
+                  {user?.user_metadata?.name || user?.email?.split('@')[0] || 'ユーザー'}
                 </h3>
                 <p className="text-muted-foreground text-sm">{user?.email}</p>
                 <div className="flex items-center space-x-2 mt-2">

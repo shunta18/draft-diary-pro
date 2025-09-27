@@ -27,16 +27,25 @@ export default function Auth() {
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
-      await signIn(email, password);
-      toast({
-        title: "ログイン成功",
-        description: "正常にログインしました",
-      });
+      const { error } = await signIn(email, password);
+      if (error) {
+        toast({
+          title: "ログインエラー",
+          description: error.message || "ログインに失敗しました。",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "ログイン成功",
+          description: "アカウントにログインしました。",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "ログインエラー",
-        description: error.message,
+        description: error.message || "ログインに失敗しました。",
         variant: "destructive",
       });
     } finally {
@@ -47,16 +56,25 @@ export default function Auth() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    
     try {
-      await signUp(email, password, name);
-      toast({
-        title: "アカウント作成成功",
-        description: "アカウントが作成されました",
-      });
+      const { error } = await signUp(email, password, name);
+      if (error) {
+        toast({
+          title: "アカウント作成エラー",
+          description: error.message || "アカウント作成に失敗しました。",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "アカウント作成成功",
+          description: "確認メールを送信しました。メールをご確認ください。",
+        });
+      }
     } catch (error: any) {
       toast({
         title: "アカウント作成エラー",
-        description: error.message,
+        description: error.message || "アカウント作成に失敗しました。",
         variant: "destructive",
       });
     } finally {
