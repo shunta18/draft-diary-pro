@@ -388,6 +388,21 @@ export default function Players() {
                 </div>
               )}
 
+              {/* 動画 */}
+              {selectedPlayer.videos && selectedPlayer.videos.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-primary">動画</h4>
+                  <div className="grid grid-cols-1 gap-2">
+                    {selectedPlayer.videos.map((video, index) => (
+                      <div key={index} className="bg-muted/50 rounded-lg p-2">
+                        <video controls className="w-full max-h-32 rounded" src={video}>
+                          動画を再生できません
+                        </video>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {/* Action Buttons */}
               <div className="flex space-x-2 pt-4">
                 <Button 

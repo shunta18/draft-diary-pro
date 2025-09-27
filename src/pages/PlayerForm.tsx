@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Save, X } from "lucide-react";
+import { ArrowLeft, Save, X, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -66,9 +66,10 @@ export default function PlayerForm() {
     usage: "",
     evaluation: "",
     memo: "",
+    videos: [] as string[],
   });
 
-  const [videoLinks, setVideoLinks] = useState([""]);
+  const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -87,8 +88,8 @@ export default function PlayerForm() {
             usage: player.usage || "",
             evaluation: player.evaluation || "",
             memo: player.memo || "",
+            videos: player.videos || [],
           });
-          setVideoLinks([""]);
         }
       };
       loadPlayer();
@@ -104,20 +105,29 @@ export default function PlayerForm() {
     }));
   };
 
-  const addVideoLink = () => {
-    setVideoLinks(prev => [...prev, ""]);
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setVideoFiles(e.target.files);
   };
 
-  const removeVideoLink = (index: number) => {
-    setVideoLinks(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const updateVideoLink = (index: number, value: string) => {
-    setVideoLinks(prev => prev.map((link, i) => i === index ? value : link));
+  const removeVideo = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      videos: prev.videos.filter((_, i) => i !== index)
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Handle video file uploads
+    const videoUrls: string[] = [...formData.videos];
+    if (videoFiles) {
+      for (let i = 0; i < videoFiles.length; i++) {
+        const file = videoFiles[i];
+        const videoUrl = URL.createObjectURL(file);
+        videoUrls.push(videoUrl);
+      }
+    }
     
     const playerData = {
       name: formData.name,
@@ -132,6 +142,7 @@ export default function PlayerForm() {
       usage: formData.usage,
       evaluation: formData.evaluation,
       memo: formData.memo,
+      videos: videoUrls,
     };
 
     try {
@@ -417,37 +428,31 @@ export default function PlayerForm() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label>動画リンク</Label>
+                <Label>動画（任意）</Label>
                 <div className="space-y-2 mt-2">
-                  {videoLinks.map((link, index) => (
-                    <div key={index} className="flex space-x-2">
-                      <Input
-                        value={link}
-                        onChange={(e) => updateVideoLink(index, e.target.value)}
-                        placeholder="YouTube、Twitter等のURLを入力"
-                        className="shadow-soft"
-                      />
-                      {videoLinks.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeVideoLink(index)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      )}
+                  {formData.videos.map((video, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <div className="flex-1 p-2 bg-muted/50 rounded">
+                        <video controls className="w-full max-h-32 rounded" src={video}>
+                          動画を再生できません
+                        </video>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        onClick={() => removeVideo(index)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
                     </div>
                   ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={addVideoLink}
-                    className="transition-smooth"
-                  >
-                    + 動画リンクを追加
-                  </Button>
+                  <Input
+                    type="file"
+                    accept="video/*"
+                    multiple
+                    onChange={handleVideoUpload}
+                  />
                 </div>
               </div>
             </CardContent>

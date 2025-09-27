@@ -101,6 +101,7 @@ export type Database = {
           updated_at: string
           usage: string | null
           user_id: string
+          videos: string[] | null
           weight: number | null
           year: number | null
         }
@@ -121,6 +122,7 @@ export type Database = {
           updated_at?: string
           usage?: string | null
           user_id: string
+          videos?: string[] | null
           weight?: number | null
           year?: number | null
         }
@@ -141,6 +143,7 @@ export type Database = {
           updated_at?: string
           usage?: string | null
           user_id?: string
+          videos?: string[] | null
           weight?: number | null
           year?: number | null
         }
