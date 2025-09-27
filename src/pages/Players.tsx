@@ -52,7 +52,11 @@ export default function Players() {
             evaluation: "1位競合確実",
             year: 2013,
             batting_hand: "左",
-            throwing_hand: "左"
+            throwing_hand: "左",
+            hometown: "神奈川県",
+            career_path: "プロ志望",
+            usage: "抑え",
+            memo: "高校2年時に甲子園で1試合の奪三振記録を更新。消えるスライダーが武器のドクターK"
           };
           setPlayers([samplePlayer]);
         }
@@ -325,8 +329,40 @@ export default function Players() {
                       <span>{selectedPlayer.height}cm / {selectedPlayer.weight}kg</span>
                     </div>
                   )}
+
+                  {selectedPlayer.hometown && (
+                    <div className="flex items-center space-x-2">
+                      <LocationIcon className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-muted-foreground">出身地:</span>
+                      <span>{selectedPlayer.hometown}</span>
+                    </div>
+                  )}
+
+                  {selectedPlayer.career_path && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-muted-foreground">進路先:</span>
+                      <span>{selectedPlayer.career_path}</span>
+                    </div>
+                  )}
+
+                  {selectedPlayer.usage && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-muted-foreground">起用法:</span>
+                      <span>{selectedPlayer.usage}</span>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* メモ欄 */}
+              {selectedPlayer.memo && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-primary">メモ</h4>
+                  <div className="bg-muted/50 rounded-lg p-3">
+                    <p className="text-sm leading-relaxed">{selectedPlayer.memo}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Action Buttons */}
               <div className="flex space-x-2 pt-4">
