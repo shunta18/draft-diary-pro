@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { addPlayer, updatePlayer, getPlayerById } from "@/lib/supabase-storage";
+import { useToast } from "@/hooks/use-toast";
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"];
 const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
@@ -25,6 +26,7 @@ const evaluations = [
 export default function PlayerForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const isEditing = !!id;
   
   const [formData, setFormData] = useState({
@@ -109,13 +111,35 @@ export default function PlayerForm() {
 
     try {
       if (isEditing && id) {
-        await updatePlayer(parseInt(id), playerData);
+        const result = await updatePlayer(parseInt(id), playerData);
+        if (result) {
+          toast({
+            title: "選手情報を更新しました",
+            description: `${formData.name}の情報が正常に更新されました。`,
+          });
+          navigate("/players");
+        } else {
+          throw new Error("Failed to update player");
+        }
       } else {
-        await addPlayer(playerData);
+        const result = await addPlayer(playerData);
+        if (result) {
+          toast({
+            title: "選手を追加しました",
+            description: `${formData.name}が正常に登録されました。`,
+          });
+          navigate("/players");
+        } else {
+          throw new Error("Failed to add player");
+        }
       }
-      navigate("/players");
     } catch (error) {
       console.error("Failed to save player:", error);
+      toast({
+        title: "エラーが発生しました",
+        description: "選手の保存に失敗しました。もう一度お試しください。",
+        variant: "destructive",
+      });
     }
   };
 
