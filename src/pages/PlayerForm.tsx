@@ -70,6 +70,7 @@ export default function PlayerForm() {
   });
 
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
+  const [videoUrl, setVideoUrl] = useState("");
 
   useEffect(() => {
     if (isEditing && id) {
@@ -107,6 +108,16 @@ export default function PlayerForm() {
 
   const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     setVideoFiles(e.target.files);
+  };
+
+  const addVideoUrl = () => {
+    if (videoUrl.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        videos: [...prev.videos, videoUrl.trim()]
+      }));
+      setVideoUrl("");
+    }
   };
 
   const removeVideo = (index: number) => {
@@ -429,7 +440,7 @@ export default function PlayerForm() {
             <CardContent className="space-y-4">
               <div>
                 <Label>動画（任意）</Label>
-                <div className="space-y-2 mt-2">
+                <div className="space-y-4 mt-2">
                   {formData.videos.map((video, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <div className="flex-1 p-2 bg-muted/50 rounded">
@@ -447,12 +458,40 @@ export default function PlayerForm() {
                       </Button>
                     </div>
                   ))}
-                  <Input
-                    type="file"
-                    accept="video/*"
-                    multiple
-                    onChange={handleVideoUpload}
-                  />
+                  
+                  {/* URL入力 */}
+                  <div className="space-y-2">
+                    <Label htmlFor="videoUrl">動画URL</Label>
+                    <div className="flex space-x-2">
+                      <Input
+                        id="videoUrl"
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        placeholder="https://example.com/video.mp4"
+                        className="shadow-soft"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={addVideoUrl}
+                        disabled={!videoUrl.trim()}
+                      >
+                        追加
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* ファイルアップロード */}
+                  <div className="space-y-2">
+                    <Label>動画ファイル</Label>
+                    <Input
+                      type="file"
+                      accept="video/*"
+                      multiple
+                      onChange={handleVideoUpload}
+                      className="shadow-soft"
+                    />
+                  </div>
                 </div>
               </div>
             </CardContent>
