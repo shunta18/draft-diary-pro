@@ -31,29 +31,7 @@ export default function PlayerForm() {
   const { user, loading } = useAuth();
   const isEditing = !!id;
 
-  // 未認証の場合は認証ページにリダイレクト
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
-
-  // 認証状態を確認中はローディング表示
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">読み込み中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // 未認証の場合は何も表示しない（リダイレクト処理中）
-  if (!user) {
-    return null;
-  }
-  
+  // All useState hooks must be declared before any early returns
   const [formData, setFormData] = useState({
     name: "",
     draftYear: "2025",
@@ -71,6 +49,13 @@ export default function PlayerForm() {
 
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
+
+  // 未認証の場合は認証ページにリダイレクト
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate("/auth");
+    }
+  }, [user, loading, navigate]);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -96,6 +81,22 @@ export default function PlayerForm() {
       loadPlayer();
     }
   }, [isEditing, id]);
+
+  // 認証状態を確認中はローディング表示
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-muted-foreground">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 未認証の場合は何も表示しない（リダイレクト処理中）
+  if (!user) {
+    return null;
+  }
 
   const togglePosition = (position: string) => {
     setFormData(prev => ({
