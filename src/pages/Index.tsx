@@ -15,6 +15,30 @@ const Index = () => {
   const [totalPlayers, setTotalPlayers] = useState(0);
   const [totalWatching, setTotalWatching] = useState(0);
   const [completedDrafts, setCompletedDrafts] = useState(0);
+  const [dataKey, setDataKey] = useState(0); // データの再読み込みトリガー
+
+  // ページ表示時にデータを再読み込みする
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        setDataKey(prev => prev + 1); // データ再読み込みをトリガー
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    // ページがフォーカスを得た時も再読み込み
+    const handleFocus = () => {
+      setDataKey(prev => prev + 1);
+    };
+    
+    window.addEventListener('focus', handleFocus);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
 
   useEffect(() => {
     const loadData = async () => {
@@ -56,7 +80,7 @@ const Index = () => {
     };
 
     loadData();
-  }, [user]);
+  }, [user, dataKey]); // dataKeyを依存配列に追加
 
   // 現在の年度を計算（10月20日以降は次年度）
   const getCurrentDraftYear = () => {
