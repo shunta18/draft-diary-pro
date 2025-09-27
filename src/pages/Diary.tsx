@@ -59,9 +59,21 @@ export default function Diary() {
     }
   }, [user, loading]);
 
-  const handleEdit = (entry: DiaryEntry) => {
+  const handleEdit = (entry: DiaryEntry | SupabaseDiaryEntry) => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
     setIsDetailOpen(false);
     navigate("/diary/form", { state: { editingEntryId: entry.id } });
+  };
+
+  const handleNewRecord = () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    navigate("/diary/form");
   };
 
   const handleDelete = async () => {
@@ -140,15 +152,14 @@ export default function Diary() {
             <h1 className="text-xl font-bold text-primary">観戦日記</h1>
           </div>
           
-          <Link to="/diary/form">
-            <Button 
-              variant="secondary"
-              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              新規記録
-            </Button>
-          </Link>
+          <Button 
+            onClick={handleNewRecord}
+            variant="secondary"
+            className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            新規記録
+          </Button>
         </div>
         
         {!user && !loading && (
@@ -279,11 +290,9 @@ export default function Diary() {
             <Card className="gradient-card border-0 shadow-soft">
               <CardContent className="p-8 text-center">
                 <p className="text-muted-foreground">該当する観戦記録が見つかりません</p>
-                <Link to="/diary/form">
-                  <Button variant="outline" className="mt-4">
+                <Button onClick={handleNewRecord} variant="outline" className="mt-4">
                     最初の観戦記録を作成
                   </Button>
-                </Link>
               </CardContent>
             </Card>
           )}

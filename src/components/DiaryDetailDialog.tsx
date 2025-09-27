@@ -4,13 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { DiaryEntry, deleteDiaryEntry } from "@/lib/diaryStorage";
+import { DiaryEntry, deleteDiaryEntry as deleteLocalDiaryEntry } from "@/lib/diaryStorage";
+import { deleteDiaryEntry, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface DiaryDetailDialogProps {
-  entry: DiaryEntry | null;
+  entry: DiaryEntry | SupabaseDiaryEntry | null;
   isOpen: boolean;
   onClose: () => void;
-  onEdit?: (entry: DiaryEntry) => void;
+  onEdit?: (entry: DiaryEntry | SupabaseDiaryEntry) => void;
   onDelete?: () => void;
 }
 
@@ -25,11 +28,15 @@ const categoryColors = {
 
 export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDelete }: DiaryDetailDialogProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const navigate = useNavigate();
   
   if (!entry) return null;
 
   const handleShare = (platform: 'twitter' | 'line' | 'copy') => {
-    const text = `観戦記録: ${entry.matchCard}\n会場: ${entry.venue}\n日付: ${entry.date}\n${entry.score ? `スコア: ${entry.score}\n` : ''}${entry.playerComments}`;
+    const matchCard = 'match_card' in entry ? entry.match_card : (entry as any).matchCard;
+    const playerComments = 'player_comments' in entry ? entry.player_comments : (entry as any).playerComments;
+    const text = `観戦記録: ${matchCard}\n会場: ${entry.venue}\n日付: ${entry.date}\n${entry.score ? `スコア: ${entry.score}\n` : ''}${playerComments}`;
     
     switch (platform) {
       case 'twitter':
@@ -51,15 +58,37 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
     }
   };
 
-  const handleDelete = () => {
-    if (entry && deleteDiaryEntry(entry.id)) {
-      toast({
-        title: "削除完了",
-        description: "観戦記録を削除しました。",
-      });
-      onDelete?.();
-      onClose();
-    } else {
+  const handleDelete = async () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    
+    if (!entry) return;
+    
+    try {
+      let success = false;
+      if (user) {
+        success = await deleteDiaryEntry(entry.id);
+      } else {
+        success = deleteLocalDiaryEntry(entry.id);
+      }
+      
+      if (success) {
+        toast({
+          title: "削除完了",
+          description: "観戦記録を削除しました。",
+        });
+        onDelete?.();
+        onClose();
+      } else {
+        toast({
+          title: "エラー",
+          description: "削除に失敗しました。",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       toast({
         title: "エラー",
         description: "削除に失敗しました。",
@@ -68,12 +97,24 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
     }
   };
 
+  const handleEdit = () => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+    if (onEdit && entry) {
+      onEdit(entry);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-start justify-between gap-4">
-            <DialogTitle className="text-xl flex-1 pr-2">{entry.matchCard}</DialogTitle>
+            <DialogTitle className="text-xl flex-1 pr-2">
+              {'match_card' in entry ? entry.match_card : (entry as any).matchCard}
+            </DialogTitle>
             <div className="flex items-center gap-2 flex-shrink-0">
               <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium`}>
                 {entry.category}
@@ -86,7 +127,7 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => onEdit(entry)}
+                  onClick={handleEdit}
                   className="h-8 px-3"
                 >
                   <Edit className="h-4 w-4 mr-1" />
@@ -109,7 +150,7 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
                     <AlertDialogHeader>
                       <AlertDialogTitle>観戦記録を削除しますか？</AlertDialogTitle>
                       <AlertDialogDescription>
-                        「{entry.matchCard}」の観戦記録を削除します。この操作は取り消せません。
+                        「{'match_card' in entry ? entry.match_card : (entry as any).matchCard}」の観戦記録を削除します。この操作は取り消せません。
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
@@ -152,16 +193,20 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">注目選手・コメント</h3>
             <div className="p-4 bg-muted/50 rounded-lg">
-              <p className="text-foreground whitespace-pre-wrap">{entry.playerComments}</p>
+              <p className="text-foreground whitespace-pre-wrap">
+                {'player_comments' in entry ? entry.player_comments : (entry as any).playerComments}
+              </p>
             </div>
           </div>
 
           {/* Overall Impression */}
-          {entry.overallImpression && (
+          {('overall_impression' in entry ? entry.overall_impression : (entry as any).overallImpression) && (
             <div className="space-y-2">
               <h3 className="text-lg font-semibold">全体的な感想</h3>
               <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="text-foreground whitespace-pre-wrap">{entry.overallImpression}</p>
+                <p className="text-foreground whitespace-pre-wrap">
+                  {'overall_impression' in entry ? entry.overall_impression : (entry as any).overallImpression}
+                </p>
               </div>
             </div>
           )}
