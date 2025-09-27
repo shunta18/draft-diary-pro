@@ -46,10 +46,13 @@ export default function Players() {
           const samplePlayer = {
             id: 1,
             name: "松井裕樹",
-            team: "桐蔭学園高校",
+            team: "桐光学園",
             position: "投手",
             category: "高校",
-            evaluation: "2-3位"
+            evaluation: "1位競合確実",
+            year: 2013,
+            batting_hand: "左",
+            throwing_hand: "左"
           };
           setPlayers([samplePlayer]);
         }
