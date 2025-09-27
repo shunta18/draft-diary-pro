@@ -94,8 +94,13 @@ export default function Draft() {
 
   // Load draft data from Supabase
   useEffect(() => {
+    if (loading) return; // Wait for auth state to be determined
+    
     const loadDraftData = async () => {
-      if (!user) return;
+      if (!user) {
+        setIsLoading(false);
+        return;
+      }
       
       try {
         const data = await getDraftData();
@@ -112,9 +117,7 @@ export default function Draft() {
       }
     };
 
-    if (!loading) {
-      loadDraftData();
-    }
+    loadDraftData();
   }, [user, loading, toast]);
 
   // Get current team data
