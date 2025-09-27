@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { Player } from "@/lib/playerStorage";
+import { Player as LocalPlayer } from "@/lib/playerStorage";
+import { Player as SupabasePlayer } from "@/lib/supabase-storage";
+
+// Union type to handle both data formats
+type PlayerData = LocalPlayer | SupabasePlayer;
 import { Search } from "lucide-react";
 
 interface PlayerSelectionDialogProps {
-  players: Player[];
+  players: PlayerData[];
   selectedPlayerId?: number;
   onSelect: (playerId: number | undefined) => void;
   children: React.ReactNode;
@@ -21,16 +25,27 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
   const [filterCategory, setFilterCategory] = useState("");
   const [filterEvaluation, setFilterEvaluation] = useState("");
 
+  // Helper function to normalize position data
+  const normalizePosition = (position: string | string[]): string[] => {
+    return Array.isArray(position) ? position : [position];
+  };
+
+  // Helper function to get position as string for display
+  const getPositionDisplay = (position: string | string[]): string => {
+    return Array.isArray(position) ? position.join(', ') : position;
+  };
+
   // Get unique values for filters
-  const positions = [...new Set(players.flatMap(p => p.position))];
+  const positions = [...new Set(players.flatMap(p => normalizePosition(p.position)))];
   const categories = [...new Set(players.map(p => p.category))];
-  const evaluations = [...new Set(players.map(p => p.evaluation))];
+  const evaluations = [...new Set(players.map(p => p.evaluation).filter(Boolean))];
 
   // Filter players based on search criteria
   const filteredPlayers = players.filter(player => {
+    const playerPositions = normalizePosition(player.position);
     return (
       player.name.toLowerCase().includes(searchName.toLowerCase()) &&
-      (filterPosition === "" || filterPosition === "all" || player.position.includes(filterPosition)) &&
+      (filterPosition === "" || filterPosition === "all" || playerPositions.includes(filterPosition)) &&
       (filterCategory === "" || filterCategory === "all" || player.category === filterCategory) &&
       (filterEvaluation === "" || filterEvaluation === "all" || player.evaluation === filterEvaluation)
     );
@@ -163,7 +178,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
                     </div>
                     <div>
                       <div className="text-muted-foreground">ポジション</div>
-                      <div>{player.position.join(', ')}</div>
+                      <div>{getPositionDisplay(player.position)}</div>
                     </div>
                     <div>
                       <div className="text-muted-foreground">所属</div>
