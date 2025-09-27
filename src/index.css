@@ -154,7 +154,7 @@ All colors MUST be HSL.
   }
   
   .gradient-accent {
-    background: var(--gradient-accent);
+    background: var(--gradient-accent) !important;
   }
   
   .gradient-card {

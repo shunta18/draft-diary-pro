@@ -260,7 +260,11 @@ export default function DiaryForm() {
               </div>
 
               <div className="flex space-x-2 pt-4">
-                <Button type="submit" className="flex-1 gradient-accent border-0 shadow-soft hover:shadow-glow transition-smooth">
+                <Button 
+                  type="submit" 
+                  variant="secondary"
+                  className="flex-1 gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+                >
                   {isEditing ? "更新" : "保存"}
                 </Button>
                 <Link to="/diary">

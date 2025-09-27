@@ -197,7 +197,8 @@ export default function PlayerForm() {
             <Button 
               type="submit" 
               form="player-form"
-              className="gradient-accent border-0 shadow-soft hover:shadow-glow transition-smooth"
+              variant="secondary"
+              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
             >
               <Save className="h-4 w-4 mr-2" />
               保存
