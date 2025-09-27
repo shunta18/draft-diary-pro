@@ -112,7 +112,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(`アカウント削除に失敗しました: ${error.message}`);
       }
       
-      // Clear local state after successful deletion
+      // Log out the user after successful deletion
+      await supabase.auth.signOut();
+      
+      // Clear local state
       setSession(null);
       setUser(null);
     } catch (error: any) {
