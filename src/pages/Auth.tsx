@@ -143,6 +143,17 @@ export default function Auth() {
               </TabsContent>
               
               <TabsContent value="signup" className="space-y-4">
+                {/* セキュリティ・プライバシー保護のメッセージ */}
+                <div className="bg-muted/30 border border-border/50 rounded-lg p-3 space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p className="text-sm font-medium text-foreground">安全なデータ管理</p>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    お客様の個人情報は最新のセキュリティ技術で暗号化され、厳格なデータ保護基準に従って管理されています。メールアドレスは認証目的のみに使用し、第三者への提供や不要な配信は一切行いません。
+                  </p>
+                </div>
+                
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">メールアドレス</Label>
