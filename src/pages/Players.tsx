@@ -296,39 +296,6 @@ export default function Players() {
                     <Badge variant="secondary" className="text-xs">
                       {player.category}
                     </Badge>
-                    {player.evaluations && sortEvaluations(player.evaluations).map((evaluation, index) => (
-                      <Badge 
-                        key={index}
-                        className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
-                      >
-                        {evaluation}
-                      </Badge>
-                    ))}
-                    {player.recommended_teams && player.recommended_teams.map((team, index) => (
-                      <Badge 
-                        key={`team-${index}`}
-                        className={`${teamColors[team as keyof typeof teamColors]} font-medium text-xs`}
-                      >
-                      {team === "オリックス・バファローズ" ? "オリックス" :
-                       team.replace(/ジャイアンツ|タイガース|ドラゴンズ|カープ|スワローズ|ベイスターズ|ホークス|ファイターズ|マリーンズ|ライオンズ|ゴールデンイーグルス/, '').replace(/読売|阪神|中日|広島東洋|東京ヤクルト|横浜DeNA|福岡ソフトバンク|北海道日本ハム|千葉ロッテ|埼玉西武|東北楽天/, (match) => {
-                        const teamMap: { [key: string]: string } = {
-                          '読売': '巨人',
-                          '阪神': '阪神',
-                          '中日': '中日',
-                          '広島東洋': '広島',
-                          '東京ヤクルト': 'ヤクルト',
-                          '横浜DeNA': 'DeNA',
-                          '福岡ソフトバンク': 'ソフトバンク',
-                          '北海道日本ハム': '日本ハム',
-                          '千葉ロッテ': 'ロッテ',
-                          '埼玉西武': '西武',
-                          '東北楽天': '楽天',
-                          'オリックス': 'オリックス'
-                        };
-                        return teamMap[match] || match;
-                      })}
-                      </Badge>
-                    ))}
                     {player.id === 1 && (
                       <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
                         サンプル
