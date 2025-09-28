@@ -89,7 +89,7 @@ export type Database = {
           career_path: string | null
           category: string
           created_at: string
-          evaluation: string | null
+          evaluations: string[] | null
           height: number | null
           hometown: string | null
           id: number
@@ -110,7 +110,7 @@ export type Database = {
           career_path?: string | null
           category: string
           created_at?: string
-          evaluation?: string | null
+          evaluations?: string[] | null
           height?: number | null
           hometown?: string | null
           id?: number
@@ -131,7 +131,7 @@ export type Database = {
           career_path?: string | null
           category?: string
           created_at?: string
-          evaluation?: string | null
+          evaluations?: string[] | null
           height?: number | null
           hometown?: string | null
           id?: number

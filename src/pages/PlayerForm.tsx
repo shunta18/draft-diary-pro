@@ -20,8 +20,8 @@ const battingThrowingOptions = [
 ];
 
 const evaluations = [
-  "1位競合確実", "一本釣り〜外れ1位", "2-3位", 
-  "4-5位", "6位以下", "育成"
+  "1位競合", "1位一本釣り", "外れ1位", "2位", "3位", 
+  "4位", "5位", "6位以下", "育成"
 ];
 
 export default function PlayerForm() {
@@ -42,7 +42,7 @@ export default function PlayerForm() {
     hometown: "",
     
     usage: "",
-    evaluation: "",
+    evaluations: [] as string[],
     memo: "",
     videos: [] as string[],
   });
@@ -72,7 +72,7 @@ export default function PlayerForm() {
             hometown: player.hometown || "",
             
             usage: player.usage || "",
-            evaluation: player.evaluation || "",
+            evaluations: player.evaluations || [],
             memo: player.memo || "",
             videos: player.videos || [],
           });
@@ -97,6 +97,15 @@ export default function PlayerForm() {
   if (!user) {
     return null;
   }
+
+  const toggleEvaluation = (evaluation: string) => {
+    setFormData(prev => ({
+      ...prev,
+      evaluations: prev.evaluations.includes(evaluation)
+        ? prev.evaluations.filter(e => e !== evaluation)
+        : [...prev.evaluations, evaluation]
+    }));
+  };
 
   const togglePosition = (position: string) => {
     setFormData(prev => ({
@@ -152,14 +161,14 @@ export default function PlayerForm() {
       hometown: formData.hometown,
       
       usage: formData.usage,
-      evaluation: formData.evaluation,
+      evaluations: formData.evaluations,
       memo: formData.memo,
       videos: videoUrls,
     };
 
     try {
       // フォームバリデーション
-      if (!formData.name || !formData.category || !formData.team || formData.positions.length === 0 || !formData.evaluation) {
+      if (!formData.name || !formData.category || !formData.team || formData.positions.length === 0 || formData.evaluations.length === 0) {
         toast({
           title: "入力エラー",
           description: "必須項目を全て入力してください。",
@@ -389,16 +398,18 @@ export default function PlayerForm() {
                 <Label>ドラフト評価 *</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {evaluations.map(evaluation => (
-                    <Button
+                    <Badge
                       key={evaluation}
-                      type="button"
-                      variant={formData.evaluation === evaluation ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setFormData(prev => ({ ...prev, evaluation }))}
-                      className="transition-smooth"
+                      variant={formData.evaluations.includes(evaluation) ? "default" : "outline"}
+                      className={`cursor-pointer transition-smooth ${
+                        formData.evaluations.includes(evaluation) 
+                          ? "bg-primary text-primary-foreground hover:bg-primary/80" 
+                          : "hover:bg-secondary"
+                      }`}
+                      onClick={() => toggleEvaluation(evaluation)}
                     >
                       {evaluation}
-                    </Button>
+                    </Badge>
                   ))}
                 </div>
               </div>

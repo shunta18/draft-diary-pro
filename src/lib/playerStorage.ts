@@ -4,11 +4,11 @@ export interface Player {
   team: string;
   position: string[];
   category: string;
-  evaluation: string;
+  evaluations: string[];
   draftYear: string;
   battingThrowing?: string;
   hometown?: string;
-  careerPath?: string;
+  
   usage?: string;
   memo?: string;
   videoLinks: string[];
@@ -24,11 +24,11 @@ const defaultPlayers: Player[] = [
     team: "桐光学園",
     position: ["投手"],
     category: "高校",
-    evaluation: "1位競合確実",
+    evaluations: ["1位競合"],
     draftYear: "2013",
     battingThrowing: "左投左打",
     hometown: "神奈川県",
-    careerPath: "プロ志望",
+    
     memo: "高校2年時に甲子園で1試合の奪三振記録を更新。消えるスライダーが武器のドクターK",
     videoLinks: [],
   },

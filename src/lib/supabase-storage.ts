@@ -7,7 +7,7 @@ export interface Player {
   team: string;
   position: string;
   category: string;
-  evaluation?: string;
+  evaluations?: string[];
   year?: number;
   batting_hand?: string;
   throwing_hand?: string;
@@ -15,7 +15,7 @@ export interface Player {
   weight?: number;
   memo?: string;
   hometown?: string;
-  career_path?: string;
+  
   usage?: string;
   videos?: string[];
 }
