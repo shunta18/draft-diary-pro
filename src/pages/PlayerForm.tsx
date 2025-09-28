@@ -444,7 +444,8 @@ export default function PlayerForm() {
                       className="cursor-pointer transition-colors"
                       onClick={() => toggleTeam(team)}
                     >
-                      {team.replace(/ジャイアンツ|タイガース|ドラゴンズ|カープ|スワローズ|ベイスターズ|ホークス|ファイターズ|マリーンズ|ライオンズ|ゴールデンイーグルス|バファローズ/, '').replace(/読売|阪神|中日|広島東洋|東京ヤクルト|横浜DeNA|福岡ソフトバンク|北海道日本ハム|千葉ロッテ|埼玉西武|東北楽天|オリックス/, (match) => {
+                      {team === "オリックス・バファローズ" ? "オリックス" : 
+                       team.replace(/ジャイアンツ|タイガース|ドラゴンズ|カープ|スワローズ|ベイスターズ|ホークス|ファイターズ|マリーンズ|ライオンズ|ゴールデンイーグルス/, '').replace(/読売|阪神|中日|広島東洋|東京ヤクルト|横浜DeNA|福岡ソフトバンク|北海道日本ハム|千葉ロッテ|埼玉西武|東北楽天/, (match) => {
                         const teamMap: { [key: string]: string } = {
                           '読売': '巨人',
                           '阪神': '阪神',
