@@ -25,6 +25,21 @@ const evaluationColors = {
   "育成": "bg-purple-500 text-white",
 };
 
+// 評価の順序を定義
+const evaluationOrder = [
+  "1位競合", "1位一本釣り", "外れ1位", "2位", "3位", 
+  "4位", "5位", "6位以下", "育成"
+];
+
+// 評価をソートする関数
+const sortEvaluations = (evaluations: string[]) => {
+  return [...evaluations].sort((a, b) => {
+    const indexA = evaluationOrder.indexOf(a);
+    const indexB = evaluationOrder.indexOf(b);
+    return indexA - indexB;
+  });
+};
+
 export default function Players() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -265,7 +280,7 @@ export default function Players() {
                     <Badge variant="secondary" className="text-xs">
                       {player.category}
                     </Badge>
-                    {player.evaluations && player.evaluations.map((evaluation, index) => (
+                    {player.evaluations && sortEvaluations(player.evaluations).map((evaluation, index) => (
                       <Badge 
                         key={index}
                         className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
@@ -317,7 +332,7 @@ export default function Players() {
                   <Badge variant="secondary" className="text-xs">
                     {selectedPlayer.category}
                   </Badge>
-                  {selectedPlayer.evaluations && selectedPlayer.evaluations.map((evaluation, index) => (
+                  {selectedPlayer.evaluations && sortEvaluations(selectedPlayer.evaluations).map((evaluation, index) => (
                     <Badge 
                       key={index}
                       className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
