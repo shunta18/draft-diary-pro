@@ -40,6 +40,22 @@ const sortEvaluations = (evaluations: string[]) => {
   });
 };
 
+// 球団の色設定
+const teamColors: { [key: string]: string } = {
+  "読売ジャイアンツ": "bg-orange-500 text-white",
+  "阪神タイガース": "bg-yellow-500 text-black",
+  "中日ドラゴンズ": "bg-blue-500 text-white",
+  "広島東洋カープ": "bg-red-500 text-white",
+  "東京ヤクルトスワローズ": "bg-green-500 text-white",
+  "横浜DeNAベイスターズ": "bg-blue-600 text-white",
+  "福岡ソフトバンクホークス": "bg-yellow-400 text-black",
+  "北海道日本ハムファイターズ": "bg-blue-700 text-white",
+  "千葉ロッテマリーンズ": "bg-blue-400 text-white",
+  "埼玉西武ライオンズ": "bg-blue-800 text-white",
+  "東北楽天ゴールデンイーグルス": "bg-red-600 text-white",
+  "オリックス・バファローズ": "bg-blue-900 text-white",
+};
+
 export default function Players() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -280,14 +296,6 @@ export default function Players() {
                     <Badge variant="secondary" className="text-xs">
                       {player.category}
                     </Badge>
-                    {player.evaluations && sortEvaluations(player.evaluations).map((evaluation, index) => (
-                      <Badge 
-                        key={index}
-                        className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
-                      >
-                        {evaluation}
-                      </Badge>
-                    ))}
                     {player.id === 1 && (
                       <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
                         サンプル
@@ -338,6 +346,31 @@ export default function Players() {
                       className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
                     >
                       {evaluation}
+                    </Badge>
+                  ))}
+                  {selectedPlayer.recommended_teams && selectedPlayer.recommended_teams.map((team, index) => (
+                    <Badge 
+                      key={`team-${index}`}
+                      className={`${teamColors[team as keyof typeof teamColors]} font-medium text-xs`}
+                    >
+                      {team === "オリックス・バファローズ" ? "オリックス" :
+                       team.replace(/ジャイアンツ|タイガース|ドラゴンズ|カープ|スワローズ|ベイスターズ|ホークス|ファイターズ|マリーンズ|ライオンズ|ゴールデンイーグルス/, '').replace(/読売|阪神|中日|広島東洋|東京ヤクルト|横浜DeNA|福岡ソフトバンク|北海道日本ハム|千葉ロッテ|埼玉西武|東北楽天/, (match) => {
+                        const teamMap: { [key: string]: string } = {
+                          '読売': '巨人',
+                          '阪神': '阪神',
+                          '中日': '中日',
+                          '広島東洋': '広島',
+                          '東京ヤクルト': 'ヤクルト',
+                          '横浜DeNA': 'DeNA',
+                          '福岡ソフトバンク': 'ソフトバンク',
+                          '北海道日本ハム': '日本ハム',
+                          '千葉ロッテ': 'ロッテ',
+                          '埼玉西武': '西武',
+                          '東北楽天': '楽天',
+                          'オリックス': 'オリックス'
+                        };
+                        return teamMap[match] || match;
+                      })}
                     </Badge>
                   ))}
                   {selectedPlayer.id === 1 && (

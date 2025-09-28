@@ -96,6 +96,7 @@ export type Database = {
           memo: string | null
           name: string
           position: string
+          recommended_teams: string[] | null
           team: string
           throwing_hand: string | null
           updated_at: string
@@ -117,6 +118,7 @@ export type Database = {
           memo?: string | null
           name: string
           position: string
+          recommended_teams?: string[] | null
           team: string
           throwing_hand?: string | null
           updated_at?: string
@@ -138,6 +140,7 @@ export type Database = {
           memo?: string | null
           name?: string
           position?: string
+          recommended_teams?: string[] | null
           team?: string
           throwing_hand?: string | null
           updated_at?: string

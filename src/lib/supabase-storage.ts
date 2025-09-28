@@ -8,6 +8,7 @@ export interface Player {
   position: string;
   category: string;
   evaluations?: string[];
+  recommended_teams?: string[];
   year?: number;
   batting_hand?: string;
   throwing_hand?: string;

@@ -5,6 +5,7 @@ export interface Player {
   position: string[];
   category: string;
   evaluations: string[];
+  recommended_teams?: string[];
   draftYear: string;
   battingThrowing?: string;
   hometown?: string;
