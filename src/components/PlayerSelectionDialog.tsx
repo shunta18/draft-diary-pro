@@ -38,7 +38,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
   // Get unique values for filters
   const positions = [...new Set(players.flatMap(p => normalizePosition(p.position)))];
   const categories = [...new Set(players.map(p => p.category))];
-  const evaluations = [...new Set(players.map(p => p.evaluation).filter(Boolean))];
+  const evaluations = [...new Set(players.flatMap(p => p.evaluations || []).filter(Boolean))];
 
   // Filter players based on search criteria
   const filteredPlayers = players.filter(player => {
@@ -47,7 +47,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
       player.name.toLowerCase().includes(searchName.toLowerCase()) &&
       (filterPosition === "" || filterPosition === "all" || playerPositions.includes(filterPosition)) &&
       (filterCategory === "" || filterCategory === "all" || player.category === filterCategory) &&
-      (filterEvaluation === "" || filterEvaluation === "all" || player.evaluation === filterEvaluation)
+      (filterEvaluation === "" || filterEvaluation === "all" || (player.evaluations && player.evaluations.includes(filterEvaluation)))
     );
   });
 
@@ -188,7 +188,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
                     </div>
                     <div>
                       <div className="text-muted-foreground">評価</div>
-                      <div>{player.evaluation}</div>
+                      <div>{player.evaluations ? player.evaluations.join(", ") : ""}</div>
                     </div>
                   </div>
                   {player.memo && (

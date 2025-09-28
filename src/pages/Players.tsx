@@ -14,10 +14,13 @@ import { useAuth } from "@/hooks/useAuth";
 
 
 const evaluationColors = {
-  "1位競合確実": "bg-red-500 text-white",
-  "一本釣り〜外れ1位": "bg-orange-500 text-white",
-  "2-3位": "bg-yellow-500 text-white",
-  "4-5位": "bg-blue-500 text-white",
+  "1位競合": "bg-red-500 text-white",
+  "1位一本釣り": "bg-red-400 text-white",
+  "外れ1位": "bg-orange-500 text-white",
+  "2位": "bg-yellow-500 text-white",
+  "3位": "bg-green-500 text-white",
+  "4位": "bg-blue-500 text-white",
+  "5位": "bg-indigo-500 text-white",
   "6位以下": "bg-gray-500 text-white",
   "育成": "bg-purple-500 text-white",
 };
@@ -52,7 +55,7 @@ export default function Players() {
           team: "桐光学園",
           position: "投手",
           category: "高校",
-          evaluation: "1位競合確実",
+          evaluations: ["1位競合"],
           year: 2013,
           batting_hand: "左",
           throwing_hand: "左",
@@ -98,7 +101,7 @@ export default function Players() {
     const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
     const matchesCategory = selectedCategory === "all" || player.category === selectedCategory;
     const matchesPosition = selectedPosition === "all" || player.position === selectedPosition;
-    const matchesEvaluation = selectedEvaluation === "all" || player.evaluation === selectedEvaluation;
+    const matchesEvaluation = selectedEvaluation === "all" || (player.evaluations && player.evaluations.includes(selectedEvaluation));
     
     return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
   });
@@ -125,7 +128,7 @@ export default function Players() {
       "additionalProperty": {
         "@type": "PropertyValue",
         "name": "評価",
-        "value": player.evaluation
+        "value": player.evaluations ? player.evaluations.join(", ") : ""
       }
     }))
   };
@@ -224,10 +227,13 @@ export default function Players() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">全ての評価</SelectItem>
-                <SelectItem value="1位競合確実">1位競合確実</SelectItem>
-                <SelectItem value="一本釣り〜外れ1位">一本釣り〜外れ1位</SelectItem>
-                <SelectItem value="2-3位">2-3位</SelectItem>
-                <SelectItem value="4-5位">4-5位</SelectItem>
+                <SelectItem value="1位競合">1位競合</SelectItem>
+                <SelectItem value="1位一本釣り">1位一本釣り</SelectItem>
+                <SelectItem value="外れ1位">外れ1位</SelectItem>
+                <SelectItem value="2位">2位</SelectItem>
+                <SelectItem value="3位">3位</SelectItem>
+                <SelectItem value="4位">4位</SelectItem>
+                <SelectItem value="5位">5位</SelectItem>
                 <SelectItem value="6位以下">6位以下</SelectItem>
                 <SelectItem value="育成">育成</SelectItem>
               </SelectContent>
@@ -259,11 +265,14 @@ export default function Players() {
                     <Badge variant="secondary" className="text-xs">
                       {player.category}
                     </Badge>
-                    <Badge 
-                      className={`${evaluationColors[player.evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
-                    >
-                      {player.evaluation}
-                    </Badge>
+                    {player.evaluations && player.evaluations.map((evaluation, index) => (
+                      <Badge 
+                        key={index}
+                        className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
+                      >
+                        {evaluation}
+                      </Badge>
+                    ))}
                     {player.id === 1 && (
                       <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
                         サンプル
@@ -308,11 +317,14 @@ export default function Players() {
                   <Badge variant="secondary" className="text-xs">
                     {selectedPlayer.category}
                   </Badge>
-                  <Badge 
-                    className={`${evaluationColors[selectedPlayer.evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
-                  >
-                    {selectedPlayer.evaluation}
-                  </Badge>
+                  {selectedPlayer.evaluations && selectedPlayer.evaluations.map((evaluation, index) => (
+                    <Badge 
+                      key={index}
+                      className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
+                    >
+                      {evaluation}
+                    </Badge>
+                  ))}
                   {selectedPlayer.id === 1 && (
                     <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
                       サンプル
