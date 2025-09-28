@@ -18,7 +18,7 @@ const battingThrowingOptions = [
   "右投右打", "右投左打", "右投両打", 
   "左投右打", "左投左打", "左投両打"
 ];
-const careerPaths = ["プロ志望", "大学進学", "社会人", "未定"];
+
 const evaluations = [
   "1位競合確実", "一本釣り〜外れ1位", "2-3位", 
   "4-5位", "6位以下", "育成"
@@ -40,7 +40,7 @@ export default function PlayerForm() {
     positions: [] as string[],
     battingThrowing: "",
     hometown: "",
-    careerPath: "",
+    
     usage: "",
     evaluation: "",
     memo: "",
@@ -70,7 +70,7 @@ export default function PlayerForm() {
             positions: Array.isArray(player.position) ? player.position : [player.position],
             battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
             hometown: player.hometown || "",
-            careerPath: player.career_path || "",
+            
             usage: player.usage || "",
             evaluation: player.evaluation || "",
             memo: player.memo || "",
@@ -150,7 +150,7 @@ export default function PlayerForm() {
       batting_hand: formData.battingThrowing.includes("右打") ? "右" : formData.battingThrowing.includes("左打") ? "左" : undefined,
       throwing_hand: formData.battingThrowing.includes("右投") ? "右" : formData.battingThrowing.includes("左投") ? "左" : undefined,
       hometown: formData.hometown,
-      career_path: formData.careerPath,
+      
       usage: formData.usage,
       evaluation: formData.evaluation,
       memo: formData.memo,
@@ -337,7 +337,7 @@ export default function PlayerForm() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label>投打</Label>
                   <Select value={formData.battingThrowing} onValueChange={(value) => 
@@ -363,22 +363,6 @@ export default function PlayerForm() {
                     placeholder="出身地を入力"
                     className="shadow-soft"
                   />
-                </div>
-
-                <div>
-                  <Label>進路先 *</Label>
-                  <Select value={formData.careerPath} onValueChange={(value) => 
-                    setFormData(prev => ({ ...prev, careerPath: value }))
-                  }>
-                    <SelectTrigger className="shadow-soft">
-                      <SelectValue placeholder="選択してください" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {careerPaths.map(path => (
-                        <SelectItem key={path} value={path}>{path}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
               </div>
 
