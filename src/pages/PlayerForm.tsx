@@ -24,6 +24,13 @@ const evaluations = [
   "4位", "5位", "6位以下", "育成"
 ];
 
+const teams = [
+  "読売ジャイアンツ", "阪神タイガース", "中日ドラゴンズ", 
+  "広島東洋カープ", "東京ヤクルトスワローズ", "横浜DeNAベイスターズ",
+  "福岡ソフトバンクホークス", "北海道日本ハムファイターズ", "千葉ロッテマリーンズ",
+  "埼玉西武ライオンズ", "東北楽天ゴールデンイーグルス", "オリックス・バファローズ"
+];
+
 export default function PlayerForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -43,6 +50,7 @@ export default function PlayerForm() {
     
     usage: "",
     evaluations: [] as string[],
+    recommended_teams: [] as string[],
     memo: "",
     videos: [] as string[],
   });
@@ -73,6 +81,7 @@ export default function PlayerForm() {
             
             usage: player.usage || "",
             evaluations: player.evaluations || [],
+            recommended_teams: player.recommended_teams || [],
             memo: player.memo || "",
             videos: player.videos || [],
           });
@@ -104,6 +113,15 @@ export default function PlayerForm() {
       evaluations: prev.evaluations.includes(evaluation)
         ? prev.evaluations.filter(e => e !== evaluation)
         : [...prev.evaluations, evaluation]
+    }));
+  };
+
+  const toggleTeam = (team: string) => {
+    setFormData(prev => ({
+      ...prev,
+      recommended_teams: prev.recommended_teams.includes(team)
+        ? prev.recommended_teams.filter(t => t !== team)
+        : [...prev.recommended_teams, team]
     }));
   };
 
@@ -162,6 +180,7 @@ export default function PlayerForm() {
       
       usage: formData.usage,
       evaluations: formData.evaluations,
+      recommended_teams: formData.recommended_teams,
       memo: formData.memo,
       videos: videoUrls,
     };
@@ -409,6 +428,39 @@ export default function PlayerForm() {
                       onClick={() => toggleEvaluation(evaluation)}
                     >
                       {evaluation}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* おすすめ球団 */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">おすすめ球団</Label>
+                <div className="flex flex-wrap gap-2">
+                  {teams.map((team) => (
+                    <Badge
+                      key={team}
+                      variant={formData.recommended_teams.includes(team) ? "default" : "outline"}
+                      className="cursor-pointer transition-colors"
+                      onClick={() => toggleTeam(team)}
+                    >
+                      {team.replace(/ジャイアンツ|タイガース|ドラゴンズ|カープ|スワローズ|ベイスターズ|ホークス|ファイターズ|マリーンズ|ライオンズ|ゴールデンイーグルス|バファローズ/, '').replace(/読売|阪神|中日|広島東洋|東京ヤクルト|横浜DeNA|福岡ソフトバンク|北海道日本ハム|千葉ロッテ|埼玉西武|東北楽天|オリックス/, (match) => {
+                        const teamMap: { [key: string]: string } = {
+                          '読売': '巨人',
+                          '阪神': '阪神',
+                          '中日': '中日',
+                          '広島東洋': '広島',
+                          '東京ヤクルト': 'ヤクルト',
+                          '横浜DeNA': 'DeNA',
+                          '福岡ソフトバンク': 'ソフトバンク',
+                          '北海道日本ハム': '日本ハム',
+                          '千葉ロッテ': 'ロッテ',
+                          '埼玉西武': '西武',
+                          '東北楽天': '楽天',
+                          'オリックス': 'オリックス'
+                        };
+                        return teamMap[match] || match;
+                      })}
                     </Badge>
                   ))}
                 </div>
