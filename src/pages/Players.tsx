@@ -57,7 +57,7 @@ export default function Players() {
           batting_hand: "左",
           throwing_hand: "左",
           hometown: "神奈川県",
-          career_path: "プロ志望",
+          
           usage: "抑え",
           memo: "高校2年時に甲子園で1試合の奪三振記録を更新。消えるスライダーが武器のドクターK"
         };
@@ -362,12 +362,6 @@ export default function Players() {
                     </div>
                   )}
 
-                  {selectedPlayer.career_path && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-muted-foreground">進路先:</span>
-                      <span>{selectedPlayer.career_path}</span>
-                    </div>
-                  )}
 
                   {selectedPlayer.usage && (
                     <div className="flex items-center space-x-2">
