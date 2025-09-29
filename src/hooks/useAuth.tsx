@@ -115,19 +115,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!user) throw new Error('ユーザーがログインしていません');
     
     try {
-      // Call the delete_user function to remove all user data
-      const { error } = await supabase.rpc('delete_user');
+      // Call the delete-user edge function to remove all user data and auth account
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+      
       if (error) {
         console.error('Account deletion error:', error);
         throw new Error(`アカウント削除に失敗しました: ${error.message}`);
       }
       
-      // Log out the user after successful deletion
-      await supabase.auth.signOut();
+      // Clear local storage data
+      localStorage.removeItem('baseball_scout_players');
+      localStorage.removeItem('baseball_scout_diary');
+      localStorage.removeItem('draftData');
       
       // Clear local state
       setSession(null);
       setUser(null);
+      
+      console.log('Account successfully deleted');
     } catch (error: any) {
       console.error('Delete account failed:', error);
       throw error;
