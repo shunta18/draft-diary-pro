@@ -40,6 +40,25 @@ const sortEvaluations = (evaluations: string[]) => {
   });
 };
 
+// ポジションの順序を定義
+const positionOrder = [
+  "投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"
+];
+
+// ポジションをソートする関数
+const sortPositions = (positionsStr: string) => {
+  const positions = positionsStr.split(/[,、]/).map(p => p.trim()).filter(p => p);
+  return positions.sort((a, b) => {
+    const indexA = positionOrder.indexOf(a);
+    const indexB = positionOrder.indexOf(b);
+    // 未定義の場合は最後に配置
+    if (indexA === -1 && indexB === -1) return 0;
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  }).join("、");
+};
+
 // 球団の色設定
 const teamColors: { [key: string]: string } = {
   "読売ジャイアンツ": "bg-orange-500 text-white",
@@ -306,7 +325,7 @@ export default function Players() {
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <span>{player.team}</span>
                       <span>•</span>
-                      <span>{player.position}</span>
+                      <span>{sortPositions(player.position)}</span>
                       <span>•</span>
                       <span>{player.year || 2025}年</span>
                     </div>
@@ -396,7 +415,7 @@ export default function Players() {
                   <div className="flex items-center space-x-2">
                     <Users className="h-4 w-4 text-muted-foreground" />
                     <span className="text-muted-foreground">ポジション:</span>
-                    <span>{selectedPlayer.position}</span>
+                    <span>{sortPositions(selectedPlayer.position)}</span>
                   </div>
 
                   {selectedPlayer.batting_hand && selectedPlayer.throwing_hand && (

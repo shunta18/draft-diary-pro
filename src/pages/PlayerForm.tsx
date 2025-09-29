@@ -13,6 +13,19 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"];
+
+// ポジションをソートする関数
+const sortPositions = (positionsArray: string[]) => {
+  return [...positionsArray].sort((a, b) => {
+    const indexA = positions.indexOf(a);
+    const indexB = positions.indexOf(b);
+    // 未定義の場合は最後に配置
+    if (indexA === -1 && indexB === -1) return 0;
+    if (indexA === -1) return 1;
+    if (indexB === -1) return -1;
+    return indexA - indexB;
+  });
+};
 const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
 const battingThrowingOptions = [
   "右投右打", "右投左打", "右投両打", 
@@ -75,7 +88,7 @@ export default function PlayerForm() {
             draftYear: player.year?.toString() || "2025",
             category: player.category,
             team: player.team,
-            positions: Array.isArray(player.position) ? player.position : [player.position],
+            positions: sortPositions(Array.isArray(player.position) ? player.position : player.position.split(/[,、]/).map(p => p.trim()).filter(p => p)),
             battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
             hometown: player.hometown || "",
             
@@ -173,7 +186,7 @@ export default function PlayerForm() {
       year: parseInt(formData.draftYear),
       category: formData.category,
       team: formData.team,
-      position: formData.positions.join(", "),
+      position: sortPositions(formData.positions).join("、"),
       batting_hand: formData.battingThrowing.includes("右打") ? "右" : formData.battingThrowing.includes("左打") ? "左" : undefined,
       throwing_hand: formData.battingThrowing.includes("右投") ? "右" : formData.battingThrowing.includes("左投") ? "左" : undefined,
       hometown: formData.hometown,
