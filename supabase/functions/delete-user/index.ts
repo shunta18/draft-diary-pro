@@ -45,12 +45,40 @@ Deno.serve(async (req) => {
       }
     })
 
-    // First, delete user data from custom tables
+    // First, delete user data from custom tables using admin client
     console.log('Deleting user data from custom tables...')
-    const { error: deleteDataError } = await supabaseAdmin.rpc('delete_user')
-    if (deleteDataError) {
-      console.error('Error deleting user data:', deleteDataError)
-      throw new Error(`Failed to delete user data: ${deleteDataError.message}`)
+    
+    // Delete user data directly using admin client
+    const { error: deletePlayersError } = await supabaseAdmin
+      .from('players')
+      .delete()
+      .eq('user_id', user.id)
+    if (deletePlayersError) {
+      console.error('Error deleting players:', deletePlayersError)
+    }
+
+    const { error: deleteDiaryError } = await supabaseAdmin
+      .from('diary_entries')
+      .delete()
+      .eq('user_id', user.id)
+    if (deleteDiaryError) {
+      console.error('Error deleting diary entries:', deleteDiaryError)
+    }
+
+    const { error: deleteDraftError } = await supabaseAdmin
+      .from('draft_data')
+      .delete()
+      .eq('user_id', user.id)
+    if (deleteDraftError) {
+      console.error('Error deleting draft data:', deleteDraftError)
+    }
+
+    const { error: deleteProfileError } = await supabaseAdmin
+      .from('profiles')
+      .delete()
+      .eq('user_id', user.id)
+    if (deleteProfileError) {
+      console.error('Error deleting profile:', deleteProfileError)
     }
 
     // Then delete the user from auth.users
