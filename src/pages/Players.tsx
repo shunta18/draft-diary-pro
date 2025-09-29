@@ -448,10 +448,15 @@ export default function Players() {
                   <h4 className="font-semibold text-primary">動画</h4>
                   <div className="grid grid-cols-1 gap-2">
                     {selectedPlayer.videos.map((video, index) => (
-                      <div key={index} className="bg-muted/50 rounded-lg p-2">
-                        <video controls className="w-full max-h-32 rounded" src={video}>
-                          動画を再生できません
-                        </video>
+                      <div key={index} className="bg-muted/50 rounded-lg p-3">
+                        <a 
+                          href={video} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-blue-600 hover:text-blue-800 break-all text-sm"
+                        >
+                          {video}
+                        </a>
                       </div>
                     ))}
                   </div>
