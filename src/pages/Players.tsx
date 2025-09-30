@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { getPlayers, deletePlayer, type Player } from "@/lib/supabase-storage";
 import { SEO } from "@/components/SEO";
@@ -80,9 +82,9 @@ export default function Players() {
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState("all");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [selectedPosition, setSelectedPosition] = useState("all");
-  const [selectedEvaluation, setSelectedEvaluation] = useState("all");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
+  const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -149,9 +151,15 @@ export default function Players() {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          player.team.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
-    const matchesCategory = selectedCategory === "all" || player.category === selectedCategory;
-    const matchesPosition = selectedPosition === "all" || player.position === selectedPosition;
-    const matchesEvaluation = selectedEvaluation === "all" || (player.evaluations && player.evaluations.includes(selectedEvaluation));
+    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(player.category);
+    
+    // ポジションフィルター：選手のポジションを分割してチェック
+    const playerPositions = player.position.split(/[,、]/).map(p => p.trim());
+    const matchesPosition = selectedPositions.length === 0 || 
+      playerPositions.some(pos => selectedPositions.includes(pos));
+    
+    const matchesEvaluation = selectedEvaluations.length === 0 || 
+      (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
     
     return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
   });
@@ -159,9 +167,9 @@ export default function Players() {
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedYear("all");
-    setSelectedCategory("all");
-    setSelectedPosition("all");
-    setSelectedEvaluation("all");
+    setSelectedCategories([]);
+    setSelectedPositions([]);
+    setSelectedEvaluations([]);
   };
 
   const playersStructuredData = {
@@ -244,50 +252,113 @@ export default function Players() {
               </SelectContent>
             </Select>
             
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-              <SelectTrigger className="w-full sm:w-32">
-                <SelectValue placeholder="所属" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全ての所属</SelectItem>
-                <SelectItem value="高校">高校生</SelectItem>
-                <SelectItem value="大学">大学生</SelectItem>
-                <SelectItem value="社会人">社会人</SelectItem>
-                <SelectItem value="独立リーグ">独立リーグ</SelectItem>
-                <SelectItem value="その他">その他</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-32 justify-between">
+                  <span className="truncate">
+                    {selectedCategories.length === 0 ? "全ての所属" : `所属(${selectedCategories.length})`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-3 bg-background z-50">
+                <div className="space-y-2">
+                  {["高校", "大学", "社会人", "独立リーグ", "その他"].map((category) => (
+                    <div key={category} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`category-${category}`}
+                        checked={selectedCategories.includes(category)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedCategories([...selectedCategories, category]);
+                          } else {
+                            setSelectedCategories(selectedCategories.filter(c => c !== category));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`category-${category}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {category}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
             
-            <Select value={selectedPosition} onValueChange={setSelectedPosition}>
-              <SelectTrigger className="w-full sm:w-32">
-                <SelectValue placeholder="ポジション" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全てのポジション</SelectItem>
-                <SelectItem value="投手">投手</SelectItem>
-                <SelectItem value="捕手">捕手</SelectItem>
-                <SelectItem value="内野手">内野手</SelectItem>
-                <SelectItem value="外野手">外野手</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-32 justify-between">
+                  <span className="truncate">
+                    {selectedPositions.length === 0 ? "全てのポジション" : `ポジション(${selectedPositions.length})`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-3 bg-background z-50">
+                <div className="space-y-2">
+                  {positionOrder.map((position) => (
+                    <div key={position} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`position-${position}`}
+                        checked={selectedPositions.includes(position)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedPositions([...selectedPositions, position]);
+                          } else {
+                            setSelectedPositions(selectedPositions.filter(p => p !== position));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`position-${position}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {position}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
             
-            <Select value={selectedEvaluation} onValueChange={setSelectedEvaluation}>
-              <SelectTrigger className="w-full sm:w-32">
-                <SelectValue placeholder="評価" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全ての評価</SelectItem>
-                <SelectItem value="1位競合">1位競合</SelectItem>
-                <SelectItem value="1位一本釣り">1位一本釣り</SelectItem>
-                <SelectItem value="外れ1位">外れ1位</SelectItem>
-                <SelectItem value="2位">2位</SelectItem>
-                <SelectItem value="3位">3位</SelectItem>
-                <SelectItem value="4位">4位</SelectItem>
-                <SelectItem value="5位">5位</SelectItem>
-                <SelectItem value="6位以下">6位以下</SelectItem>
-                <SelectItem value="育成">育成</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-32 justify-between">
+                  <span className="truncate">
+                    {selectedEvaluations.length === 0 ? "全ての評価" : `評価(${selectedEvaluations.length})`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-3 bg-background z-50">
+                <div className="space-y-2">
+                  {evaluationOrder.map((evaluation) => (
+                    <div key={evaluation} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`evaluation-${evaluation}`}
+                        checked={selectedEvaluations.includes(evaluation)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedEvaluations([...selectedEvaluations, evaluation]);
+                          } else {
+                            setSelectedEvaluations(selectedEvaluations.filter(e => e !== evaluation));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`evaluation-${evaluation}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {evaluation}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
             
             <Button 
               variant="outline" 
