@@ -85,6 +85,7 @@ export type Database = {
       }
       players: {
         Row: {
+          age: number | null
           batting_hand: string | null
           career_path: string | null
           category: string
@@ -107,6 +108,7 @@ export type Database = {
           year: number | null
         }
         Insert: {
+          age?: number | null
           batting_hand?: string | null
           career_path?: string | null
           category: string
@@ -129,6 +131,7 @@ export type Database = {
           year?: number | null
         }
         Update: {
+          age?: number | null
           batting_hand?: string | null
           career_path?: string | null
           category?: string

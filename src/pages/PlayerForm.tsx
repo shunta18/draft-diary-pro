@@ -60,6 +60,7 @@ export default function PlayerForm() {
     positions: [] as string[],
     battingThrowing: "",
     hometown: "",
+    age: undefined as number | undefined,
     
     usage: "",
     evaluations: [] as string[],
@@ -91,6 +92,7 @@ export default function PlayerForm() {
             positions: sortPositions(Array.isArray(player.position) ? player.position : player.position.split(/[,、]/).map(p => p.trim()).filter(p => p)),
             battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
             hometown: player.hometown || "",
+            age: player.age,
             
             usage: player.usage || "",
             evaluations: player.evaluations || [],
@@ -190,6 +192,7 @@ export default function PlayerForm() {
       batting_hand: formData.battingThrowing.includes("右打") ? "右" : formData.battingThrowing.includes("左打") ? "左" : undefined,
       throwing_hand: formData.battingThrowing.includes("右投") ? "右" : formData.battingThrowing.includes("左投") ? "左" : undefined,
       hometown: formData.hometown,
+      age: formData.age,
       
       usage: formData.usage,
       evaluations: formData.evaluations,
@@ -402,6 +405,18 @@ export default function PlayerForm() {
                     value={formData.hometown}
                     onChange={(e) => setFormData(prev => ({ ...prev, hometown: e.target.value }))}
                     placeholder="出身地を入力"
+                    className="shadow-soft"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="age">年齢</Label>
+                  <Input
+                    id="age"
+                    type="number"
+                    value={formData.age || ""}
+                    onChange={(e) => setFormData(prev => ({ ...prev, age: e.target.value ? parseInt(e.target.value) : undefined }))}
+                    placeholder="例：18"
                     className="shadow-soft"
                   />
                 </div>
