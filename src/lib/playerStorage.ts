@@ -9,6 +9,7 @@ export interface Player {
   draftYear: string;
   battingThrowing?: string;
   hometown?: string;
+  age?: number;
   
   usage?: string;
   memo?: string;

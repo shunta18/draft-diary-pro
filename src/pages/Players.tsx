@@ -512,6 +512,12 @@ export default function Players() {
                     </div>
                   )}
 
+                  {selectedPlayer.age && (
+                    <div className="flex items-center space-x-2">
+                      <span className="text-muted-foreground">年齢:</span>
+                      <span>{selectedPlayer.age}歳</span>
+                    </div>
+                  )}
 
                   {selectedPlayer.usage && (
                     <div className="flex items-center space-x-2">
