@@ -81,7 +81,7 @@ export default function Players() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("2025");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
@@ -166,7 +166,7 @@ export default function Players() {
 
   const resetFilters = () => {
     setSearchTerm("");
-    setSelectedYear("all");
+    setSelectedYear("2025");
     setSelectedCategories([]);
     setSelectedPositions([]);
     setSelectedEvaluations([]);
@@ -249,6 +249,7 @@ export default function Players() {
                 <SelectItem value="2025">2025年度</SelectItem>
                 <SelectItem value="2026">2026年度</SelectItem>
                 <SelectItem value="2027">2027年度</SelectItem>
+                <SelectItem value="2028">2028年度</SelectItem>
               </SelectContent>
             </Select>
             
