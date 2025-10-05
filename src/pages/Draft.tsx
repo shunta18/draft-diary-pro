@@ -821,7 +821,7 @@ export default function Draft() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-8">
       <SEO 
         title="ドラフト構想"
         description="プロ野球12球団のドラフト指名予想を作成。球団別の戦略的ドラフト構想をシミュレーション。育成ドラフトにも対応。"
