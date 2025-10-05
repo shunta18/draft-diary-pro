@@ -173,6 +173,81 @@ const Index = () => {
           </Alert>
         )}
 
+        {/* About Section - SEO & AdSense対策 */}
+        <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4">
+          <h2 className="text-xl font-bold text-primary">BaaS 野球スカウトノートについて</h2>
+          
+          <div className="space-y-3 text-sm text-foreground/90 leading-relaxed">
+            <p>
+              BaaS 野球スカウトノートは、プロ野球ドラフト会議に向けて候補選手を徹底的に管理・評価できる野球ファン専用のウェブアプリケーションです。
+              高校野球、大学野球、社会人野球、独立リーグなど、あらゆるカテゴリーのドラフト候補選手情報を一元管理し、
+              自分だけのスカウティングデータベースを構築できます。
+            </p>
+            
+            <h3 className="text-base font-semibold text-primary pt-2">主な機能</h3>
+            
+            <div className="space-y-2 pl-4">
+              <div>
+                <h4 className="font-medium text-primary">1. 選手情報の詳細管理</h4>
+                <p className="text-muted-foreground">
+                  ドラフト候補選手の基本情報（氏名、出身校、ポジション、投打、身長体重）から、
+                  詳細な評価項目（ミート力、パワー、走力、守備力、球速、制球力など）まで、
+                  プロスカウトと同じ視点で選手を評価・記録できます。各選手には最大5段階の総合評価を設定可能で、
+                  将来性や即戦力度も含めた多角的な分析が行えます。
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-primary">2. ドラフト構想の作成</h4>
+                <p className="text-muted-foreground">
+                  プロ野球12球団それぞれの視点に立ったドラフト構想を作成できます。
+                  1位指名から育成枠まで、各球団のチーム事情や補強ポイントを考慮した指名候補をリストアップ。
+                  本命、対抗、候補という優先順位付けで、ドラフト会議当日のシミュレーションが可能です。
+                  戦略メモ機能により、なぜその選手を指名候補としたのか、理由や背景も記録できます。
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-primary">3. 観戦日記・スカウティングレポート</h4>
+                <p className="text-muted-foreground">
+                  実際に野球の試合を観戦した際の記録を日記形式で保存できます。
+                  試合日時、対戦カード、球場、天候、観戦した選手、試合結果、スコア、そして詳細な観戦メモまで、
+                  現地でしか得られない生の情報を蓄積。後から振り返ることで、選手の成長過程や
+                  コンディション変化を追跡できます。写真の添付にも対応し、ビジュアルな記録も可能です。
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-primary">4. データの永続的な保存</h4>
+                <p className="text-muted-foreground">
+                  アカウント登録により、入力したすべてのデータがクラウド上に安全に保存されます。
+                  複数のデバイスからアクセス可能で、パソコン、スマートフォン、タブレットなど、
+                  どこからでも自分のスカウティングデータベースを確認・編集できます。
+                  お試し利用では端末のローカルストレージに保存されるため、ブラウザのデータ削除で消失する可能性がありますが、
+                  アカウント登録後は安心して長期的にデータを蓄積できます。
+                </p>
+              </div>
+            </div>
+            
+            <h3 className="text-base font-semibold text-primary pt-2">こんな方におすすめ</h3>
+            
+            <ul className="list-disc list-inside space-y-1 text-muted-foreground pl-4">
+              <li>プロ野球ドラフト会議を毎年楽しみにしている野球ファンの方</li>
+              <li>高校野球や大学野球の試合を頻繁に観戦される方</li>
+              <li>アマチュア野球選手の情報を体系的に管理したい方</li>
+              <li>自分なりのドラフト予想や分析を行いたい方</li>
+              <li>将来有望な選手の成長を長期的に追いかけたい方</li>
+              <li>野球チームの編成や戦略に興味がある方</li>
+            </ul>
+            
+            <p className="pt-2">
+              BaaS 野球スカウトノートを使えば、単なる野球観戦がより深く、より楽しいものになります。
+              あなただけのスカウティング視点を磨き、プロ野球ドラフト会議をより一層楽しみましょう。
+              まずはお試し利用で機能をご体験いただき、気に入ったらアカウント登録で本格的にご活用ください。
+            </p>
+          </div>
+        </section>
+
         {/* Stats Cards - 小さくして3列配置 */}
         <div className="grid grid-cols-3 gap-3">
           <div className="bg-card/50 border border-border/40 rounded-lg p-3 text-center">
