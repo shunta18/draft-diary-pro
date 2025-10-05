@@ -81,7 +81,7 @@ export default function Players() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedYear, setSelectedYear] = useState("all");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
@@ -166,11 +166,16 @@ export default function Players() {
 
   const resetFilters = () => {
     setSearchTerm("");
-    setSelectedYear("2025");
+    setSelectedYear(user ? "2025" : "all");
     setSelectedCategories([]);
     setSelectedPositions([]);
     setSelectedEvaluations([]);
   };
+
+  // Set default year filter based on auth status
+  useEffect(() => {
+    setSelectedYear(user ? "2025" : "all");
+  }, [user]);
 
   const playersStructuredData = {
     "@context": "https://schema.org",
