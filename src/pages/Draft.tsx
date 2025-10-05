@@ -821,7 +821,7 @@ export default function Draft() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-8">
       <SEO 
         title="ドラフト構想"
         description="プロ野球12球団のドラフト指名予想を作成。球団別の戦略的ドラフト構想をシミュレーション。育成ドラフトにも対応。"
@@ -846,6 +846,33 @@ export default function Draft() {
       </div>
 
       <div className="p-4 space-y-6">
+        {/* Login Notice for Guest Users */}
+        {!user && (
+          <Card className="bg-yellow-50 border-yellow-200 shadow-soft">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-3">
+                <div className="bg-yellow-100 p-2 rounded-full">
+                  <Star className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-yellow-800">お試しモードでご利用中</h3>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    お試しモードでは横浜DeNAベイスターズのみご利用いただけます。<br />
+                    <Button 
+                      variant="link" 
+                      className="p-0 h-auto text-yellow-800 underline"
+                      onClick={() => navigate('/auth')}
+                    >
+                      ログイン
+                    </Button>
+                    すると、全12球団のドラフト構想を作成できます。
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <Card className="gradient-card border-0 shadow-soft">
           <CardHeader>
             <CardTitle className="text-primary">球団を選択してください</CardTitle>
@@ -857,8 +884,12 @@ export default function Draft() {
               </SelectTrigger>
               <SelectContent>
                 {teams.map((team) => (
-                  <SelectItem key={team.name} value={team.name}>
-                    {team.name}
+                  <SelectItem 
+                    key={team.name} 
+                    value={team.name}
+                    disabled={!user && team.name !== "横浜DeNAベイスターズ"}
+                  >
+                    {team.name}{!user && team.name !== "横浜DeNAベイスターズ" ? " (ログインが必要)" : ""}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -905,6 +936,51 @@ export default function Draft() {
             )}
           </CardContent>
         </Card>
+
+        {/* About Section - SEO & AdSense対策（非ログイン時のみ表示） */}
+        {!user && (
+          <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4">
+            <h2 className="text-xl font-bold text-primary">ドラフト構想機能について</h2>
+            
+            <div className="space-y-3 text-sm text-foreground/90 leading-relaxed">
+              <p>
+                このページでは、プロ野球12球団のドラフト戦略を自由に構想できます。複数のプランを作成し、
+                各球団の戦力分析や獲得候補選手の優先順位を詳細に管理できる本格的なドラフトシミュレーションツールです。
+              </p>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-primary">主な機能：</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>12球団それぞれの独立したドラフト構想管理</li>
+                  <li>プランA・B・Cの複数パターン作成（名称変更可能）</li>
+                  <li>戦略方針メモの保存（各プラン別）</li>
+                  <li>ポジション別の獲得目標設定</li>
+                  <li>ドラフト指名候補の本命・候補1〜3の登録</li>
+                  <li>育成ドラフト候補の管理</li>
+                  <li>各ポジションへのメモ機能</li>
+                  <li>Twitter・LINEでの構想シェア機能</li>
+                  <li>お気に入り球団の登録</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-primary">こんな方におすすめ：</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>ドラフト会議が毎年の楽しみな野球ファン</li>
+                  <li>各球団の戦力分析が好きな方</li>
+                  <li>自分なりのドラフト戦略を練りたい方</li>
+                  <li>複数シナリオを比較検討したい方</li>
+                  <li>SNSでドラフト予想を共有したい方</li>
+                </ul>
+              </div>
+              
+              <p className="text-xs text-muted-foreground pt-2 border-t">
+                現在お試しモードでご利用中です。アカウント登録すると、全12球団の構想データがクラウドに保存され、
+                いつでもどこでも編集・閲覧が可能になります。
+              </p>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );

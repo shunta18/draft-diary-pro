@@ -297,6 +297,49 @@ export default function Diary() {
             </Card>
           )}
         </div>
+
+        {/* About Section - SEO & AdSense対策（非ログイン時のみ表示） */}
+        {!user && (
+          <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4 mt-6">
+            <h2 className="text-xl font-bold text-primary">観戦日記機能について</h2>
+            
+            <div className="space-y-3 text-sm text-foreground/90 leading-relaxed">
+              <p>
+                このページでは、野球の観戦記録を詳細に記録・管理できます。高校野球、大学野球、社会人野球、独立リーグなど、
+                あらゆるカテゴリーの試合観戦を記録し、選手評価や試合の印象を後から振り返ることができます。
+              </p>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-primary">主な機能：</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>試合情報の記録（対戦カード、日時、会場、スコア）</li>
+                  <li>カテゴリー別の分類（高校・大学・社会人・独立リーグ・その他）</li>
+                  <li>選手別のコメント記録</li>
+                  <li>全体的な試合の印象メモ</li>
+                  <li>年月・カテゴリーによる絞り込み検索</li>
+                  <li>対戦カード・会場名での検索</li>
+                  <li>観戦記録の編集・削除機能</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-primary">こんな方におすすめ：</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>球場に足を運んで野球観戦を楽しむ方</li>
+                  <li>注目選手の成長過程を記録したい方</li>
+                  <li>複数の試合を見比べて評価したい方</li>
+                  <li>自分だけの観戦ノートを作りたい方</li>
+                  <li>後から観戦記録を振り返りたい方</li>
+                </ul>
+              </div>
+              
+              <p className="text-xs text-muted-foreground pt-2 border-t">
+                現在お試しモードでご利用中です。アカウント登録すると、すべての観戦記録がクラウドに保存され、
+                スマートフォンやタブレットからもアクセスできるようになります。
+              </p>
+            </div>
+          </section>
+        )}
       </div>
 
       <DiaryDetailDialog 

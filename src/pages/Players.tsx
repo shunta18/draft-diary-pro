@@ -419,6 +419,50 @@ export default function Players() {
             </Card>
           )}
         </div>
+
+        {/* About Section - SEO & AdSense対策（非ログイン時のみ表示） */}
+        {!user && (
+          <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4 mt-6">
+            <h2 className="text-xl font-bold text-primary">選手リスト機能について</h2>
+            
+            <div className="space-y-3 text-sm text-foreground/90 leading-relaxed">
+              <p>
+                このページでは、ドラフト候補選手の詳細データを一覧で管理できます。高校野球、大学野球、社会人野球など、
+                カテゴリー別に選手情報を整理し、効率的なスカウティング活動をサポートします。
+              </p>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-primary">主な機能：</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>選手名、チーム名による高速検索</li>
+                  <li>年度、カテゴリー、ポジション、評価による多角的なフィルタリング</li>
+                  <li>詳細な選手プロフィール（身体データ、投打、出身地など）</li>
+                  <li>ドラフト評価（1位競合、外れ1位、育成など）の管理</li>
+                  <li>球団カラーによる視覚的な識別</li>
+                  <li>打撃成績、投球成績の記録</li>
+                  <li>スカウトメモの保存</li>
+                  <li>動画リンクの管理</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-primary">こんな方におすすめ：</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>プロ野球ドラフト会議を楽しみにしている野球ファン</li>
+                  <li>高校野球、大学野球、社会人野球の観戦が好きな方</li>
+                  <li>有望選手の成長を追いかけたい方</li>
+                  <li>自分なりのドラフト予想を楽しみたい方</li>
+                  <li>複数年にわたる選手データを管理したい方</li>
+                </ul>
+              </div>
+              
+              <p className="text-xs text-muted-foreground pt-2 border-t">
+                現在お試しモードでご利用中です。アカウント登録すると、すべてのデータがクラウドに保存され、
+                どのデバイスからでもアクセスできるようになります。
+              </p>
+            </div>
+          </section>
+        )}
       </div>
       
       {/* Player Detail Dialog */}
