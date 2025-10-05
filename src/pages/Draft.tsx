@@ -905,6 +905,51 @@ export default function Draft() {
             )}
           </CardContent>
         </Card>
+
+        {/* About Section - SEO & AdSense対策（非ログイン時のみ表示） */}
+        {!user && (
+          <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4 mt-6">
+            <h2 className="text-xl font-bold text-primary">ドラフト構想機能について</h2>
+            
+            <div className="space-y-3 text-sm text-foreground/90 leading-relaxed">
+              <p>
+                このページでは、プロ野球12球団のドラフト戦略を自由に構想できます。複数のプランを作成し、
+                各球団の戦力分析や獲得候補選手の優先順位を詳細に管理できる本格的なドラフトシミュレーションツールです。
+              </p>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-primary">主な機能：</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>12球団それぞれの独立したドラフト構想管理</li>
+                  <li>プランA・B・Cの複数パターン作成（名称変更可能）</li>
+                  <li>戦略方針メモの保存（各プラン別）</li>
+                  <li>ポジション別の獲得目標設定</li>
+                  <li>ドラフト指名候補の本命・候補1〜3の登録</li>
+                  <li>育成ドラフト候補の管理</li>
+                  <li>各ポジションへのメモ機能</li>
+                  <li>Twitter・LINEでの構想シェア機能</li>
+                  <li>お気に入り球団の登録</li>
+                </ul>
+              </div>
+              
+              <div className="space-y-2">
+                <h3 className="font-semibold text-primary">こんな方におすすめ：</h3>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>ドラフト会議が毎年の楽しみな野球ファン</li>
+                  <li>各球団の戦力分析が好きな方</li>
+                  <li>自分なりのドラフト戦略を練りたい方</li>
+                  <li>複数シナリオを比較検討したい方</li>
+                  <li>SNSでドラフト予想を共有したい方</li>
+                </ul>
+              </div>
+              
+              <p className="text-xs text-muted-foreground pt-2 border-t">
+                現在お試しモードでご利用中です。アカウント登録すると、すべての構想データがクラウドに保存され、
+                いつでもどこでも編集・閲覧が可能になります。
+              </p>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   );
