@@ -308,7 +308,14 @@ export default function Draft() {
     }
   }, [user, loading]);
 
-  const favoriteTeams = teams.filter(team => favorites.includes(team.name));
+  // Filter favorite teams based on user login status
+  const favoriteTeams = teams.filter(team => {
+    if (!user) {
+      // Non-logged in users can only see 横浜DeNAベイスターズ
+      return favorites.includes(team.name) && team.name === "横浜DeNAベイスターズ";
+    }
+    return favorites.includes(team.name);
+  });
   const otherTeams = teams.filter(team => !favorites.includes(team.name));
 
   if (selectedTeam) {
