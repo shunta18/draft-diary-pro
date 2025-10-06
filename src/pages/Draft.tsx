@@ -852,6 +852,33 @@ export default function Draft() {
               )}
             </CardContent>
           </Card>
+
+          {/* About Section */}
+          <Card className="shadow-soft">
+            <CardHeader>
+              <CardTitle className="text-primary">ドラフト構想について</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">このアプリでできること</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground">
+                  <li>• プロ野球12球団のドラフト指名構想を作成</li>
+                  <li>• 各球団の戦略メモを記録</li>
+                  <li>• 育成ドラフトの構想も管理</li>
+                  <li>• 作成した構想をSNSでシェア</li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">使い方</h3>
+                <ol className="space-y-2 text-sm text-muted-foreground">
+                  <li>1. 上のドロップダウンから球団を選択</li>
+                  <li>2. 戦略メモに球団の方針を記入</li>
+                  <li>3. 各巡目の指名候補選手を選択</li>
+                  <li>4. 構想を保存して管理</li>
+                </ol>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
