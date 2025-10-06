@@ -860,22 +860,34 @@ export default function Draft() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h3 className="font-semibold text-foreground mb-2">このアプリでできること</h3>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• プロ野球12球団のドラフト指名構想を作成</li>
-                  <li>• 各球団の戦略メモを記録</li>
-                  <li>• 育成ドラフトの構想も管理</li>
-                  <li>• 作成した構想をSNSでシェア</li>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  このアプリは、プロ野球12球団のドラフト指名構想を自由に作成・管理できるツールです。各球団のフロント担当者になったつもりで、戦略的なドラフト会議のシミュレーションをお楽しみいただけます。
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground mb-2">主な機能</h3>
+                <ul className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+                  <li>• <strong>複数の構想管理：</strong>球団ごとに複数のドラフト構想を作成・保存できます</li>
+                  <li>• <strong>詳細な戦略メモ：</strong>各球団の補強ポイントや方針を記録できます</li>
+                  <li>• <strong>育成ドラフト対応：</strong>支配下選手だけでなく、育成ドラフトの構想も管理可能</li>
+                  <li>• <strong>SNSシェア機能：</strong>作成した構想をX（旧Twitter）で共有して、他のファンと議論できます</li>
+                  <li>• <strong>お気に入り機能：</strong>よく使う球団を登録して、素早くアクセスできます</li>
                 </ul>
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-2">使い方</h3>
-                <ol className="space-y-2 text-sm text-muted-foreground">
-                  <li>1. 上のドロップダウンから球団を選択</li>
-                  <li>2. 戦略メモに球団の方針を記入</li>
-                  <li>3. 各巡目の指名候補選手を選択</li>
-                  <li>4. 構想を保存して管理</li>
+                <ol className="space-y-2 text-sm text-muted-foreground leading-relaxed">
+                  <li>1. 上部のドロップダウンメニューから対象球団を選択します</li>
+                  <li>2. 「戦略メモ」欄に球団の補強方針や重視するポジションを記入します</li>
+                  <li>3. 各巡目の指名候補選手を「選手を選択」ボタンから設定します</li>
+                  <li>4. 必要に応じて育成ドラフトの候補も選択します</li>
+                  <li>5. 「構想を保存」ボタンで作成した構想を保存・管理します</li>
                 </ol>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  ドラフト会議当日まで何度でも編集できるので、最新の情報をもとに理想のドラフト構想を練り上げましょう。プロ野球ファン同士で構想を共有し、ドラフトをもっと楽しみましょう。
+                </p>
               </div>
             </CardContent>
           </Card>
