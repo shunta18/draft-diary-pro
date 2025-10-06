@@ -8,6 +8,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { SEO } from "@/components/SEO";
 
 
 export default function Settings() {
@@ -106,19 +107,27 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <SEO 
+        title="設定"
+        description="アカウント情報の確認、利用規約・プライバシーポリシーの閲覧、ログアウト、アカウント削除などの設定を管理。"
+        keywords={[
+          "設定", "アカウント管理", "プロフィール", "ログアウト", 
+          "アカウント削除", "利用規約", "プライバシーポリシー"
+        ]}
+      />
       {/* Header */}
-      <div className="bg-card border-b shadow-soft">
+      <header className="bg-card border-b shadow-soft">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
             <Link to="/">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="ホームに戻る">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
             <h1 className="text-xl font-bold text-primary">設定</h1>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="p-4 space-y-6">
         {/* User Profile Card */}

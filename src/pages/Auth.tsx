@@ -10,6 +10,7 @@ import { Navigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoIcon from "@/assets/logo.png";
+import { SEO } from "@/components/SEO";
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
@@ -83,19 +84,27 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <SEO 
+        title="ログイン・新規登録"
+        description="BaaS野球スカウトノートへのログイン・新規アカウント作成ページ。メールアドレスで簡単登録、データをクラウド保存。"
+        keywords={[
+          "ログイン", "新規登録", "アカウント作成", "会員登録", 
+          "野球アプリ", "ドラフト管理", "サインアップ"
+        ]}
+      />
       {/* Header */}
-      <div className="bg-card border-b shadow-soft">
+      <header className="bg-card border-b shadow-soft">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
             <Link to="/">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="ホームに戻る">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
             <h1 className="text-xl font-bold text-primary">ログイン・新規登録</h1>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="flex items-center justify-center p-4 mt-8">
         <Card className="w-full max-w-md gradient-card border-0 shadow-soft">
