@@ -2,23 +2,32 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import { SEO } from "@/components/SEO";
 
 export default function Terms() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <SEO 
+        title="利用規約"
+        description="BaaS野球スカウトノートの利用規約。サービス概要、利用条件、禁止事項、データの取り扱い、免責事項について説明。"
+        keywords={[
+          "利用規約", "サービス規約", "禁止事項", "免責事項", 
+          "データ管理", "サービス条件", "野球アプリ"
+        ]}
+      />
       {/* Header */}
-      <div className="bg-card border-b shadow-soft">
+      <header className="bg-card border-b shadow-soft">
         <div className="flex items-center justify-between p-4">
           <div className="flex items-center space-x-4">
             <Link to="/">
-              <Button variant="ghost" size="icon">
+              <Button variant="ghost" size="icon" aria-label="ホームに戻る">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
             <h1 className="text-xl font-bold text-primary">利用規約</h1>
           </div>
         </div>
-      </div>
+      </header>
 
       <div className="p-4 max-w-4xl mx-auto">
         <Card className="gradient-card border-0 shadow-soft">
