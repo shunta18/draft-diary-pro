@@ -757,6 +757,33 @@ export default function Draft() {
         </div>
 
         <div className="p-4 space-y-6">
+          {/* Login Notice for Guest Users */}
+          {!user && (
+            <Card className="bg-yellow-50 border-yellow-200 shadow-soft">
+              <CardContent className="pt-6">
+                <div className="flex items-center space-x-3">
+                  <div className="bg-yellow-100 p-2 rounded-full">
+                    <Star className="h-5 w-5 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-yellow-800">お試しモードでご利用中</h3>
+                    <p className="text-sm text-yellow-700 mt-1">
+                      お試しモードでは横浜DeNAベイスターズのみご利用いただけます。<br />
+                      <Button 
+                        variant="link" 
+                        className="p-0 h-auto text-yellow-800 underline"
+                        onClick={() => navigate('/auth')}
+                      >
+                        ログイン
+                      </Button>
+                      すると、全12球団のドラフト構想を作成できます。
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <Card className="gradient-card border-0 shadow-soft">
             <CardHeader>
               <CardTitle className="text-primary">球団を選択してください</CardTitle>
@@ -768,8 +795,12 @@ export default function Draft() {
                 </SelectTrigger>
                 <SelectContent>
                   {teams.map((team) => (
-                    <SelectItem key={team.name} value={team.name}>
-                      {team.name}
+                    <SelectItem 
+                      key={team.name} 
+                      value={team.name}
+                      disabled={!user && team.name !== "横浜DeNAベイスターズ"}
+                    >
+                      {team.name}{!user && team.name !== "横浜DeNAベイスターズ" ? " (ログインが必要)" : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
