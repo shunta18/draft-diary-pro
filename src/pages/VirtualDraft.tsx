@@ -124,6 +124,7 @@ const VirtualDraft = () => {
         const { data, error } = await supabase
           .from("players")
           .select("*")
+          .eq("year", 2025)
           .order("name");
         
         if (error) throw error;
@@ -131,7 +132,9 @@ const VirtualDraft = () => {
         setPlayers(normalized);
       } else {
         const localPlayers = getPlayers();
-        const normalized = localPlayers.map(normalizeLocalPlayer);
+        const normalized = localPlayers
+          .map(normalizeLocalPlayer)
+          .filter(p => p.draftYear === "2025");
         setPlayers(normalized);
       }
     } catch (error) {
