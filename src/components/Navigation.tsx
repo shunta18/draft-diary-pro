@@ -1,4 +1,4 @@
-import { Menu, Home, Users, Trophy, Calendar, Settings } from "lucide-react";
+import { Menu, Home, Users, Trophy, Calendar, Settings, Shuffle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -15,6 +15,7 @@ const navItems: NavItem[] = [
   { icon: Home, label: "ホーム", path: "/" },
   { icon: Users, label: "選手リスト", path: "/players" },
   { icon: Trophy, label: "ドラフト構想", path: "/draft" },
+  { icon: Shuffle, label: "仮想ドラフト", path: "/virtual-draft" },
   { icon: Calendar, label: "観戦日記", path: "/diary" },
   { icon: Settings, label: "設定", path: "/settings" },
 ];
