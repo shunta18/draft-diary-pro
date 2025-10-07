@@ -536,10 +536,15 @@ const VirtualDraft = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {(() => {
-            // 1位指名の抽選フェーズでは奇数ラウンド順、それ以外は固定の表示順
-            const teamOrder = finalSelections.length < teams.length && currentRound === 1 
-              ? oddRoundOrder 
-              : displayOrder;
+            // 1位指名の抽選フェーズでは1位の順番、2位以降は各ラウンドの指名順
+            let teamOrder: number[];
+            if (finalSelections.length < teams.length) {
+              // 1位指名の抽選フェーズ
+              teamOrder = oddRoundOrder;
+            } else {
+              // 2位以降のウェーバー方式：現在のラウンドに応じた指名順
+              teamOrder = getWaiverOrder(currentRound);
+            }
             
             return teamOrder.map(teamId => {
               const team = teams.find(t => t.id === teamId);
