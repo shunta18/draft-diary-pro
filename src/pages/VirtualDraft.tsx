@@ -68,6 +68,8 @@ interface TeamSelection {
   teamId: number;
   playerId: number | null;
   playerName: string | null;
+  compensatoryPlayerId: number | null;
+  compensatoryPlayerName: string | null;
 }
 
 interface LotteryResult {
@@ -108,7 +110,13 @@ const VirtualDraft = () => {
   const { toast } = useToast();
   const [players, setPlayers] = useState<NormalizedPlayer[]>([]);
   const [selections, setSelections] = useState<TeamSelection[]>(
-    teams.map(team => ({ teamId: team.id, playerId: null, playerName: null }))
+    teams.map(team => ({ 
+      teamId: team.id, 
+      playerId: null, 
+      playerName: null,
+      compensatoryPlayerId: null,
+      compensatoryPlayerName: null
+    }))
   );
   const [lotteryResults, setLotteryResults] = useState<LotteryResult[]>([]);
   const [isLotteryComplete, setIsLotteryComplete] = useState(false);
@@ -217,6 +225,45 @@ const VirtualDraft = () => {
     return result && result.competingTeams.includes(teamId) && result.winner !== teamId;
   };
 
+  const getLoserTeams = () => {
+    const loserTeamIds: number[] = [];
+    lotteryResults.forEach(result => {
+      result.competingTeams.forEach(teamId => {
+        if (teamId !== result.winner) {
+          loserTeamIds.push(teamId);
+        }
+      });
+    });
+    return loserTeamIds;
+  };
+
+  const getSelectedPlayerIds = () => {
+    const selectedIds: number[] = [];
+    selections.forEach(sel => {
+      if (sel.playerId) {
+        const result = lotteryResults.find(r => r.playerId === sel.playerId);
+        if (!result || result.winner === sel.teamId) {
+          selectedIds.push(sel.playerId);
+        }
+      }
+    });
+    return selectedIds;
+  };
+
+  const handleCompensatorySelect = (teamId: number, playerId: number | null) => {
+    setSelections(prev => 
+      prev.map(sel => 
+        sel.teamId === teamId 
+          ? { 
+              ...sel, 
+              compensatoryPlayerId: playerId,
+              compensatoryPlayerName: playerId ? players.find(p => p.id === playerId)?.name || null : null 
+            }
+          : sel
+      )
+    );
+  };
+
   const allTeamsSelected = selections.every(sel => sel.playerId !== null);
 
   if (loading) {
@@ -280,6 +327,10 @@ const VirtualDraft = () => {
             const selection = selections.find(s => s.teamId === team.id);
             const isWinner = selection?.playerId && isTeamWinner(team.id, selection.playerId);
             const isLoser = selection?.playerId && isTeamLoser(team.id, selection.playerId);
+            const loserTeams = getLoserTeams();
+            const isLoserTeam = loserTeams.includes(team.id);
+            const selectedPlayerIds = getSelectedPlayerIds();
+            const availablePlayers = players.filter(p => !selectedPlayerIds.includes(p.id));
             
             return (
               <Card key={team.id} className={`${isWinner ? 'ring-2 ring-green-500' : isLoser ? 'opacity-60' : ''}`}>
@@ -330,6 +381,32 @@ const VirtualDraft = () => {
                         選手を選択
                       </Button>
                     </PlayerSelectionDialog>
+
+                    {isLotteryComplete && isLoserTeam && (
+                      <div className="pt-4 border-t">
+                        <p className="text-sm text-muted-foreground mb-2">ハズレ1位</p>
+                        {selection?.compensatoryPlayerName ? (
+                          <div className="space-y-2">
+                            <p className="font-semibold text-lg">{selection.compensatoryPlayerName}</p>
+                            <Badge variant="default" className="bg-orange-600">
+                              ハズレ1位指名
+                            </Badge>
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">未選択</p>
+                        )}
+                        
+                        <PlayerSelectionDialog
+                          players={availablePlayers}
+                          selectedPlayerId={selection?.compensatoryPlayerId || null}
+                          onSelect={(playerId) => handleCompensatorySelect(team.id, playerId)}
+                        >
+                          <Button variant="outline" className="w-full mt-2">
+                            ハズレ1位を選択
+                          </Button>
+                        </PlayerSelectionDialog>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
