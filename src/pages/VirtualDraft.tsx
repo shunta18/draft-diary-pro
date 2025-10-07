@@ -51,18 +51,18 @@ interface NormalizedPlayer {
 type PlayerData = NormalizedPlayer;
 
 const teams = [
-  { id: 1, name: "北海道日本ハムファイターズ", color: "from-blue-600 to-blue-800" },
-  { id: 2, name: "東北楽天ゴールデンイーグルス", color: "from-red-700 to-red-900" },
-  { id: 3, name: "埼玉西武ライオンズ", color: "from-blue-500 to-blue-700" },
-  { id: 4, name: "千葉ロッテマリーンズ", color: "from-gray-800 to-black" },
-  { id: 5, name: "オリックス・バファローズ", color: "from-blue-600 to-gray-800" },
-  { id: 6, name: "福岡ソフトバンクホークス", color: "from-yellow-500 to-yellow-700" },
-  { id: 7, name: "読売ジャイアンツ", color: "from-orange-500 to-orange-700" },
-  { id: 8, name: "東京ヤクルトスワローズ", color: "from-green-600 to-green-800" },
-  { id: 9, name: "横浜DeNAベイスターズ", color: "from-blue-500 to-blue-700" },
-  { id: 10, name: "中日ドラゴンズ", color: "from-blue-700 to-blue-900" },
-  { id: 11, name: "阪神タイガース", color: "from-yellow-500 to-yellow-700" },
-  { id: 12, name: "広島東洋カープ", color: "from-red-600 to-red-800" },
+  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800" },
+  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900" },
+  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武", color: "from-blue-500 to-blue-700" },
+  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ", color: "from-gray-800 to-black" },
+  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス", color: "from-blue-600 to-gray-800" },
+  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク", color: "from-yellow-500 to-yellow-700" },
+  { id: 7, name: "読売ジャイアンツ", shortName: "巨人", color: "from-orange-500 to-orange-700" },
+  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト", color: "from-green-600 to-green-800" },
+  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA", color: "from-blue-500 to-blue-700" },
+  { id: 10, name: "中日ドラゴンズ", shortName: "中日", color: "from-blue-700 to-blue-900" },
+  { id: 11, name: "阪神タイガース", shortName: "阪神", color: "from-yellow-500 to-yellow-700" },
+  { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800" },
 ];
 
 interface TeamSelection {
@@ -363,7 +363,7 @@ const VirtualDraft = () => {
                     const status = getTeamStatus(team.id);
                     return (
                       <TableRow key={team.id}>
-                        <TableCell className="font-medium">{team.name}</TableCell>
+                        <TableCell className="font-medium">{team.shortName}</TableCell>
                         <TableCell>
                           {status.decided ? (
                             <Badge variant="default" className="gap-1">
