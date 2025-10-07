@@ -184,18 +184,40 @@ const VirtualDraft = () => {
   };
 
   const handlePlayerSelect = (teamId: number, playerId: number | null) => {
-    if (currentRound === 1) {
-      setSelections(prev => 
-        prev.map(sel => 
-          sel.teamId === teamId 
-            ? { 
-                ...sel, 
-                playerId, 
-                playerName: playerId ? players.find(p => p.id === playerId)?.name || null : null 
-              }
-            : sel
-        )
-      );
+    // 1位指名の抽選フェーズ（全球団が確定するまで）
+    if (finalSelections.length < teams.length) {
+      // 第1次選択
+      if (currentRound === 1) {
+        setSelections(prev => 
+          prev.map(sel => 
+            sel.teamId === teamId 
+              ? { 
+                  ...sel, 
+                  playerId, 
+                  playerName: playerId ? players.find(p => p.id === playerId)?.name || null : null 
+                }
+              : sel
+          )
+        );
+      } else {
+        // 第2次以降の選択（抽選外れた球団のみ）
+        setRoundSelections(prev => {
+          const existing = prev.find(s => s.teamId === teamId);
+          if (existing) {
+            return prev.map(s => 
+              s.teamId === teamId 
+                ? { ...s, playerId, playerName: playerId ? players.find(p => p.id === playerId)?.name || null : null }
+                : s
+            );
+          } else {
+            return [...prev, { 
+              teamId, 
+              playerId, 
+              playerName: playerId ? players.find(p => p.id === playerId)?.name || null : null 
+            }];
+          }
+        });
+      }
     } else {
       // 2位以降はウェーバー方式なので、現在指名中の球団のみ選択可能
       const currentPickingTeamId = waiverOrder[currentWaiverIndex];
@@ -219,13 +241,13 @@ const VirtualDraft = () => {
               setCurrentRound(prev => prev + 1);
               setCurrentWaiverIndex(0);
               toast({
-                title: `第${currentRound}ラウンド終了`,
-                description: `第${currentRound + 1}ラウンドを開始します`,
+                title: `${currentRound}位指名終了`,
+                description: `${currentRound + 1}位指名を開始します`,
               });
             } else {
               toast({
                 title: "ドラフト終了",
-                description: "すべてのラウンドが完了しました",
+                description: "すべての指名が完了しました",
               });
             }
           }
@@ -287,24 +309,35 @@ const VirtualDraft = () => {
 
     setAllRoundResults(prev => [...prev, results]);
     setFinalSelections(newFinalSelections);
-    
-    // 1位指名の全選手をallDraftPicksに追加
-    const firstRoundPicks: DraftPick[] = newFinalSelections.map(sel => ({
-      teamId: sel.teamId,
-      playerId: sel.playerId,
-      playerName: sel.playerName,
-      round: 1,
-    }));
-    setAllDraftPicks(firstRoundPicks);
 
-    // 2位指名へ進む
-    setCurrentRound(2);
-    setCurrentWaiverIndex(0);
-    setRoundSelections([]);
-    toast({
-      title: `1位指名抽選完了`,
-      description: `${results.length > 0 ? `${results.length}名の選手について抽選を実施しました。` : ''}2位指名をウェーバー方式で開始します。`,
-    });
+    // 全12球団の1位指名が確定したかチェック
+    if (newFinalSelections.length === teams.length) {
+      // 1位指名の全選手をallDraftPicksに追加
+      const firstRoundPicks: DraftPick[] = newFinalSelections.map(sel => ({
+        teamId: sel.teamId,
+        playerId: sel.playerId,
+        playerName: sel.playerName,
+        round: 1,
+      }));
+      setAllDraftPicks(firstRoundPicks);
+
+      // 2位指名へ進む
+      setCurrentRound(2);
+      setCurrentWaiverIndex(0);
+      setRoundSelections([]);
+      toast({
+        title: `1位指名完了`,
+        description: `全球団の1位指名が確定しました。2位指名をウェーバー方式で開始します。`,
+      });
+    } else {
+      // まだ確定していない球団がある場合は次の選択へ
+      setCurrentRound(prev => prev + 1);
+      setRoundSelections([]);
+      toast({
+        title: `第${currentRound}次選択抽選完了`,
+        description: `${results.length > 0 ? `${results.length}名の選手について抽選を実施しました。` : ''}第${currentRound + 1}次選択を開始してください。`,
+      });
+    }
   };
 
   const getTeamName = (teamId: number) => {
@@ -360,8 +393,18 @@ const VirtualDraft = () => {
   };
 
   const canExecuteLottery = () => {
-    if (currentRound !== 1) return false;
-    return selections.every(sel => sel.playerId !== null);
+    // 1位指名が全球団確定するまでは抽選可能
+    if (finalSelections.length >= teams.length) return false;
+    
+    const undecidedTeams = teams.filter(team => !finalSelections.find(fs => fs.teamId === team.id));
+    
+    if (currentRound === 1) {
+      return selections.every(sel => sel.playerId !== null);
+    } else {
+      return undecidedTeams.every(team => 
+        roundSelections.find(rs => rs.teamId === team.id && rs.playerId !== null)
+      );
+    }
   };
 
   const isDraftComplete = currentRound > maxRounds || (currentRound === maxRounds && currentWaiverIndex >= waiverOrder.length);
@@ -468,12 +511,12 @@ const VirtualDraft = () => {
               className="gap-2"
             >
               <Shuffle className="h-5 w-5" />
-              1位指名抽選実行
+              第{currentRound}次選択抽選実行
             </Button>
           </div>
         )}
         
-        {currentRound > 1 && !isDraftComplete && (
+        {finalSelections.length === teams.length && currentRound > 1 && !isDraftComplete && (
           <div className="mb-8">
             <Card className="bg-primary/5">
               <CardContent className="pt-6">
@@ -497,8 +540,10 @@ const VirtualDraft = () => {
             const selectedPlayerIds = getSelectedPlayerIds();
             const availablePlayers = players.filter(p => !selectedPlayerIds.includes(p.id));
             const lostPlayers = getLostPlayers(team.id);
+            const isCurrentPickingTeam = finalSelections.length === teams.length && currentRound > 1 && getCurrentPickingTeam() === team.id;
             
-            if (teamStatus.decided) {
+            // 1位指名フェーズで確定済みの球団、または2位以降で指名済みの球団
+            if (teamStatus.decided && finalSelections.length < teams.length) {
               // 確定済みの球団
               return (
                 <Card key={team.id} className="ring-2 ring-green-500">
@@ -523,56 +568,96 @@ const VirtualDraft = () => {
               );
             }
             
-            // 未確定の球団
-            return (
-              <Card key={team.id}>
-                <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
-                  <CardTitle className="text-lg flex items-center justify-between">
-                    <span>{team.name}</span>
-                    <Badge variant="secondary" className="bg-white/20">第{currentRound}次</Badge>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {currentRound === 1 ? "1位指名" : `第${currentRound}次選択`}
-                      </p>
-                      {currentSelection?.playerName ? (
-                        <div className="space-y-2">
-                          <p className="font-semibold text-lg">{currentSelection.playerName}</p>
+            // 1位指名フェーズで未確定の球団、または2位以降で選択可能な球団
+            if (finalSelections.length < teams.length) {
+              // 1位指名の抽選フェーズ
+              return (
+                <Card key={team.id}>
+                  <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span>{team.name}</span>
+                      <Badge variant="secondary" className="bg-white/20">第{currentRound}次</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {currentRound === 1 ? "1位指名" : `第${currentRound}次選択`}
+                        </p>
+                        {currentSelection?.playerName ? (
+                          <div className="space-y-2">
+                            <p className="font-semibold text-lg">{currentSelection.playerName}</p>
+                          </div>
+                        ) : (
+                          <p className="text-muted-foreground">未選択</p>
+                        )}
+                      </div>
+                      
+                      {lostPlayers.length > 0 && (
+                        <div className="bg-muted/50 p-3 rounded-lg">
+                          <p className="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
+                          <div className="space-y-1">
+                            {lostPlayers.map((lostPlayer, idx) => (
+                              <p key={idx} className="text-sm">
+                                {lostPlayer.playerName} <span className="text-xs text-muted-foreground">(第{lostPlayer.round}次)</span>
+                              </p>
+                            ))}
+                          </div>
                         </div>
-                      ) : (
-                        <p className="text-muted-foreground">未選択</p>
+                      )}
+                      
+                      <PlayerSelectionDialog
+                        players={availablePlayers}
+                        selectedPlayerId={currentSelection?.playerId || null}
+                        onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                      >
+                        <Button variant="outline" className="w-full">
+                          選手を選択
+                        </Button>
+                      </PlayerSelectionDialog>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            } else {
+              // 2位以降のウェーバー方式フェーズ
+              const teamPicks = getTeamPicks(team.id);
+              return (
+                <Card key={team.id} className={isCurrentPickingTeam ? "ring-2 ring-primary" : ""}>
+                  <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span>{team.name}</span>
+                      {isCurrentPickingTeam && <Badge variant="secondary" className="bg-white/20">指名中</Badge>}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">指名選手</p>
+                        {teamPicks.map(pick => (
+                          <p key={pick.round} className="text-sm">
+                            {pick.round}位: {pick.playerName}
+                          </p>
+                        ))}
+                      </div>
+                      
+                      {isCurrentPickingTeam && (
+                        <PlayerSelectionDialog
+                          players={availablePlayers}
+                          selectedPlayerId={null}
+                          onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                        >
+                          <Button variant="default" className="w-full">
+                            {currentRound}位指名する
+                          </Button>
+                        </PlayerSelectionDialog>
                       )}
                     </div>
-                    
-                    {lostPlayers.length > 0 && (
-                      <div className="bg-muted/50 p-3 rounded-lg">
-                        <p className="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
-                        <div className="space-y-1">
-                          {lostPlayers.map((lostPlayer, idx) => (
-                            <p key={idx} className="text-sm">
-                              {lostPlayer.playerName} <span className="text-xs text-muted-foreground">(第{lostPlayer.round}次)</span>
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <PlayerSelectionDialog
-                      players={availablePlayers}
-                      selectedPlayerId={currentSelection?.playerId || null}
-                      onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
-                    >
-                      <Button variant="outline" className="w-full">
-                        選手を選択
-                      </Button>
-                    </PlayerSelectionDialog>
-                  </div>
-                </CardContent>
-              </Card>
-            );
+                  </CardContent>
+                </Card>
+              );
+            }
           })}
         </div>
 
