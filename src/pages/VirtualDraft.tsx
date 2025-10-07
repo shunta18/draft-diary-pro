@@ -9,8 +9,9 @@ import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlayers, Player as LocalPlayer } from "@/lib/playerStorage";
-import { Shuffle, Trophy, AlertCircle } from "lucide-react";
+import { Shuffle, Trophy, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -68,8 +69,12 @@ interface TeamSelection {
   teamId: number;
   playerId: number | null;
   playerName: string | null;
-  compensatoryPlayerId: number | null;
-  compensatoryPlayerName: string | null;
+}
+
+interface RoundSelection {
+  teamId: number;
+  playerId: number | null;
+  playerName: string | null;
 }
 
 interface LotteryResult {
@@ -77,6 +82,13 @@ interface LotteryResult {
   playerName: string;
   competingTeams: number[];
   winner: number;
+}
+
+interface FinalSelection {
+  teamId: number;
+  playerId: number;
+  playerName: string;
+  round: number;
 }
 
 // データ正規化関数
@@ -113,13 +125,13 @@ const VirtualDraft = () => {
     teams.map(team => ({ 
       teamId: team.id, 
       playerId: null, 
-      playerName: null,
-      compensatoryPlayerId: null,
-      compensatoryPlayerName: null
+      playerName: null
     }))
   );
-  const [lotteryResults, setLotteryResults] = useState<LotteryResult[]>([]);
-  const [isLotteryComplete, setIsLotteryComplete] = useState(false);
+  const [currentRound, setCurrentRound] = useState(1);
+  const [roundSelections, setRoundSelections] = useState<RoundSelection[]>([]);
+  const [allRoundResults, setAllRoundResults] = useState<LotteryResult[][]>([]);
+  const [finalSelections, setFinalSelections] = useState<FinalSelection[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -158,113 +170,148 @@ const VirtualDraft = () => {
   };
 
   const handlePlayerSelect = (teamId: number, playerId: number | null) => {
-    setSelections(prev => 
-      prev.map(sel => 
-        sel.teamId === teamId 
-          ? { 
-              ...sel, 
-              playerId, 
-              playerName: playerId ? players.find(p => p.id === playerId)?.name || null : null 
-            }
-          : sel
-      )
-    );
-    setIsLotteryComplete(false);
-    setLotteryResults([]);
+    if (currentRound === 1) {
+      setSelections(prev => 
+        prev.map(sel => 
+          sel.teamId === teamId 
+            ? { 
+                ...sel, 
+                playerId, 
+                playerName: playerId ? players.find(p => p.id === playerId)?.name || null : null 
+              }
+            : sel
+        )
+      );
+    } else {
+      setRoundSelections(prev => {
+        const existing = prev.find(s => s.teamId === teamId);
+        if (existing) {
+          return prev.map(s => 
+            s.teamId === teamId 
+              ? { ...s, playerId, playerName: playerId ? players.find(p => p.id === playerId)?.name || null : null }
+              : s
+          );
+        } else {
+          return [...prev, { 
+            teamId, 
+            playerId, 
+            playerName: playerId ? players.find(p => p.id === playerId)?.name || null : null 
+          }];
+        }
+      });
+    }
   };
 
   const executeLottery = () => {
-    // 被り選手を抽出
+    const selectionsToUse = currentRound === 1 ? selections : roundSelections;
     const playerCounts = new Map<number, number[]>();
     
-    selections.forEach(sel => {
-      if (sel.playerId) {
+    // 未確定の球団の選択のみを抽出
+    const undecidedTeams = teams.map(t => t.id).filter(teamId => 
+      !finalSelections.find(fs => fs.teamId === teamId)
+    );
+    
+    selectionsToUse.forEach(sel => {
+      if (sel.playerId && undecidedTeams.includes(sel.teamId)) {
         const teams = playerCounts.get(sel.playerId) || [];
         teams.push(sel.teamId);
         playerCounts.set(sel.playerId, teams);
       }
     });
 
-    // 抽選実行
     const results: LotteryResult[] = [];
+    const newFinalSelections: FinalSelection[] = [...finalSelections];
     
     playerCounts.forEach((competingTeams, playerId) => {
+      const player = players.find(p => p.id === playerId);
+      
       if (competingTeams.length > 1) {
-        const player = players.find(p => p.id === playerId);
         const winner = competingTeams[Math.floor(Math.random() * competingTeams.length)];
-        
         results.push({
           playerId,
           playerName: player?.name || "不明",
           competingTeams,
           winner,
         });
+        
+        newFinalSelections.push({
+          teamId: winner,
+          playerId,
+          playerName: player?.name || "不明",
+          round: currentRound,
+        });
+      } else {
+        // 単独指名
+        newFinalSelections.push({
+          teamId: competingTeams[0],
+          playerId,
+          playerName: player?.name || "不明",
+          round: currentRound,
+        });
       }
     });
 
-    setLotteryResults(results);
-    setIsLotteryComplete(true);
+    setAllRoundResults(prev => [...prev, results]);
+    setFinalSelections(newFinalSelections);
 
-    toast({
-      title: "抽選完了",
-      description: `${results.length}名の選手について抽選を実施しました`,
-    });
+    // 次のラウンドの準備
+    if (newFinalSelections.length < teams.length) {
+      setCurrentRound(prev => prev + 1);
+      setRoundSelections([]);
+      toast({
+        title: `第${currentRound}ラウンド抽選完了`,
+        description: `${results.length > 0 ? `${results.length}名の選手について抽選を実施しました。` : ''}次のラウンドの選択を開始してください。`,
+      });
+    } else {
+      toast({
+        title: "全ドラフト完了",
+        description: "すべての球団の1位指名が確定しました",
+      });
+    }
   };
 
   const getTeamName = (teamId: number) => {
     return teams.find(t => t.id === teamId)?.name || "";
   };
 
-  const isTeamWinner = (teamId: number, playerId: number) => {
-    const result = lotteryResults.find(r => r.playerId === playerId);
-    return result?.winner === teamId;
+  const getTeamStatus = (teamId: number) => {
+    const finalSelection = finalSelections.find(fs => fs.teamId === teamId);
+    if (finalSelection) {
+      return { decided: true, playerName: finalSelection.playerName, round: finalSelection.round };
+    }
+    return { decided: false, playerName: null, round: currentRound };
   };
 
-  const isTeamLoser = (teamId: number, playerId: number) => {
-    const result = lotteryResults.find(r => r.playerId === playerId);
-    return result && result.competingTeams.includes(teamId) && result.winner !== teamId;
-  };
-
-  const getLoserTeams = () => {
-    const loserTeamIds: number[] = [];
-    lotteryResults.forEach(result => {
-      result.competingTeams.forEach(teamId => {
-        if (teamId !== result.winner) {
-          loserTeamIds.push(teamId);
-        }
-      });
-    });
-    return loserTeamIds;
+  const getUndecidedTeams = () => {
+    return teams.filter(team => !finalSelections.find(fs => fs.teamId === team.id));
   };
 
   const getSelectedPlayerIds = () => {
-    const selectedIds: number[] = [];
-    selections.forEach(sel => {
-      if (sel.playerId) {
-        const result = lotteryResults.find(r => r.playerId === sel.playerId);
-        if (!result || result.winner === sel.teamId) {
-          selectedIds.push(sel.playerId);
-        }
-      }
-    });
-    return selectedIds;
+    return finalSelections.map(fs => fs.playerId);
   };
 
-  const handleCompensatorySelect = (teamId: number, playerId: number | null) => {
-    setSelections(prev => 
-      prev.map(sel => 
-        sel.teamId === teamId 
-          ? { 
-              ...sel, 
-              compensatoryPlayerId: playerId,
-              compensatoryPlayerName: playerId ? players.find(p => p.id === playerId)?.name || null : null 
-            }
-          : sel
-      )
-    );
+  const getCurrentRoundSelection = (teamId: number) => {
+    if (currentRound === 1) {
+      return selections.find(s => s.teamId === teamId);
+    } else {
+      return roundSelections.find(s => s.teamId === teamId);
+    }
   };
 
-  const allTeamsSelected = selections.every(sel => sel.playerId !== null);
+  const canExecuteLottery = () => {
+    const undecidedTeams = getUndecidedTeams();
+    if (undecidedTeams.length === 0) return false;
+    
+    if (currentRound === 1) {
+      return selections.every(sel => sel.playerId !== null);
+    } else {
+      return undecidedTeams.every(team => 
+        roundSelections.find(rs => rs.teamId === team.id && rs.playerId !== null)
+      );
+    }
+  };
+
+  const isDraftComplete = finalSelections.length === teams.length;
 
   if (loading) {
     return (
@@ -294,6 +341,54 @@ const VirtualDraft = () => {
           </p>
         </header>
 
+        {currentRound > 1 || finalSelections.length > 0 ? (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                各球団の選択状況
+                <Badge variant="outline">第{currentRound}ラウンド</Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>球団</TableHead>
+                    <TableHead>状態</TableHead>
+                    <TableHead>指名選手</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {teams.map(team => {
+                    const status = getTeamStatus(team.id);
+                    return (
+                      <TableRow key={team.id}>
+                        <TableCell className="font-medium">{team.name}</TableCell>
+                        <TableCell>
+                          {status.decided ? (
+                            <Badge variant="default" className="gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              確定 (第{status.round}R)
+                            </Badge>
+                          ) : (
+                            <Badge variant="secondary" className="gap-1">
+                              <Clock className="h-3 w-3" />
+                              選択中
+                            </Badge>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {status.decided ? status.playerName : "―"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        ) : null}
+
         <Card className="mb-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -309,7 +404,7 @@ const VirtualDraft = () => {
           </CardContent>
         </Card>
 
-        {allTeamsSelected && !isLotteryComplete && (
+        {canExecuteLottery() && !isDraftComplete && (
           <div className="mb-8 text-center">
             <Button 
               size="lg" 
@@ -317,55 +412,61 @@ const VirtualDraft = () => {
               className="gap-2"
             >
               <Shuffle className="h-5 w-5" />
-              抽選実行
+              第{currentRound}ラウンド抽選実行
             </Button>
           </div>
         )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {teams.map(team => {
-            const selection = selections.find(s => s.teamId === team.id);
-            const isWinner = selection?.playerId && isTeamWinner(team.id, selection.playerId);
-            const isLoser = selection?.playerId && isTeamLoser(team.id, selection.playerId);
-            const loserTeams = getLoserTeams();
-            const isLoserTeam = loserTeams.includes(team.id);
+            const teamStatus = getTeamStatus(team.id);
+            const currentSelection = getCurrentRoundSelection(team.id);
             const selectedPlayerIds = getSelectedPlayerIds();
             const availablePlayers = players.filter(p => !selectedPlayerIds.includes(p.id));
             
+            if (teamStatus.decided) {
+              // 確定済みの球団
+              return (
+                <Card key={team.id} className="ring-2 ring-green-500">
+                  <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      <span>{team.name}</span>
+                      <Trophy className="h-5 w-5 text-yellow-300" />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-2">確定選手</p>
+                        <p className="font-semibold text-lg">{teamStatus.playerName}</p>
+                        <Badge variant="default" className="bg-green-600 mt-2">
+                          第{teamStatus.round}ラウンド確定
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            }
+            
+            // 未確定の球団
             return (
-              <Card key={team.id} className={`${isWinner ? 'ring-2 ring-green-500' : isLoser ? 'opacity-60' : ''}`}>
+              <Card key={team.id}>
                 <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
                   <CardTitle className="text-lg flex items-center justify-between">
                     <span>{team.name}</span>
-                    {isWinner && <Trophy className="h-5 w-5 text-yellow-300" />}
+                    <Badge variant="secondary" className="bg-white/20">第{currentRound}R</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">1位指名</p>
-                      {selection?.playerName ? (
+                      <p className="text-sm text-muted-foreground mb-2">
+                        {currentRound === 1 ? "1位指名" : `第${currentRound}ラウンド指名`}
+                      </p>
+                      {currentSelection?.playerName ? (
                         <div className="space-y-2">
-                          <p className="font-semibold text-lg">{selection.playerName}</p>
-                          {isLotteryComplete && (
-                            <div>
-                              {isWinner && (
-                                <Badge variant="default" className="bg-green-600">
-                                  抽選獲得
-                                </Badge>
-                              )}
-                              {isLoser && (
-                                <Badge variant="secondary">
-                                  抽選外れ
-                                </Badge>
-                              )}
-                              {!isWinner && !isLoser && selection.playerId && (
-                                <Badge variant="default">
-                                  単独指名
-                                </Badge>
-                              )}
-                            </div>
-                          )}
+                          <p className="font-semibold text-lg">{currentSelection.playerName}</p>
                         </div>
                       ) : (
                         <p className="text-muted-foreground">未選択</p>
@@ -373,40 +474,14 @@ const VirtualDraft = () => {
                     </div>
                     
                     <PlayerSelectionDialog
-                      players={players}
-                      selectedPlayerId={selection?.playerId || null}
+                      players={availablePlayers}
+                      selectedPlayerId={currentSelection?.playerId || null}
                       onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
                     >
                       <Button variant="outline" className="w-full">
                         選手を選択
                       </Button>
                     </PlayerSelectionDialog>
-
-                    {isLotteryComplete && isLoserTeam && (
-                      <div className="pt-4 border-t">
-                        <p className="text-sm text-muted-foreground mb-2">ハズレ1位</p>
-                        {selection?.compensatoryPlayerName ? (
-                          <div className="space-y-2">
-                            <p className="font-semibold text-lg">{selection.compensatoryPlayerName}</p>
-                            <Badge variant="default" className="bg-orange-600">
-                              ハズレ1位指名
-                            </Badge>
-                          </div>
-                        ) : (
-                          <p className="text-muted-foreground">未選択</p>
-                        )}
-                        
-                        <PlayerSelectionDialog
-                          players={availablePlayers}
-                          selectedPlayerId={selection?.compensatoryPlayerId || null}
-                          onSelect={(playerId) => handleCompensatorySelect(team.id, playerId)}
-                        >
-                          <Button variant="outline" className="w-full mt-2">
-                            ハズレ1位を選択
-                          </Button>
-                        </PlayerSelectionDialog>
-                      </div>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -414,7 +489,7 @@ const VirtualDraft = () => {
           })}
         </div>
 
-        {isLotteryComplete && lotteryResults.length > 0 && (
+        {allRoundResults.length > 0 && (
           <Card className="mt-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -423,18 +498,29 @@ const VirtualDraft = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {lotteryResults.map(result => (
-                  <div key={result.playerId} className="border-b pb-4 last:border-b-0">
-                    <h3 className="font-semibold text-lg mb-2">{result.playerName}</h3>
-                    <p className="text-sm text-muted-foreground mb-2">
-                      競合: {result.competingTeams.map(id => getTeamName(id)).join(", ")}
-                    </p>
-                    <p className="text-sm">
-                      <span className="font-semibold text-green-600">
-                        獲得: {getTeamName(result.winner)}
-                      </span>
-                    </p>
+              <div className="space-y-6">
+                {allRoundResults.map((roundResults, roundIndex) => (
+                  <div key={roundIndex}>
+                    {roundResults.length > 0 && (
+                      <>
+                        <h3 className="font-semibold mb-3">第{roundIndex + 1}ラウンド抽選</h3>
+                        <div className="space-y-4">
+                          {roundResults.map(result => (
+                            <div key={result.playerId} className="border-b pb-4 last:border-b-0">
+                              <h4 className="font-semibold text-lg mb-2">{result.playerName}</h4>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                競合: {result.competingTeams.map(id => getTeamName(id)).join(", ")}
+                              </p>
+                              <p className="text-sm">
+                                <span className="font-semibold text-green-600">
+                                  獲得: {getTeamName(result.winner)}
+                                </span>
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
               </div>
