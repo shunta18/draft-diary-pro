@@ -259,8 +259,8 @@ const VirtualDraft = () => {
       setCurrentRound(prev => prev + 1);
       setRoundSelections([]);
       toast({
-        title: `第${currentRound}ラウンド抽選完了`,
-        description: `${results.length > 0 ? `${results.length}名の選手について抽選を実施しました。` : ''}次のラウンドの選択を開始してください。`,
+        title: `第${currentRound}次選択抽選完了`,
+        description: `${results.length > 0 ? `${results.length}名の選手について抽選を実施しました。` : ''}次の選択を開始してください。`,
       });
     } else {
       toast({
@@ -346,7 +346,7 @@ const VirtualDraft = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 各球団の選択状況
-                <Badge variant="outline">第{currentRound}ラウンド</Badge>
+                <Badge variant="outline">第{currentRound}次選択</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -368,7 +368,7 @@ const VirtualDraft = () => {
                           {status.decided ? (
                             <Badge variant="default" className="gap-1">
                               <CheckCircle2 className="h-3 w-3" />
-                              確定 (第{status.round}R)
+                              確定 (第{status.round}次)
                             </Badge>
                           ) : (
                             <Badge variant="secondary" className="gap-1">
@@ -412,7 +412,7 @@ const VirtualDraft = () => {
               className="gap-2"
             >
               <Shuffle className="h-5 w-5" />
-              第{currentRound}ラウンド抽選実行
+              第{currentRound}次選択抽選実行
             </Button>
           </div>
         )}
@@ -440,7 +440,7 @@ const VirtualDraft = () => {
                         <p className="text-sm text-muted-foreground mb-2">確定選手</p>
                         <p className="font-semibold text-lg">{teamStatus.playerName}</p>
                         <Badge variant="default" className="bg-green-600 mt-2">
-                          第{teamStatus.round}ラウンド確定
+                          第{teamStatus.round}次選択確定
                         </Badge>
                       </div>
                     </div>
@@ -455,14 +455,14 @@ const VirtualDraft = () => {
                 <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
                   <CardTitle className="text-lg flex items-center justify-between">
                     <span>{team.name}</span>
-                    <Badge variant="secondary" className="bg-white/20">第{currentRound}R</Badge>
+                    <Badge variant="secondary" className="bg-white/20">第{currentRound}次</Badge>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6">
                   <div className="space-y-4">
                     <div>
                       <p className="text-sm text-muted-foreground mb-2">
-                        {currentRound === 1 ? "1位指名" : `第${currentRound}ラウンド指名`}
+                        {currentRound === 1 ? "1位指名" : `第${currentRound}次選択`}
                       </p>
                       {currentSelection?.playerName ? (
                         <div className="space-y-2">
@@ -503,7 +503,7 @@ const VirtualDraft = () => {
                   <div key={roundIndex}>
                     {roundResults.length > 0 && (
                       <>
-                        <h3 className="font-semibold mb-3">第{roundIndex + 1}ラウンド抽選</h3>
+                        <h3 className="font-semibold mb-3">第{roundIndex + 1}次選択抽選</h3>
                         <div className="space-y-4">
                           {roundResults.map(result => (
                             <div key={result.playerId} className="border-b pb-4 last:border-b-0">
