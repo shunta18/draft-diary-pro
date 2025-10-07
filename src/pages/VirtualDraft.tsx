@@ -82,6 +82,7 @@ interface LotteryResult {
   playerName: string;
   competingTeams: number[];
   winner: number;
+  losers: number[];
 }
 
 interface FinalSelection {
@@ -227,11 +228,13 @@ const VirtualDraft = () => {
       
       if (competingTeams.length > 1) {
         const winner = competingTeams[Math.floor(Math.random() * competingTeams.length)];
+        const losers = competingTeams.filter(t => t !== winner);
         results.push({
           playerId,
           playerName: player?.name || "不明",
           competingTeams,
           winner,
+          losers,
         });
         
         newFinalSelections.push({
@@ -296,6 +299,21 @@ const VirtualDraft = () => {
     } else {
       return roundSelections.find(s => s.teamId === teamId);
     }
+  };
+
+  const getLostPlayers = (teamId: number) => {
+    const lostPlayers: { playerName: string; round: number }[] = [];
+    allRoundResults.forEach((roundResults, roundIndex) => {
+      roundResults.forEach(result => {
+        if (result.losers.includes(teamId)) {
+          lostPlayers.push({
+            playerName: result.playerName,
+            round: roundIndex + 1,
+          });
+        }
+      });
+    });
+    return lostPlayers;
   };
 
   const canExecuteLottery = () => {
@@ -423,6 +441,7 @@ const VirtualDraft = () => {
             const currentSelection = getCurrentRoundSelection(team.id);
             const selectedPlayerIds = getSelectedPlayerIds();
             const availablePlayers = players.filter(p => !selectedPlayerIds.includes(p.id));
+            const lostPlayers = getLostPlayers(team.id);
             
             if (teamStatus.decided) {
               // 確定済みの球団
@@ -472,6 +491,19 @@ const VirtualDraft = () => {
                         <p className="text-muted-foreground">未選択</p>
                       )}
                     </div>
+                    
+                    {lostPlayers.length > 0 && (
+                      <div className="bg-muted/50 p-3 rounded-lg">
+                        <p className="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
+                        <div className="space-y-1">
+                          {lostPlayers.map((lostPlayer, idx) => (
+                            <p key={idx} className="text-sm">
+                              {lostPlayer.playerName} <span className="text-xs text-muted-foreground">(第{lostPlayer.round}次)</span>
+                            </p>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     
                     <PlayerSelectionDialog
                       players={availablePlayers}
