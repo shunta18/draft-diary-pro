@@ -29,12 +29,12 @@ export const Navigation = () => {
   return (
     <div className="bg-card border-b shadow-soft">
       <div className="flex items-center justify-between p-4">
-        <div className="flex items-center space-x-2">
+        <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
           <img src={logoIcon} alt="ロゴ" className="h-8 w-8" />
           <h1 className="text-xl font-bold text-primary">
             BaaS 野球スカウトノート
           </h1>
-        </div>
+        </Link>
         
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
