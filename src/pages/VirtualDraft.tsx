@@ -66,7 +66,18 @@ const teams = [
 ];
 
 // ウェーバー方式の指名順（2位以降）
-const waiverOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6]; // ヤクルト、ロッテ、広島、西武、中日、楽天、巨人、オリックス、DeNA、日ハム、阪神、ソフトバンク
+// 奇数ラウンド（1位、3位、5位...）: ソフトバンク、阪神、日ハム、DeNA、オリックス、巨人、楽天、中日、西武、広島、ロッテ、ヤクルト
+const oddRoundOrder = [6, 11, 1, 9, 5, 7, 2, 10, 3, 12, 4, 8];
+// 偶数ラウンド（2位、4位...）: ヤクルト、ロッテ、広島、西武、中日、楽天、巨人、オリックス、DeNA、日ハム、阪神、ソフトバンク
+const evenRoundOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
+
+// 指名順を取得する関数
+const getWaiverOrder = (round: number) => {
+  return round % 2 === 1 ? oddRoundOrder : evenRoundOrder;
+};
+
+// 表示順（固定）: 阪神、DeNA、巨人、中日、広島、ヤクルト、ソフトバンク、日ハム、オリックス、楽天、西武、ロッテ
+const displayOrder = [11, 9, 7, 10, 12, 8, 6, 1, 5, 2, 3, 4];
 
 interface TeamSelection {
   teamId: number;
@@ -220,6 +231,7 @@ const VirtualDraft = () => {
       }
     } else {
       // 2位以降はウェーバー方式なので、現在指名中の球団のみ選択可能
+      const waiverOrder = getWaiverOrder(currentRound);
       const currentPickingTeamId = waiverOrder[currentWaiverIndex];
       if (teamId === currentPickingTeamId && playerId) {
         const player = players.find(p => p.id === playerId);
@@ -366,6 +378,7 @@ const VirtualDraft = () => {
   
   const getCurrentPickingTeam = () => {
     if (currentRound === 1) return null;
+    const waiverOrder = getWaiverOrder(currentRound);
     return waiverOrder[currentWaiverIndex];
   };
 
@@ -407,7 +420,7 @@ const VirtualDraft = () => {
     }
   };
 
-  const isDraftComplete = currentRound > maxRounds || (currentRound === maxRounds && currentWaiverIndex >= waiverOrder.length);
+  const isDraftComplete = currentRound > maxRounds || (currentRound === maxRounds && currentWaiverIndex >= getWaiverOrder(currentRound).length);
 
   if (loading) {
     return (
@@ -458,7 +471,9 @@ const VirtualDraft = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {teams.map(team => {
+                  {displayOrder.map(teamId => {
+                    const team = teams.find(t => t.id === teamId);
+                    if (!team) return null;
                     const picks = getTeamPicks(team.id);
                     const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
                     return (
@@ -484,25 +499,6 @@ const VirtualDraft = () => {
           </Card>
         )}
 
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              使い方
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <p><strong>1位指名：</strong></p>
-            <p>・各球団の1位指名選手を選択してください</p>
-            <p>・すべての球団で選択が完了したら「抽選実行」ボタンが表示されます</p>
-            <p>・複数球団が同じ選手を指名した場合、ランダムで獲得球団が決まります</p>
-            <p className="mt-4"><strong>2位以降：</strong></p>
-            <p>・ウェーバー方式で順番に指名します（順位下位チームから）</p>
-            <p>・指名順：ヤクルト→ロッテ→広島→西武→中日→楽天→巨人→オリックス→DeNA→日ハム→阪神→ソフトバンク</p>
-            <p>・既に指名された選手は選択できません</p>
-          </CardContent>
-        </Card>
-
         {canExecuteLottery() && (
           <div className="mb-8 text-center">
             <Button 
@@ -525,7 +521,7 @@ const VirtualDraft = () => {
                     {currentRound}位指名 - {teams.find(t => t.id === getCurrentPickingTeam())?.name}の番です
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    指名順 {currentWaiverIndex + 1} / {waiverOrder.length}
+                    指名順 {currentWaiverIndex + 1} / {getWaiverOrder(currentRound).length}
                   </p>
                 </div>
               </CardContent>
@@ -699,6 +695,26 @@ const VirtualDraft = () => {
             </CardContent>
           </Card>
         )}
+
+        <Card className="mt-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5" />
+              使い方
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p><strong>1位指名：</strong></p>
+            <p>・各球団の1位指名選手を選択してください</p>
+            <p>・すべての球団で選択が完了したら「抽選実行」ボタンが表示されます</p>
+            <p>・複数球団が同じ選手を指名した場合、ランダムで獲得球団が決まります</p>
+            <p className="mt-4"><strong>2位以降：</strong></p>
+            <p>・ウェーバー方式で順番に指名します</p>
+            <p>・奇数指名（1位、3位、5位...）：ソフトバンク→阪神→日ハム→DeNA→オリックス→巨人→楽天→中日→西武→広島→ロッテ→ヤクルト</p>
+            <p>・偶数指名（2位、4位...）：ヤクルト→ロッテ→広島→西武→中日→楽天→巨人→オリックス→DeNA→日ハム→阪神→ソフトバンク</p>
+            <p>・既に指名された選手は選択できません</p>
+          </CardContent>
+        </Card>
 
         {!user && (
           <Card className="mt-8 border-yellow-500">
