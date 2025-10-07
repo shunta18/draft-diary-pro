@@ -369,6 +369,11 @@ const VirtualDraft = () => {
   };
 
   const getSelectedPlayerIds = () => {
+    // 1位指名の抽選フェーズ中は finalSelections から取得
+    if (finalSelections.length < teams.length) {
+      return finalSelections.map(fs => fs.playerId);
+    }
+    // 2位以降は allDraftPicks から取得
     return allDraftPicks.map(pick => pick.playerId);
   };
   
@@ -685,7 +690,10 @@ const VirtualDraft = () => {
                         <div className="space-y-4">
                           {roundResults.map(result => (
                             <div key={result.playerId} className="border-b pb-4 last:border-b-0">
-                              <h4 className="font-semibold text-lg mb-2">{result.playerName}</h4>
+                              <h4 className="font-semibold text-lg mb-2">
+                                {result.playerName} 
+                                <Badge variant="outline" className="ml-2">{result.competingTeams.length}球団競合</Badge>
+                              </h4>
                               <p className="text-sm text-muted-foreground mb-2">
                                 競合: {result.competingTeams.map(id => getTeamName(id)).join(", ")}
                               </p>
