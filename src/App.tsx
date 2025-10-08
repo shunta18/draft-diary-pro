@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Players from "./pages/Players";
 import PlayerForm from "./pages/PlayerForm";
 import Draft from "./pages/Draft";
+import VirtualDraft from "./pages/VirtualDraft";
 import Diary from "./pages/Diary";
 import DiaryForm from "./pages/DiaryForm";
 import Settings from "./pages/Settings";
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/players/new" element={<PlayerForm />} />
             <Route path="/players/:id/edit" element={<PlayerForm />} />
             <Route path="/draft" element={<Draft />} />
+            <Route path="/virtual-draft" element={<VirtualDraft />} />
             <Route path="/diary" element={<Diary />} />
             <Route path="/diary/form" element={<DiaryForm />} />
             <Route path="/settings" element={<Settings />} />

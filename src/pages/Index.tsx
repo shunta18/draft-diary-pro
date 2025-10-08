@@ -1,4 +1,4 @@
-import { Users, Trophy, Calendar, Settings, UserPlus } from "lucide-react";
+import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
 import { SEO } from "@/components/SEO";
@@ -228,6 +228,23 @@ const Index = () => {
                     <h3 className="text-lg font-semibold text-primary">ドラフト構想</h3>
                     <p className="text-sm text-muted-foreground">各球団のドラフト戦略を練る</p>
                     <p className="text-xs text-accent mt-1 font-medium">{completedDrafts}球団構想済み →</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/virtual-draft">
+            <Card className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer group">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-purple-500/10 rounded-full flex items-center justify-center group-hover:bg-purple-500/20 transition-smooth">
+                    <Shuffle className="h-6 w-6 text-purple-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-primary">仮想ドラフト</h3>
+                    <p className="text-sm text-muted-foreground">ドラフト会議をシミュレート</p>
+                    <p className="text-xs text-purple-600 mt-1 font-medium">抽選を体験 →</p>
                   </div>
                 </div>
               </CardContent>

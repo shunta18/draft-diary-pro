@@ -101,8 +101,6 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
                   value={searchName}
                   onChange={(e) => setSearchName(e.target.value)}
                   className="pl-9"
-                  autoFocus={false}
-                  inputMode="none"
                 />
               </div>
             </div>
