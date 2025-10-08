@@ -472,9 +472,36 @@ const VirtualDraft = () => {
 
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">仮想ドラフト会議</h1>
-          <p className="text-muted-foreground">
-            12球団すべての1位指名を自分で決めて、実際のドラフト会議のように抽選をシミュレートできます。
-          </p>
+          <div className="space-y-3">
+            <p className="text-muted-foreground">
+              12球団すべての1位指名を自分で決めて、実際のドラフト会議のように抽選をシミュレートできます。
+            </p>
+            <Card className="bg-muted/50">
+              <CardContent className="pt-4 pb-4">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-muted-foreground" />
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <p>
+                      <strong>選択できる選手について：</strong>選手リストに登録した選手のみが選択可能です。
+                    </p>
+                    {!user && (
+                      <p>
+                        ゲストモードでご利用の場合は、
+                        <Button 
+                          variant="link" 
+                          className="px-1 h-auto py-0 text-sm" 
+                          onClick={() => navigate("/auth")}
+                        >
+                          アカウント登録
+                        </Button>
+                        して選手リストに選手を追加することで、仮想ドラフト機能をご利用いただけます。
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </header>
 
         {allDraftPicks.length > 0 && (
