@@ -448,6 +448,28 @@ const VirtualDraft = () => {
       <Navigation />
       
       <main className="container mx-auto px-4 py-8">
+        {!user && (
+          <Card className="mb-6 border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm">
+                  ゲストモードでは、仮想ドラフトの結果を保存できません。
+                  結果を保存するには、
+                  <Button 
+                    variant="link" 
+                    className="px-1 h-auto py-0" 
+                    onClick={() => navigate("/auth")}
+                  >
+                    ログイン
+                  </Button>
+                  してください。
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         <header className="mb-8">
           <h1 className="text-4xl font-bold mb-4">仮想ドラフト会議</h1>
           <p className="text-muted-foreground">
@@ -739,24 +761,6 @@ const VirtualDraft = () => {
           </CardContent>
         </Card>
 
-        {!user && (
-          <Card className="mt-8 border-yellow-500">
-            <CardContent className="pt-6">
-              <p className="text-sm text-muted-foreground">
-                ゲストモードでは、仮想ドラフトの結果を保存できません。
-                結果を保存するには、
-                <Button 
-                  variant="link" 
-                  className="px-1" 
-                  onClick={() => navigate("/auth")}
-                >
-                  ログイン
-                </Button>
-                してください。
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </main>
     </div>
   );
