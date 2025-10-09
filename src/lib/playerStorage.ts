@@ -53,7 +53,7 @@ const defaultPlayers: Player[] = [
   {
     id: 4,
     name: "毛利 海大",
-    team: "明治大",
+    team: "明治大学",
     position: ["投手"],
     category: "大学",
     evaluations: ["外れ1位", "2位"],
@@ -98,7 +98,7 @@ const defaultPlayers: Player[] = [
   {
     id: 9,
     name: "谷端 将伍",
-    team: "日大",
+    team: "日本大学",
     position: ["二塁手", "三塁手"],
     category: "大学",
     evaluations: ["1位一本釣り", "外れ1位", "2位"],
