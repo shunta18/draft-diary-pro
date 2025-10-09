@@ -488,7 +488,7 @@ const VirtualDraft = () => {
                     </p>
                     {!user && (
                       <p>
-                        ゲストモードでご利用の場合は、
+                        ゲストモードでご利用の場合は、サンプル選手でしかご利用いただけません。
                         <Button 
                           variant="link" 
                           className="px-1 h-auto py-0 text-sm" 
