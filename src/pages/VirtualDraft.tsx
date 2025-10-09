@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { getPlayers, Player as LocalPlayer } from "@/lib/playerStorage";
+import { getDefaultPlayers, Player as LocalPlayer } from "@/lib/playerStorage";
 import { Shuffle, Trophy, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -166,6 +166,7 @@ const VirtualDraft = () => {
   const loadPlayers = async () => {
     try {
       if (user) {
+        // ログインユーザーはSupabaseから取得
         const { data, error } = await supabase
           .from("players")
           .select("*")
@@ -176,7 +177,8 @@ const VirtualDraft = () => {
         const normalized = (data || []).map(normalizeSupabasePlayer);
         setPlayers(normalized);
       } else {
-        const localPlayers = getPlayers();
+        // ゲストユーザーは最新のサンプルデータを表示
+        const localPlayers = getDefaultPlayers();
         const normalized = localPlayers
           .map(normalizeLocalPlayer)
           .filter(p => p.draftYear === "2025");

@@ -382,6 +382,12 @@ const defaultPlayers: Player[] = [
   }
 ];
 
+// ゲストユーザー向け：常に最新のデフォルトデータを取得
+export const getDefaultPlayers = (): Player[] => {
+  return defaultPlayers;
+};
+
+// ログインユーザーまたは既存データがある場合用
 export const getPlayers = (): Player[] => {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
