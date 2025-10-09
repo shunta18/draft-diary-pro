@@ -1,4 +1,4 @@
-import { ArrowLeft, User, Database, HelpCircle, Info, LogOut, Shield, Settings as SettingsIcon, Trash2, ExternalLink, FileText, Mail } from "lucide-react";
+import { ArrowLeft, User, Database, HelpCircle, Info, LogOut, Shield, Settings as SettingsIcon, Trash2, ExternalLink, FileText, Mail, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -67,6 +67,26 @@ export default function Settings() {
       toast({
         title: "エラー",
         description: "アカウント削除に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleClearLocalStorage = () => {
+    try {
+      localStorage.removeItem('baseball_scout_players');
+      localStorage.removeItem('baseball_scout_diary');
+      toast({
+        title: "ローカルデータを削除しました",
+        description: "ブラウザに保存されていた古いデータを削除しました。ページをリロードしてください。",
+      });
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      toast({
+        title: "エラー",
+        description: "ローカルデータの削除に失敗しました。",
         variant: "destructive",
       });
     }
@@ -159,6 +179,58 @@ export default function Settings() {
               </div>
             </div>
             
+          </CardContent>
+        </Card>
+
+        {/* Data Management - only for logged in users */}
+        <Card className="gradient-card border-0 shadow-soft">
+          <CardHeader>
+            <CardTitle className="text-primary flex items-center space-x-2">
+              <Database className="h-5 w-5" />
+              <span>データ管理</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            <div className="bg-muted/50 p-4 rounded-lg mb-3">
+              <p className="text-sm text-muted-foreground">
+                ログイン済みユーザーは、すべてのデータがクラウドに保存されています。
+                ブラウザに保存された古いローカルデータがある場合は、下のボタンで削除できます。
+              </p>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-auto p-4 transition-smooth"
+                >
+                  <div className="flex items-start space-x-3 w-full">
+                    <RefreshCw className="h-5 w-5 mt-0.5 text-muted-foreground" />
+                    <div className="flex-1 text-left">
+                      <div className="font-medium">ローカルデータを削除</div>
+                      <div className="text-sm text-muted-foreground mt-1">
+                        ブラウザに保存された古いデータを削除（クラウドデータは保護されます）
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>ローカルデータを削除しますか？</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    ブラウザ（localStorage）に保存されている古いデータを削除します。
+                    クラウドに保存されているあなたのデータは保護され、削除されません。
+                    この操作後、ページが自動的にリロードされます。
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearLocalStorage}>
+                    削除する
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
 

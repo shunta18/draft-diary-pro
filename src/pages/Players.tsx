@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
 import { getPlayers, deletePlayer, type Player } from "@/lib/supabase-storage";
+import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -97,26 +98,19 @@ export default function Players() {
     setLoading(true);
     try {
       if (user) {
+        // ログインユーザーはSupabaseから取得
         const data = await getPlayers();
         setPlayers(data);
       } else {
-        // ゲストユーザーの場合はサンプルデータを表示
-        const samplePlayer = {
-          id: 1,
-          name: "松井裕樹",
-          team: "桐光学園",
-          position: "投手",
-          category: "高校",
-          evaluations: ["1位競合"],
-          year: 2013,
-          batting_hand: "左",
-          throwing_hand: "左",
-          hometown: "神奈川県",
-          
-          usage: "抑え",
-          memo: "高校2年時に甲子園で1試合の奪三振記録を更新。消えるスライダーが武器のドクターK"
-        };
-        setPlayers([samplePlayer]);
+        // ゲストユーザーは最新のサンプルデータを表示
+        const samplePlayers = getDefaultPlayers();
+        // Player型に変換（positionをstringに）
+        const convertedPlayers = samplePlayers.map(p => ({
+          ...p,
+          position: Array.isArray(p.position) ? p.position.join("、") : p.position,
+          year: p.draftYear ? parseInt(p.draftYear) : 2025
+        }));
+        setPlayers(convertedPlayers as any);
       }
     } catch (error) {
       console.error('Failed to load players:', error);
