@@ -299,7 +299,7 @@ export default function Players() {
                 <ArrowLeft className="h-5 w-5" />
               </Button>
             </Link>
-            <h1 className="text-xl font-bold text-primary">選手リスト</h1>
+            <h1 className="text-xl font-bold text-primary whitespace-nowrap">選手リスト</h1>
           </div>
           
           <div className="flex items-center space-x-2">
