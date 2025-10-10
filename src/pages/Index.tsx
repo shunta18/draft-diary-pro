@@ -47,8 +47,10 @@ const Index = () => {
       console.log('User:', user);
       
       if (!user) {
-        // ゲストユーザーの場合はローカルストレージからドラフトデータを読み込み
-        setTotalPlayers(1); // サンプル選手1名
+        // ゲストユーザーの場合はデフォルトサンプルデータを使用
+        const { getDefaultPlayers } = await import('@/lib/playerStorage');
+        const defaultPlayers = getDefaultPlayers();
+        setTotalPlayers(defaultPlayers.length); // サンプル選手数（24名）
         setTotalWatching(0);
         
         try {
