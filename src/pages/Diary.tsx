@@ -11,6 +11,7 @@ import { DiaryEntry, getDiaryEntries as getLocalDiaryEntries } from "@/lib/diary
 import { getDiaryEntries, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
 import { useAuth } from "@/hooks/useAuth";
 import { SEO } from "@/components/SEO";
+import { Footer } from "@/components/Footer";
 
 const categoryColors = {
   "高校": "bg-blue-500 text-white",
@@ -341,6 +342,8 @@ export default function Diary() {
           </section>
         )}
       </div>
+
+      <Footer />
 
       <DiaryDetailDialog 
         entry={selectedEntry as any}

@@ -11,6 +11,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { addPlayer, updatePlayer, getPlayerById } from "@/lib/supabase-storage";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Footer } from "@/components/Footer";
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"];
 
@@ -576,6 +577,8 @@ export default function PlayerForm() {
           </Card>
         </form>
       </div>
+      
+      <Footer />
     </div>
   );
 }

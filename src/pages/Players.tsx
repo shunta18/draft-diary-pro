@@ -15,6 +15,7 @@ import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Footer } from "@/components/Footer";
 
 
 const evaluationColors = {
@@ -751,6 +752,8 @@ export default function Players() {
           )}
         </DialogContent>
       </Dialog>
+      
+      <Footer />
     </div>
   );
 }

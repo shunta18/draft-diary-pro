@@ -1,4 +1,4 @@
-import { Menu, Home, Users, Trophy, Calendar, Settings, Shuffle, HelpCircle, Mail } from "lucide-react";
+import { Menu, Home, Users, Trophy, Calendar, Settings, Shuffle, HelpCircle, Mail, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
 const secondaryNavItems: NavItem[] = [
   { icon: HelpCircle, label: "ヘルプ", path: "/help" },
   { icon: Mail, label: "お問い合わせ", path: "/contact" },
+  { icon: Info, label: "BaaSについて", path: "/about" },
 ];
 
 export const Navigation = () => {
