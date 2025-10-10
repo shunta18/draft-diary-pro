@@ -355,6 +355,24 @@ const Index = () => {
           </div>
           </section>
         )}
+
+        {/* Footer with Terms and Privacy Links */}
+        <footer className="border-t border-border/30 pt-4 pb-6">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+              <Link to="/terms" className="hover:text-primary transition-colors">
+                利用規約
+              </Link>
+              <span>·</span>
+              <Link to="/privacy" className="hover:text-primary transition-colors">
+                プライバシーポリシー
+              </Link>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              © 2025 BaaS Baseball. All rights reserved.
+            </p>
+          </div>
+        </footer>
       </div>
     </div>
   );
