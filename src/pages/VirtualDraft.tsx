@@ -12,6 +12,7 @@ import { getDefaultPlayers, Player as LocalPlayer } from "@/lib/playerStorage";
 import { Shuffle, Trophy, AlertCircle, CheckCircle2, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Footer } from "@/components/Footer";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -791,6 +792,8 @@ const VirtualDraft = () => {
         </Card>
 
       </main>
+      
+      <Footer />
     </div>
   );
 };

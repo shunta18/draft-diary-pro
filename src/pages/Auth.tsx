@@ -11,6 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoIcon from "@/assets/logo.png";
 import { SEO } from "@/components/SEO";
+import { Footer } from "@/components/Footer";
 
 export default function Auth() {
   const { user, signIn, signUp } = useAuth();
@@ -224,6 +225,8 @@ export default function Auth() {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 }

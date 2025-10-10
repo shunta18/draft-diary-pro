@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { getDraftData as getSupabaseDraftData, saveDraftData as saveSupabaseDraftData } from "@/lib/supabase-storage";
+import { Footer } from "@/components/Footer";
 
 // Helper function to normalize position data
 const normalizePosition = (position: string | string[]): string[] => {
@@ -1037,6 +1038,8 @@ export default function Draft() {
           </Card>
         )}
       </div>
+      
+      <Footer />
     </div>
   );
 }

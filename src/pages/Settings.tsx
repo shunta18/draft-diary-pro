@@ -9,6 +9,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { SEO } from "@/components/SEO";
+import { Footer } from "@/components/Footer";
 
 
 export default function Settings() {
@@ -376,6 +377,8 @@ export default function Settings() {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 }

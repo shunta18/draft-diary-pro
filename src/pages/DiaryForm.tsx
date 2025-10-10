@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DiaryEntry, addDiaryEntry as addLocalDiaryEntry, updateDiaryEntry as updateLocalDiaryEntry, getDiaryEntryById as getLocalDiaryEntryById } from "@/lib/diaryStorage";
 import { addDiaryEntry, updateDiaryEntry, getDiaryEntryById, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
 import { useAuth } from "@/hooks/useAuth";
+import { Footer } from "@/components/Footer";
 
 export default function DiaryForm() {
   const navigate = useNavigate();
@@ -337,6 +338,8 @@ export default function DiaryForm() {
           </CardContent>
         </Card>
       </div>
+      
+      <Footer />
     </div>
   );
 }

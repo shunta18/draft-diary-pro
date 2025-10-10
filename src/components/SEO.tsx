@@ -14,7 +14,7 @@ export const SEO = ({
   title, 
   description, 
   keywords = [], 
-  image = "https://draft-diary-pro.vercel.app/og-thumbnail.jpg",
+  image = "https://baas-baseball.com/og-thumbnail.jpg",
   url = window.location.href,
   type = "website",
   structuredData
@@ -46,7 +46,7 @@ export const SEO = ({
       {/* Twitter Card Tags */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:site" content="@lovable_dev" />
-      <meta name="twitter:image" content={`https://draft-diary-pro.vercel.app/og-thumbnail-twitter.jpg?v=${timestamp}`} />
+      <meta name="twitter:image" content={`https://baas-baseball.com/og-thumbnail-twitter.jpg?v=${timestamp}`} />
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       

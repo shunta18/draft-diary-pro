@@ -1,4 +1,4 @@
-import { Menu, Home, Users, Trophy, Calendar, Settings, Shuffle } from "lucide-react";
+import { Menu, Home, Users, Trophy, Calendar, Settings, Shuffle, HelpCircle, Mail, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
@@ -18,6 +18,12 @@ const navItems: NavItem[] = [
   { icon: Shuffle, label: "仮想ドラフト", path: "/virtual-draft" },
   { icon: Calendar, label: "観戦日記", path: "/diary" },
   { icon: Settings, label: "設定", path: "/settings" },
+];
+
+const secondaryNavItems: NavItem[] = [
+  { icon: HelpCircle, label: "ヘルプ", path: "/help" },
+  { icon: Mail, label: "お問い合わせ", path: "/contact" },
+  { icon: Info, label: "BaaSについて", path: "/about" },
 ];
 
 export const Navigation = () => {
@@ -63,6 +69,28 @@ export const Navigation = () => {
                 );
               })}
             </nav>
+            <div className="border-t border-border/30 mt-4 pt-4">
+              <nav className="flex flex-col space-y-2">
+                {secondaryNavItems.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setOpen(false)}
+                      className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-smooth ${
+                        isActive(item.path)
+                          ? "bg-primary text-primary-foreground shadow-glow"
+                          : "hover:bg-secondary text-foreground"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span className="font-medium">{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
           </SheetContent>
         </Sheet>
 
