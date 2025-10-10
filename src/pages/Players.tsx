@@ -293,35 +293,39 @@ export default function Players() {
       />
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-4">
-            <Link to="/">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-xl font-bold text-primary whitespace-nowrap">選手リスト</h1>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3 md:mb-0">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <Link to="/">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <h1 className="text-lg md:text-xl font-bold text-primary whitespace-nowrap">選手リスト</h1>
+            </div>
           </div>
           
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {user && (
               <Button 
                 variant="outline"
                 onClick={handleAddSamplePlayers}
                 disabled={isAddingSamplePlayers}
-                className="shadow-soft"
+                className="shadow-soft flex-1 sm:flex-none"
               >
-                <UserPlus className="h-4 w-4 mr-2" />
-                候補を追加
+                <UserPlus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">候補を追加</span>
+                <span className="sm:hidden">候補追加</span>
               </Button>
             )}
-            <Link to="/players/new">
+            <Link to="/players/new" className="flex-1 sm:flex-none">
               <Button 
                 variant="secondary"
-                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth w-full"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                新規追加
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">新規追加</span>
+                <span className="sm:hidden">新規</span>
               </Button>
             </Link>
           </div>

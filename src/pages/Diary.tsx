@@ -143,24 +143,26 @@ export default function Diary() {
       />
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
-        <div className="flex items-center justify-between p-4">
-          <div className="flex items-center space-x-4">
-            <Link to="/">
-              <Button variant="ghost" size="icon">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <h1 className="text-xl font-bold text-primary">観戦日記</h1>
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3 md:mb-0">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <Link to="/">
+                <Button variant="ghost" size="icon">
+                  <ArrowLeft className="h-5 w-5" />
+                </Button>
+              </Link>
+              <h1 className="text-lg md:text-xl font-bold text-primary">観戦日記</h1>
+            </div>
+            
+            <Button 
+              onClick={handleNewRecord}
+              variant="secondary"
+              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+            >
+              <Plus className="h-4 w-4 md:mr-2" />
+              <span className="hidden md:inline">新規記録</span>
+            </Button>
           </div>
-          
-          <Button 
-            onClick={handleNewRecord}
-            variant="secondary"
-            className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            新規記録
-          </Button>
         </div>
         
         {!user && !loading && (
