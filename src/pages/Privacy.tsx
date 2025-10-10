@@ -56,7 +56,6 @@ export default function Privacy() {
               <ul className="text-muted-foreground leading-relaxed space-y-1 mb-4">
                 <li>• メールアドレス（アカウント登録時）</li>
                 <li>• ユーザー名（任意）</li>
-                <li>• GoogleまたはTwitterアカウントによる認証情報</li>
                 <li>• 選手データ（選手名、所属、ポジション等、ユーザーが入力した情報）</li>
                 <li>• ドラフト構想データ</li>
                 <li>• 観戦記録データ</li>

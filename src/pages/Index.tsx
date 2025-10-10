@@ -174,31 +174,6 @@ const Index = () => {
           </Alert>
         )}
 
-        {/* Stats Cards - 小さくして3列配置 */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="bg-card/50 border border-border/40 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center mb-1">
-              <Users className="h-4 w-4 text-accent" />
-            </div>
-            <div className="text-lg font-bold text-primary">{totalPlayers}</div>
-            <div className="text-xs text-muted-foreground">登録選手</div>
-          </div>
-          <div className="bg-card/50 border border-border/40 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center mb-1">
-              <Trophy className="h-4 w-4 text-accent" />
-            </div>
-            <div className="text-lg font-bold text-primary">{completedDrafts}</div>
-            <div className="text-xs text-muted-foreground">構想完成</div>
-          </div>
-          <div className="bg-card/50 border border-border/40 rounded-lg p-3 text-center">
-            <div className="flex items-center justify-center mb-1">
-              <Calendar className="h-4 w-4 text-accent" />
-            </div>
-            <div className="text-lg font-bold text-primary">{totalWatching}</div>
-            <div className="text-xs text-muted-foreground">今年の観戦</div>
-          </div>
-        </div>
-
         {/* Main Navigation Cards */}
         <div className="grid grid-cols-1 gap-3">
           <Link to="/players">
