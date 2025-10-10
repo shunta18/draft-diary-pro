@@ -113,7 +113,7 @@ const Index = () => {
     "@type": "WebApplication",
     "name": "BaaS プロ野球ドラフト管理ツール",
     "description": "野球ファンのためのドラフト候補選手管理・評価・観戦記録アプリ",
-    "url": "https://draft-diary-pro.vercel.app",
+    "url": "https://baas-baseball.com",
     "applicationCategory": "SportsApplication",
     "operatingSystem": "All",
     "author": {
@@ -280,9 +280,8 @@ const Index = () => {
           </Link>
         </div>
 
-        {/* About Section - SEO & AdSense対策（非ログイン時のみ表示） */}
-        {!user && (
-          <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4">
+        {/* About Section - SEO & AdSense対策（常時表示） */}
+        <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4">
           <h2 className="text-xl font-bold text-primary">BaaS 野球スカウトノートについて</h2>
           
           <div className="space-y-3 text-sm text-foreground/90 leading-relaxed">
@@ -354,8 +353,7 @@ const Index = () => {
               まずはお試し利用で機能をご体験いただき、気に入ったらアカウント登録で本格的にご活用ください。
             </p>
           </div>
-          </section>
-        )}
+        </section>
 
       </div>
       

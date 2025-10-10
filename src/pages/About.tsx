@@ -199,8 +199,20 @@ const About = () => {
               </div>
               <div>
                 <h3 className="font-semibold mb-2">運営者</h3>
+                <p className="text-sm text-muted-foreground">なかむら</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">所在地</h3>
+                <p className="text-sm text-muted-foreground">神奈川県</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">設立</h3>
+                <p className="text-sm text-muted-foreground">2025年</p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-2">事業内容</h3>
                 <p className="text-sm text-muted-foreground">
-                  BaaS Baseball
+                  ウェブアプリケーションの開発・運営
                 </p>
               </div>
               <div>
