@@ -152,6 +152,9 @@ export default function Settings() {
               <User className="h-5 w-5" />
               <span>アカウント情報</span>
             </CardTitle>
+            <div className="pt-2">
+              <ProfileEditDialog profile={profile} onProfileUpdate={loadProfile} />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
@@ -162,14 +165,9 @@ export default function Settings() {
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 text-center sm:text-left">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                  <h3 className="font-semibold text-lg">
-                    {profile?.display_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'ユーザー'}
-                  </h3>
-                  <div className="flex justify-center sm:justify-start">
-                    <ProfileEditDialog profile={profile} onProfileUpdate={loadProfile} />
-                  </div>
-                </div>
+                <h3 className="font-semibold text-lg mb-2">
+                  {profile?.display_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'ユーザー'}
+                </h3>
                 <p className="text-muted-foreground text-sm break-all">{user?.email}</p>
                 <div className="flex items-center justify-center sm:justify-start space-x-2 mt-2">
                   {getProviderIcon('email')}

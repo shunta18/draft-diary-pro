@@ -37,17 +37,31 @@ export const ProfileEditDialog = ({ profile, onProfileUpdate }: ProfileEditDialo
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(profile?.avatar_url || null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const { toast } = useToast();
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      display_name: profile?.display_name || "",
-      bio: profile?.bio || "",
-      social_links: (profile?.social_links || []) as SocialLink[]
+      display_name: "",
+      bio: "",
+      social_links: []
     }
   });
+
+  // Reset form when dialog opens with current profile data
+  const handleOpenChange = (newOpen: boolean) => {
+    setOpen(newOpen);
+    if (newOpen) {
+      form.reset({
+        display_name: profile?.display_name || "",
+        bio: profile?.bio || "",
+        social_links: (profile?.social_links || []) as SocialLink[]
+      });
+      setAvatarPreview(profile?.avatar_url || null);
+      setAvatarFile(null);
+    }
+  };
 
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -130,7 +144,7 @@ export const ProfileEditDialog = ({ profile, onProfileUpdate }: ProfileEditDialo
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button variant="outline">プロフィール編集</Button>
       </DialogTrigger>
@@ -286,7 +300,7 @@ export const ProfileEditDialog = ({ profile, onProfileUpdate }: ProfileEditDialo
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+              <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                 キャンセル
               </Button>
               <Button type="submit" disabled={isLoading}>
