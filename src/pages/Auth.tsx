@@ -19,6 +19,7 @@ export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [username, setUsername] = useState("");
 
   // Redirect if already authenticated
   if (user) {
@@ -59,7 +60,38 @@ export default function Auth() {
     setLoading(true);
     
     try {
-      const { error } = await signUp(email, password);
+      // バリデーション
+      if (!username.trim()) {
+        toast({
+          title: "入力エラー",
+          description: "ユーザーネームを入力してください。",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (username.trim().length < 2) {
+        toast({
+          title: "入力エラー",
+          description: "ユーザーネームは2文字以上で入力してください。",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      if (username.trim().length > 50) {
+        toast({
+          title: "入力エラー",
+          description: "ユーザーネームは50文字以内で入力してください。",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
+      const { error } = await signUp(email, password, username.trim());
       if (error) {
         toast({
           title: "アカウント作成エラー",
@@ -71,6 +103,10 @@ export default function Auth() {
           title: "アカウント作成成功",
           description: "確認メールを送信しました。メールをご確認ください。",
         });
+        // フォームをリセット
+        setEmail("");
+        setPassword("");
+        setUsername("");
       }
     } catch (error: any) {
       toast({
@@ -166,7 +202,21 @@ export default function Auth() {
                 
                 <form onSubmit={handleSignUp} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-email">メールアドレス</Label>
+                    <Label htmlFor="signup-username">ユーザーネーム <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="signup-username"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      placeholder="ユーザーネームを入力"
+                      required
+                      minLength={2}
+                      maxLength={50}
+                    />
+                    <p className="text-xs text-muted-foreground">2〜50文字で入力してください</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">メールアドレス <span className="text-destructive">*</span></Label>
                     <Input
                       id="signup-email"
                       type="email"
@@ -177,7 +227,7 @@ export default function Auth() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-password">パスワード</Label>
+                    <Label htmlFor="signup-password">パスワード <span className="text-destructive">*</span></Label>
                     <Input
                       id="signup-password"
                       type="password"
@@ -185,7 +235,9 @@ export default function Auth() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="パスワードを入力"
                       required
+                      minLength={6}
                     />
+                    <p className="text-xs text-muted-foreground">6文字以上で入力してください</p>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? "アカウント作成中..." : "アカウント作成"}
