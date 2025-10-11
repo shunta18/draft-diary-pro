@@ -148,14 +148,12 @@ export default function Settings() {
         {/* User Profile Card */}
         <Card className="gradient-card border-0 shadow-soft">
           <CardHeader>
-            <div className="flex items-center justify-between gap-2">
-              <CardTitle className="text-primary flex items-center space-x-2 flex-shrink min-w-0">
-                <User className="h-5 w-5 flex-shrink-0" />
-                <span className="truncate">アカウント情報</span>
-              </CardTitle>
-              <div className="flex-shrink-0">
-                <ProfileEditDialog profile={profile} onProfileUpdate={loadProfile} />
-              </div>
+            <CardTitle className="text-primary flex items-center space-x-2">
+              <User className="h-5 w-5" />
+              <span>アカウント情報</span>
+            </CardTitle>
+            <div className="pt-2">
+              <ProfileEditDialog profile={profile} onProfileUpdate={loadProfile} />
             </div>
           </CardHeader>
           <CardContent>
