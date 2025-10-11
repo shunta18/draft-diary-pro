@@ -578,7 +578,7 @@ export default function Players() {
               {/* Basic Info */}
               <div className="space-y-4">
                 <div className="space-y-3">
-                  <div className="flex items-center space-x-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Badge variant="secondary" className="text-xs">
                       {selectedPlayer.category}
                     </Badge>
@@ -598,7 +598,7 @@ export default function Players() {
                   </div>
                   
                   {selectedPlayer.recommended_teams && selectedPlayer.recommended_teams.length > 0 && (
-                    <div className="flex items-center space-x-2 flex-wrap">
+                    <div className="flex items-center gap-2 flex-wrap">
                       {selectedPlayer.recommended_teams.map((team, index) => (
                         <Badge 
                           key={`team-${index}`}
@@ -682,18 +682,33 @@ export default function Players() {
               </div>
 
               {/* 経歴 */}
-              {selectedPlayer.career_path && Array.isArray(selectedPlayer.career_path) && selectedPlayer.career_path.length > 0 && (
-                <div className="space-y-2">
-                  <h4 className="font-semibold text-primary">経歴</h4>
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                    {selectedPlayer.career_path.map((career: any, index: number) => (
-                      <div key={index} className="text-sm">
-                        {career.year && <span className="text-muted-foreground">{career.year}年: </span>}
-                        <span>{career.team || career.school}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              {selectedPlayer.career_path && (
+                (() => {
+                  try {
+                    const careerData = typeof selectedPlayer.career_path === 'string' 
+                      ? JSON.parse(selectedPlayer.career_path) 
+                      : selectedPlayer.career_path;
+                    
+                    if (Array.isArray(careerData) && careerData.length > 0) {
+                      return (
+                        <div className="space-y-2">
+                          <h4 className="font-semibold text-primary">経歴</h4>
+                          <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                            {careerData.map((career: any, index: number) => (
+                              <div key={index} className="text-sm">
+                                {career.year && <span className="text-muted-foreground">{career.year}年: </span>}
+                                <span>{career.team || career.school}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    }
+                  } catch (e) {
+                    console.error('Error parsing career_path:', e);
+                  }
+                  return null;
+                })()
               )}
 
               {/* メモ欄 */}
