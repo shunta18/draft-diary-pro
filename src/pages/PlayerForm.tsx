@@ -289,7 +289,7 @@ export default function PlayerForm() {
           
           <div className="flex justify-end space-x-2">
             <Link to="/players">
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" className="h-9 px-4">
                 キャンセル
               </Button>
             </Link>
@@ -297,7 +297,8 @@ export default function PlayerForm() {
               type="submit" 
               form="player-form"
               variant="secondary"
-              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+              size="sm"
+              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth h-9 px-4"
             >
               <Save className="h-4 w-4 mr-2" />
               保存
