@@ -57,6 +57,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error('メールアドレスとパスワードを入力してください') };
     }
 
+    if (!name || name.trim().length === 0) {
+      return { error: new Error('ユーザーネームを入力してください') };
+    }
+
     const redirectUrl = `${window.location.origin}/`;
     
     const { error } = await supabase.auth.signUp({
@@ -65,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       options: {
         emailRedirectTo: redirectUrl,
         data: {
-          name: name || email.split('@')[0]
+          name: name.trim()
         }
       }
     });
