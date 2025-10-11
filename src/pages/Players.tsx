@@ -682,34 +682,41 @@ export default function Players() {
               </div>
 
               {/* 経歴 */}
-              {selectedPlayer.career_path && (
-                (() => {
-                  try {
-                    const careerData = typeof selectedPlayer.career_path === 'string' 
-                      ? JSON.parse(selectedPlayer.career_path) 
-                      : selectedPlayer.career_path;
-                    
-                    if (Array.isArray(careerData) && careerData.length > 0) {
+              {selectedPlayer.career_path && (() => {
+                try {
+                  const careerData = typeof selectedPlayer.career_path === 'string' 
+                    ? JSON.parse(selectedPlayer.career_path) 
+                    : selectedPlayer.career_path;
+                  
+                  if (careerData && typeof careerData === 'object' && !Array.isArray(careerData)) {
+                    const careerItems = [
+                      { label: '中学', value: careerData.middle_school },
+                      { label: '高校', value: careerData.high_school },
+                      { label: '大学', value: careerData.university },
+                      { label: '社会人', value: careerData.corporate }
+                    ].filter(item => item.value);
+
+                    if (careerItems.length > 0) {
                       return (
                         <div className="space-y-2">
                           <h4 className="font-semibold text-primary">経歴</h4>
                           <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                            {careerData.map((career: any, index: number) => (
+                            {careerItems.map((item, index) => (
                               <div key={index} className="text-sm">
-                                {career.year && <span className="text-muted-foreground">{career.year}年: </span>}
-                                <span>{career.team || career.school}</span>
+                                <span className="text-muted-foreground min-w-[60px] inline-block">{item.label}:</span>
+                                <span>{item.value}</span>
                               </div>
                             ))}
                           </div>
                         </div>
                       );
                     }
-                  } catch (e) {
-                    console.error('Error parsing career_path:', e);
                   }
-                  return null;
-                })()
-              )}
+                } catch (e) {
+                  console.error('Error parsing career_path:', e);
+                }
+                return null;
+              })()}
 
               {/* メモ欄 */}
               {selectedPlayer.memo && (
