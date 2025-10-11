@@ -577,107 +577,124 @@ export default function Players() {
             <div className="space-y-6">
               {/* Basic Info */}
               <div className="space-y-4">
-                <div className="flex items-center space-x-2 flex-wrap">
-                  <Badge variant="secondary" className="text-xs">
-                    {selectedPlayer.category}
-                  </Badge>
-                  {selectedPlayer.evaluations && sortEvaluations(selectedPlayer.evaluations).map((evaluation, index) => (
-                    <Badge 
-                      key={index}
-                      className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
-                    >
-                      {evaluation}
+                <div className="space-y-3">
+                  <div className="flex items-center space-x-2 flex-wrap">
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedPlayer.category}
                     </Badge>
-                  ))}
-                  {selectedPlayer.recommended_teams && selectedPlayer.recommended_teams.map((team, index) => (
-                    <Badge 
-                      key={`team-${index}`}
-                      className={`${teamColors[team as keyof typeof teamColors]} font-medium text-xs`}
-                    >
-                      {team === "オリックス・バファローズ" ? "オリックス" :
-                       team.replace(/ジャイアンツ|タイガース|ドラゴンズ|カープ|スワローズ|ベイスターズ|ホークス|ファイターズ|マリーンズ|ライオンズ|ゴールデンイーグルス/, '').replace(/読売|阪神|中日|広島東洋|東京ヤクルト|横浜DeNA|福岡ソフトバンク|北海道日本ハム|千葉ロッテ|埼玉西武|東北楽天/, (match) => {
-                        const teamMap: { [key: string]: string } = {
-                          '読売': '巨人',
-                          '阪神': '阪神',
-                          '中日': '中日',
-                          '広島東洋': '広島',
-                          '東京ヤクルト': 'ヤクルト',
-                          '横浜DeNA': 'DeNA',
-                          '福岡ソフトバンク': 'ソフトバンク',
-                          '北海道日本ハム': '日本ハム',
-                          '千葉ロッテ': 'ロッテ',
-                          '埼玉西武': '西武',
-                          '東北楽天': '楽天',
-                          'オリックス': 'オリックス'
-                        };
-                        return teamMap[match] || match;
-                      })}
-                    </Badge>
-                  ))}
-                  {selectedPlayer.id === 1 && (
-                    <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
-                      サンプル
-                    </Badge>
+                    {selectedPlayer.evaluations && sortEvaluations(selectedPlayer.evaluations).map((evaluation, index) => (
+                      <Badge 
+                        key={index}
+                        className={`${evaluationColors[evaluation as keyof typeof evaluationColors]} font-medium text-xs`}
+                      >
+                        {evaluation}
+                      </Badge>
+                    ))}
+                    {selectedPlayer.id === 1 && (
+                      <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
+                        サンプル
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {selectedPlayer.recommended_teams && selectedPlayer.recommended_teams.length > 0 && (
+                    <div className="flex items-center space-x-2 flex-wrap">
+                      {selectedPlayer.recommended_teams.map((team, index) => (
+                        <Badge 
+                          key={`team-${index}`}
+                          className={`${teamColors[team as keyof typeof teamColors]} font-medium text-xs`}
+                        >
+                          {team === "オリックス・バファローズ" ? "オリックス" :
+                           team.replace(/ジャイアンツ|タイガース|ドラゴンズ|カープ|スワローズ|ベイスターズ|ホークス|ファイターズ|マリーンズ|ライオンズ|ゴールデンイーグルス/, '').replace(/読売|阪神|中日|広島東洋|東京ヤクルト|横浜DeNA|福岡ソフトバンク|北海道日本ハム|千葉ロッテ|埼玉西武|東北楽天/, (match) => {
+                            const teamMap: { [key: string]: string } = {
+                              '読売': '巨人',
+                              '阪神': '阪神',
+                              '中日': '中日',
+                              '広島東洋': '広島',
+                              '東京ヤクルト': 'ヤクルト',
+                              '横浜DeNA': 'DeNA',
+                              '福岡ソフトバンク': 'ソフトバンク',
+                              '北海道日本ハム': '日本ハム',
+                              '千葉ロッテ': 'ロッテ',
+                              '埼玉西武': '西武',
+                              '東北楽天': '楽天',
+                              'オリックス': 'オリックス'
+                            };
+                            return teamMap[match] || match;
+                          })}
+                        </Badge>
+                      ))}
+                    </div>
                   )}
                 </div>
                 
                 <div className="grid grid-cols-1 gap-3 text-sm">
-                  <div className="flex items-center space-x-2">
-                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">所属:</span>
+                  <div className="flex items-start space-x-2">
+                    <span className="text-muted-foreground min-w-[100px]">所属:</span>
                     <span>{selectedPlayer.team}</span>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">ドラフト年度:</span>
+                  <div className="flex items-start space-x-2">
+                    <span className="text-muted-foreground min-w-[100px]">ドラフト年度:</span>
                     <span>{selectedPlayer.year || 2025}年</span>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <Users className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-muted-foreground">ポジション:</span>
+                  <div className="flex items-start space-x-2">
+                    <span className="text-muted-foreground min-w-[100px]">ポジション:</span>
                     <span>{sortPositions(selectedPlayer.position)}</span>
                   </div>
 
                   {selectedPlayer.batting_hand && selectedPlayer.throwing_hand && (
-                    <div className="flex items-center space-x-2">
-                      <Target className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">投打:</span>
+                    <div className="flex items-start space-x-2">
+                      <span className="text-muted-foreground min-w-[100px]">投打:</span>
                       <span>{selectedPlayer.throwing_hand}投{selectedPlayer.batting_hand}打</span>
                     </div>
                   )}
 
                   {selectedPlayer.height && selectedPlayer.weight && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-muted-foreground">身長・体重:</span>
+                    <div className="flex items-start space-x-2">
+                      <span className="text-muted-foreground min-w-[100px]">身長・体重:</span>
                       <span>{selectedPlayer.height}cm / {selectedPlayer.weight}kg</span>
                     </div>
                   )}
 
                   {selectedPlayer.hometown && (
-                    <div className="flex items-center space-x-2">
-                      <LocationIcon className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-muted-foreground">出身地:</span>
+                    <div className="flex items-start space-x-2">
+                      <span className="text-muted-foreground min-w-[100px]">出身地:</span>
                       <span>{selectedPlayer.hometown}</span>
                     </div>
                   )}
 
                   {selectedPlayer.age && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-muted-foreground">年齢:</span>
+                    <div className="flex items-start space-x-2">
+                      <span className="text-muted-foreground min-w-[100px]">年齢:</span>
                       <span>{selectedPlayer.age}歳</span>
                     </div>
                   )}
 
                   {selectedPlayer.usage && (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-muted-foreground">起用法:</span>
+                    <div className="flex items-start space-x-2">
+                      <span className="text-muted-foreground min-w-[100px]">起用法:</span>
                       <span>{selectedPlayer.usage}</span>
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* 経歴 */}
+              {selectedPlayer.career_path && Array.isArray(selectedPlayer.career_path) && selectedPlayer.career_path.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-primary">経歴</h4>
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                    {selectedPlayer.career_path.map((career: any, index: number) => (
+                      <div key={index} className="text-sm">
+                        {career.year && <span className="text-muted-foreground">{career.year}年: </span>}
+                        <span>{career.team || career.school}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* メモ欄 */}
               {selectedPlayer.memo && (
