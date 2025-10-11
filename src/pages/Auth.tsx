@@ -101,7 +101,7 @@ export default function Auth() {
       } else {
         toast({
           title: "アカウント作成成功",
-          description: "確認メールを送信しました。メールをご確認ください。",
+          description: "アカウントが作成されました。",
         });
         // フォームをリセット
         setEmail("");
