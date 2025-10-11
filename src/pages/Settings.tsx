@@ -154,22 +154,24 @@ export default function Settings() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center space-x-4 mb-4">
-              <Avatar className="h-16 w-16">
+            <div className="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 mb-4">
+              <Avatar className="h-20 w-20 sm:h-16 sm:w-16 mx-auto sm:mx-0">
                 <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
-                <AvatarFallback className="bg-primary/10 text-primary text-xl">
+                <AvatarFallback className="bg-primary/10 text-primary text-2xl sm:text-xl">
                   {(profile?.display_name || user?.email)?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
+              <div className="flex-1 text-center sm:text-left">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                   <h3 className="font-semibold text-lg">
                     {profile?.display_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'ユーザー'}
                   </h3>
-                  <ProfileEditDialog profile={profile} onProfileUpdate={loadProfile} />
+                  <div className="flex justify-center sm:justify-start">
+                    <ProfileEditDialog profile={profile} onProfileUpdate={loadProfile} />
+                  </div>
                 </div>
-                <p className="text-muted-foreground text-sm">{user?.email}</p>
-                <div className="flex items-center space-x-2 mt-2">
+                <p className="text-muted-foreground text-sm break-all">{user?.email}</p>
+                <div className="flex items-center justify-center sm:justify-start space-x-2 mt-2">
                   {getProviderIcon('email')}
                   <Badge variant="secondary" className="text-xs">
                     {getProviderName('email')}で認証済み
@@ -179,19 +181,21 @@ export default function Settings() {
                   <p className="text-sm mt-3 text-foreground/80">{profile.bio}</p>
                 )}
                 {profile?.social_links && profile.social_links.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-3">
+                  <div className="flex flex-wrap gap-2 mt-4 justify-center sm:justify-start">
                     {profile.social_links.map((link, index) => (
                       <a
                         key={index}
                         href={link.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-xs text-primary hover:underline"
+                        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors text-sm text-primary hover:text-primary/80"
                       >
-                        {link.type === 'twitter' && <Twitter className="w-3 h-3" />}
-                        {link.type === 'youtube' && <Youtube className="w-3 h-3" />}
-                        {link.type === 'other' && <LinkIcon className="w-3 h-3" />}
-                        {link.type === 'other' ? link.label : link.type}
+                        {link.type === 'twitter' && <Twitter className="w-4 h-4" />}
+                        {link.type === 'youtube' && <Youtube className="w-4 h-4" />}
+                        {link.type === 'other' && <LinkIcon className="w-4 h-4" />}
+                        <span className="font-medium">
+                          {link.type === 'other' ? link.label : link.type}
+                        </span>
                       </a>
                     ))}
                   </div>
