@@ -1,4 +1,4 @@
-import { ArrowLeft, User, Database, HelpCircle, Info, LogOut, Shield, Settings as SettingsIcon, Trash2, ExternalLink, FileText, Mail, RefreshCw } from "lucide-react";
+import { ArrowLeft, User, Database, HelpCircle, Info, LogOut, Shield, Settings as SettingsIcon, Trash2, ExternalLink, FileText, Mail, RefreshCw, Twitter, Youtube, Link as LinkIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -10,11 +10,24 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { SEO } from "@/components/SEO";
 import { Footer } from "@/components/Footer";
+import { ProfileEditDialog } from "@/components/ProfileEditDialog";
+import { getProfile, Profile } from "@/lib/supabase-storage";
+import { useState, useEffect } from "react";
 
 
 export default function Settings() {
   const { user, loading, signOut, deleteAccount } = useAuth();
   const { toast } = useToast();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    const profileData = await getProfile();
+    setProfile(profileData);
+  };
 
   // Redirect to auth page if not logged in
   if (!loading && !user) {
@@ -162,14 +175,18 @@ export default function Settings() {
           <CardContent>
             <div className="flex items-center space-x-4 mb-4">
               <Avatar className="h-16 w-16">
+                <AvatarImage src={profile?.avatar_url || user?.user_metadata?.avatar_url} />
                 <AvatarFallback className="bg-primary/10 text-primary text-xl">
-                  {user?.email?.charAt(0).toUpperCase()}
+                  {(profile?.display_name || user?.email)?.[0]?.toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h3 className="font-semibold text-lg">
-                  {user?.user_metadata?.name || user?.email?.split('@')[0] || 'ユーザー'}
-                </h3>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-lg">
+                    {profile?.display_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'ユーザー'}
+                  </h3>
+                  <ProfileEditDialog profile={profile} onProfileUpdate={loadProfile} />
+                </div>
                 <p className="text-muted-foreground text-sm">{user?.email}</p>
                 <div className="flex items-center space-x-2 mt-2">
                   {getProviderIcon('email')}
@@ -177,6 +194,27 @@ export default function Settings() {
                     {getProviderName('email')}で認証済み
                   </Badge>
                 </div>
+                {profile?.bio && (
+                  <p className="text-sm mt-3 text-foreground/80">{profile.bio}</p>
+                )}
+                {profile?.social_links && profile.social_links.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    {profile.social_links.map((link, index) => (
+                      <a
+                        key={index}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-1 text-xs text-primary hover:underline"
+                      >
+                        {link.type === 'twitter' && <Twitter className="w-3 h-3" />}
+                        {link.type === 'youtube' && <Youtube className="w-3 h-3" />}
+                        {link.type === 'other' && <LinkIcon className="w-3 h-3" />}
+                        {link.type === 'other' ? link.label : link.type}
+                      </a>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
             
