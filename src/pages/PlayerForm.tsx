@@ -365,12 +365,12 @@ export default function PlayerForm() {
                 </div>
 
                 <div>
-                  <Label htmlFor="team">所属チーム *</Label>
+                  <Label htmlFor="team">現在の所属チーム *</Label>
                   <Input
                     id="team"
                     value={formData.team}
                     onChange={(e) => setFormData(prev => ({ ...prev, team: e.target.value }))}
-                    placeholder="所属チーム名を入力"
+                    placeholder="現在の所属チーム名を入力"
                     required
                     className="shadow-soft"
                   />
