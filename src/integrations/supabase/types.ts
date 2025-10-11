@@ -114,7 +114,7 @@ export type Database = {
         Row: {
           age: number | null
           batting_hand: string | null
-          career_path: string | null
+          career_path: Json | null
           category: string
           created_at: string
           evaluations: string[] | null
@@ -137,7 +137,7 @@ export type Database = {
         Insert: {
           age?: number | null
           batting_hand?: string | null
-          career_path?: string | null
+          career_path?: Json | null
           category: string
           created_at?: string
           evaluations?: string[] | null
@@ -160,7 +160,7 @@ export type Database = {
         Update: {
           age?: number | null
           batting_hand?: string | null
-          career_path?: string | null
+          career_path?: Json | null
           category?: string
           created_at?: string
           evaluations?: string[] | null

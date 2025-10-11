@@ -311,7 +311,7 @@ export default function Players() {
                 variant="outline"
                 onClick={handleAddSamplePlayers}
                 disabled={isAddingSamplePlayers}
-                className="shadow-soft flex-1 sm:flex-none"
+                className="shadow-soft flex-1 sm:flex-none h-10"
               >
                 <UserPlus className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">候補を追加</span>
@@ -321,10 +321,10 @@ export default function Players() {
             <Link to="/players/new" className="flex-1 sm:flex-none">
               <Button 
                 variant="secondary"
-                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth w-full"
+                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth w-full h-10"
               >
                 <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">新規追加</span>
+                <span className="hidden sm:inline">新規選手追加</span>
                 <span className="sm:hidden">新規</span>
               </Button>
             </Link>

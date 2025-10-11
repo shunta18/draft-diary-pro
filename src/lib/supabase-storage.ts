@@ -17,7 +17,12 @@ export interface Player {
   age?: number;
   memo?: string;
   hometown?: string;
-  
+  career_path?: {
+    middle_school?: string;
+    high_school?: string;
+    university?: string;
+    corporate?: string;
+  };
   usage?: string;
   videos?: string[];
 }
@@ -57,7 +62,10 @@ export const getPlayers = async (): Promise<Player[]> => {
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return data || [];
+    return (data || []).map(player => ({
+      ...player,
+      career_path: player.career_path as Player['career_path']
+    }));
   } catch (error) {
     console.error('Failed to load players:', error);
     return [];
@@ -80,7 +88,10 @@ export const addPlayer = async (playerData: Omit<Player, 'id'>): Promise<Player 
       .single();
     
     if (error) throw error;
-    return data;
+    return data ? {
+      ...data,
+      career_path: data.career_path as Player['career_path']
+    } : null;
   } catch (error) {
     console.error('Failed to add player:', error);
     return null;
@@ -100,7 +111,10 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
       .single();
     
     if (error) throw error;
-    return data;
+    return data ? {
+      ...data,
+      career_path: data.career_path as Player['career_path']
+    } : null;
   } catch (error) {
     console.error('Failed to update player:', error);
     return null;
@@ -131,7 +145,10 @@ export const getPlayerById = async (id: number): Promise<Player | null> => {
       .single();
     
     if (error) throw error;
-    return data;
+    return data ? {
+      ...data,
+      career_path: data.career_path as Player['career_path']
+    } : null;
   } catch (error) {
     console.error('Failed to get player by id:', error);
     return null;
