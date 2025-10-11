@@ -275,7 +275,7 @@ export default function PlayerForm() {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
-        <div className="flex items-center justify-between p-4">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4">
           <div className="flex items-center space-x-4">
             <Link to="/players">
               <Button variant="ghost" size="icon">
