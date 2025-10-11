@@ -309,23 +309,23 @@ export default function Players() {
             {user && (
               <Button 
                 variant="outline"
+                size="lg"
                 onClick={handleAddSamplePlayers}
                 disabled={isAddingSamplePlayers}
                 className="shadow-soft flex-1 sm:flex-none"
               >
-                <UserPlus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">候補を追加</span>
-                <span className="sm:hidden">候補追加</span>
+                <UserPlus className="h-5 w-5 mr-2" />
+                候補追加
               </Button>
             )}
             <Link to="/players/new" className="flex-1 sm:flex-none">
               <Button 
                 variant="secondary"
+                size="lg"
                 className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth w-full"
               >
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">新規追加</span>
-                <span className="sm:hidden">新規</span>
+                <Plus className="h-5 w-5 mr-2" />
+                新規
               </Button>
             </Link>
           </div>
