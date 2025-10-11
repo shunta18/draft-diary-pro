@@ -275,7 +275,7 @@ export default function PlayerForm() {
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 p-4">
+        <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center space-x-4">
             <Link to="/players">
               <Button variant="ghost" size="icon">
@@ -287,9 +287,9 @@ export default function PlayerForm() {
             </h1>
           </div>
           
-          <div className="flex justify-end space-x-2">
-            <Link to="/players">
-              <Button variant="outline" size="sm" className="h-9 px-4">
+          <div className="flex items-center gap-2 flex-wrap">
+            <Link to="/players" className="flex-1 sm:flex-none">
+              <Button variant="outline" className="h-10 w-full">
                 キャンセル
               </Button>
             </Link>
@@ -297,8 +297,7 @@ export default function PlayerForm() {
               type="submit" 
               form="player-form"
               variant="secondary"
-              size="sm"
-              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth h-9 px-4"
+              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth h-10 flex-1 sm:flex-none"
             >
               <Save className="h-4 w-4 mr-2" />
               保存
