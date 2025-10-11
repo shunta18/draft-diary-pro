@@ -62,7 +62,12 @@ export default function PlayerForm() {
     battingThrowing: "",
     hometown: "",
     age: undefined as number | undefined,
-    
+    careerPath: {
+      middle_school: "",
+      high_school: "",
+      university: "",
+      corporate: "",
+    },
     usage: "",
     evaluations: [] as string[],
     recommended_teams: [] as string[],
@@ -85,6 +90,10 @@ export default function PlayerForm() {
       const loadPlayer = async () => {
         const player = await getPlayerById(parseInt(id));
         if (player) {
+          const careerPath = player.career_path && typeof player.career_path === 'object' 
+            ? player.career_path as { middle_school?: string; high_school?: string; university?: string; corporate?: string }
+            : { middle_school: "", high_school: "", university: "", corporate: "" };
+          
           setFormData({
             name: player.name,
             draftYear: player.year?.toString() || "2025",
@@ -94,7 +103,12 @@ export default function PlayerForm() {
             battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
             hometown: player.hometown || "",
             age: player.age,
-            
+            careerPath: {
+              middle_school: careerPath.middle_school || "",
+              high_school: careerPath.high_school || "",
+              university: careerPath.university || "",
+              corporate: careerPath.corporate || "",
+            },
             usage: player.usage || "",
             evaluations: player.evaluations || [],
             recommended_teams: player.recommended_teams || [],
@@ -194,7 +208,7 @@ export default function PlayerForm() {
       throwing_hand: formData.battingThrowing.includes("右投") ? "右" : formData.battingThrowing.includes("左投") ? "左" : undefined,
       hometown: formData.hometown,
       age: formData.age,
-      
+      career_path: formData.careerPath,
       usage: formData.usage,
       evaluations: formData.evaluations,
       recommended_teams: formData.recommended_teams,
@@ -362,6 +376,76 @@ export default function PlayerForm() {
                   />
                 </div>
               </div>
+
+              {/* 経歴 */}
+              {formData.category && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium">経歴</Label>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="middle_school" className="text-sm text-muted-foreground">中学チーム</Label>
+                      <Input
+                        id="middle_school"
+                        value={formData.careerPath.middle_school}
+                        onChange={(e) => setFormData(prev => ({ 
+                          ...prev, 
+                          careerPath: { ...prev.careerPath, middle_school: e.target.value }
+                        }))}
+                        placeholder="中学時代のチーム名"
+                        className="shadow-soft"
+                      />
+                    </div>
+
+                    {["大学", "社会人", "独立リーグ"].includes(formData.category) && (
+                      <div>
+                        <Label htmlFor="high_school" className="text-sm text-muted-foreground">高校</Label>
+                        <Input
+                          id="high_school"
+                          value={formData.careerPath.high_school}
+                          onChange={(e) => setFormData(prev => ({ 
+                            ...prev, 
+                            careerPath: { ...prev.careerPath, high_school: e.target.value }
+                          }))}
+                          placeholder="高校名"
+                          className="shadow-soft"
+                        />
+                      </div>
+                    )}
+
+                    {["社会人", "独立リーグ"].includes(formData.category) && (
+                      <div>
+                        <Label htmlFor="university" className="text-sm text-muted-foreground">大学</Label>
+                        <Input
+                          id="university"
+                          value={formData.careerPath.university}
+                          onChange={(e) => setFormData(prev => ({ 
+                            ...prev, 
+                            careerPath: { ...prev.careerPath, university: e.target.value }
+                          }))}
+                          placeholder="大学名"
+                          className="shadow-soft"
+                        />
+                      </div>
+                    )}
+
+                    {formData.category === "独立リーグ" && (
+                      <div>
+                        <Label htmlFor="corporate" className="text-sm text-muted-foreground">社会人</Label>
+                        <Input
+                          id="corporate"
+                          value={formData.careerPath.corporate}
+                          onChange={(e) => setFormData(prev => ({ 
+                            ...prev, 
+                            careerPath: { ...prev.careerPath, corporate: e.target.value }
+                          }))}
+                          placeholder="社会人チーム名"
+                          className="shadow-soft"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <Label>ポジション *</Label>
