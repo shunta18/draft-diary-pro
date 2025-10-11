@@ -287,7 +287,7 @@ export default function PlayerForm() {
             </h1>
           </div>
           
-          <div className="flex space-x-2">
+          <div className="flex justify-end space-x-2">
             <Link to="/players">
               <Button variant="outline" size="sm">
                 キャンセル
