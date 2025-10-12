@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -379,18 +380,42 @@ export default function Players() {
           </div>
           
           <div className="grid grid-cols-2 gap-2 sm:flex sm:space-x-2 sm:grid-cols-none">
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-full sm:w-32">
-                <SelectValue placeholder="年度" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">全ての年度</SelectItem>
-                <SelectItem value="2025">2025年度</SelectItem>
-                <SelectItem value="2026">2026年度</SelectItem>
-                <SelectItem value="2027">2027年度</SelectItem>
-                <SelectItem value="2028">2028年度</SelectItem>
-              </SelectContent>
-            </Select>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-32 justify-between">
+                  <span className="truncate">
+                    {selectedYear === "all" ? "全ての年度" : `${selectedYear}年度`}
+                  </span>
+                  <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-3 bg-background z-50">
+                <RadioGroup value={selectedYear} onValueChange={setSelectedYear}>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="all" id="year-all" />
+                      <Label htmlFor="year-all" className="cursor-pointer">全ての年度</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="2025" id="year-2025" />
+                      <Label htmlFor="year-2025" className="cursor-pointer">2025年度</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="2026" id="year-2026" />
+                      <Label htmlFor="year-2026" className="cursor-pointer">2026年度</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="2027" id="year-2027" />
+                      <Label htmlFor="year-2027" className="cursor-pointer">2027年度</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="2028" id="year-2028" />
+                      <Label htmlFor="year-2028" className="cursor-pointer">2028年度</Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </PopoverContent>
+            </Popover>
             
             <Popover>
               <PopoverTrigger asChild>
