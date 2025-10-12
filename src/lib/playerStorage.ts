@@ -3,6 +3,7 @@ export interface Player {
   name: string;
   team: string;
   position: string[];
+  mainPosition?: string;
   category: string;
   evaluations: string[];
   recommended_teams?: string[];
@@ -24,7 +25,8 @@ const defaultPlayers: Player[] = [
     id: 2,
     name: "立石 正広",
     team: "創価大学",
-    position: ["三塁手", "二塁手"],
+    position: ["三塁手"],
+    mainPosition: "三塁手",
     category: "大学",
     evaluations: ["1位競合"],
     recommended_teams: [],
@@ -39,7 +41,8 @@ const defaultPlayers: Player[] = [
     id: 3,
     name: "松下 歩叶",
     team: "法政大学",
-    position: ["二塁手", "三塁手", "遊撃手"],
+    position: ["三塁手"],
+    mainPosition: "三塁手",
     category: "大学",
     evaluations: ["1位一本釣り", "外れ1位"],
     recommended_teams: [],
@@ -324,7 +327,8 @@ const defaultPlayers: Player[] = [
     id: 139,
     name: "藤井 健翔",
     team: "浦和学院",
-    position: ["外野手"],
+    position: ["三塁手"],
+    mainPosition: "三塁手",
     category: "高校",
     evaluations: ["3位", "4位"],
     recommended_teams: [],
