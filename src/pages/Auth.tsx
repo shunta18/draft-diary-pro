@@ -11,6 +11,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoIcon from "@/assets/logo.png";
 import { SEO } from "@/components/SEO";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 export default function Auth() {
@@ -121,7 +122,8 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <SEO 
+      <Navigation />
+      <SEO
         title="ログイン・新規登録"
         description="BaaS野球スカウトノートへのログイン・新規アカウント作成ページ。メールアドレスで簡単登録、データをクラウド保存。"
         keywords={[

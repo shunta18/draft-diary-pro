@@ -11,6 +11,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { addPlayer, updatePlayer, getPlayerById } from "@/lib/supabase-storage";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"];
@@ -276,6 +277,7 @@ export default function PlayerForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <Navigation />
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
         <div className="flex flex-col gap-4 p-4">
