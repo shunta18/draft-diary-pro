@@ -601,10 +601,21 @@ export default function Draft() {
               <Button 
                 variant="outline" 
                 className="w-full"
-                onClick={() => setDraftRounds([...draftRounds, Math.max(...draftRounds) + 1])}
+                onClick={() => {
+                  if (draftRounds.length >= 10) {
+                    toast({
+                      title: "上限到達",
+                      description: "ドラフト枠は10位までです",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  setDraftRounds([...draftRounds, Math.max(...draftRounds) + 1]);
+                }}
+                disabled={draftRounds.length >= 10}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                ドラフト枠を追加
+                ドラフト枠を追加 {draftRounds.length >= 10 && "(上限)"}
               </Button>
             </CardContent>
           </Card>
