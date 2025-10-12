@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus, Star } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -528,7 +528,7 @@ export default function Players() {
                       <h3 className="font-bold text-lg text-primary">{player.name}</h3>
                       {player.is_favorite && (
                         <Badge className="bg-yellow-500 text-white text-xs">
-                          <Star className="h-3 w-3 mr-1 fill-current" />
+                          <ThumbsUp className="h-3 w-3 mr-1 fill-current" />
                           イチオシ
                         </Badge>
                       )}
@@ -560,7 +560,7 @@ export default function Players() {
                       }}
                       className="flex-shrink-0"
                     >
-                      <Star 
+                      <ThumbsUp 
                         className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
                       />
                     </Button>
