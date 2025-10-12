@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { getPlayers, deletePlayer, addPlayer, type Player } from "@/lib/supabase-storage";
+import { getPlayers, deletePlayer, addPlayer, updatePlayer, type Player } from "@/lib/supabase-storage";
 import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -176,6 +176,39 @@ export default function Players() {
   }, [user]);
 
   // サンプル選手を追加する関数
+  const toggleFavorite = async (player: Player) => {
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "イチオシ機能を使用するにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const updatedPlayer = await updatePlayer(player.id!, {
+        ...player,
+        is_favorite: !player.is_favorite
+      });
+
+      if (updatedPlayer) {
+        await loadPlayers();
+        toast({
+          title: player.is_favorite ? "イチオシを解除しました" : "イチオシに設定しました",
+          description: player.name,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      toast({
+        title: "エラー",
+        description: "イチオシの更新に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleAddSamplePlayers = async () => {
     if (!user) {
       toast({
@@ -483,22 +516,31 @@ export default function Players() {
           {filteredPlayers.map((player) => (
             <Card 
               key={player.id} 
-              className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer"
-              onClick={() => setSelectedPlayer(player)}
+              className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth"
             >
               <CardContent className="p-4">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-2 mb-2 flex-wrap gap-2">
-                    <h3 className="font-bold text-lg text-primary">{player.name}</h3>
-                    <Badge variant="secondary" className="text-xs">
-                      {player.category}
-                    </Badge>
-                    {player.id === 1 && (
-                      <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
-                        サンプル
+                <div className="flex items-start gap-3">
+                  <div 
+                    className="flex-1 cursor-pointer" 
+                    onClick={() => setSelectedPlayer(player)}
+                  >
+                    <div className="flex items-center space-x-2 mb-2 flex-wrap gap-2">
+                      <h3 className="font-bold text-lg text-primary">{player.name}</h3>
+                      {player.is_favorite && (
+                        <Badge className="bg-yellow-500 text-white text-xs">
+                          <Star className="h-3 w-3 mr-1 fill-current" />
+                          イチオシ
+                        </Badge>
+                      )}
+                      <Badge variant="secondary" className="text-xs">
+                        {player.category}
                       </Badge>
-                    )}
-                  </div>
+                      {player.id === 1 && (
+                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
+                          サンプル
+                        </Badge>
+                      )}
+                    </div>
                   
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <span>{player.team}</span>
@@ -507,6 +549,22 @@ export default function Players() {
                       <span>•</span>
                       <span>{player.year || 2025}年</span>
                     </div>
+                  </div>
+                  {user && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleFavorite(player);
+                      }}
+                      className="flex-shrink-0"
+                    >
+                      <Star 
+                        className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
+                      />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
