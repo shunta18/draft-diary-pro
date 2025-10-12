@@ -475,18 +475,15 @@ export default function PlayerForm() {
                 <Select 
                   value={formData.mainPosition} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, mainPosition: value }))}
+                  disabled={formData.positions.length === 0}
                 >
                   <SelectTrigger className="shadow-soft">
-                    <SelectValue placeholder="メインポジションを選択" />
+                    <SelectValue placeholder={formData.positions.length > 0 ? "メインポジションを選択" : "先にポジションを選択してください"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {formData.positions.length > 0 ? (
-                      formData.positions.map(position => (
-                        <SelectItem key={position} value={position}>{position}</SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="" disabled>先にポジションを選択してください</SelectItem>
-                    )}
+                    {formData.positions.map(position => (
+                      <SelectItem key={position} value={position}>{position}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
