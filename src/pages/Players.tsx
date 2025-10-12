@@ -570,7 +570,7 @@ export default function Players() {
                     <div className="flex items-center space-x-4 text-sm text-muted-foreground">
                       <span>{player.team}</span>
                       <span>•</span>
-                      <span>{sortPositions(player.position)}</span>
+                      <span>{player.main_position || sortPositions(player.position).split('、')[0]}</span>
                       <span>•</span>
                       <span>{player.year || 2025}年</span>
                     </div>
