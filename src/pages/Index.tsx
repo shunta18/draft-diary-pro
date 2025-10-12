@@ -118,10 +118,10 @@ const Index = () => {
 
   const currentDraftYear = getCurrentDraftYear();
 
-  // Get top 2 posts by likes
+  // Get top 1 post by likes
   const topPosts = [...blogPosts]
     .sort((a, b) => (blogLikes[b.slug] || 0) - (blogLikes[a.slug] || 0))
-    .slice(0, 2);
+    .slice(0, 1);
 
   const homeStructuredData = {
     "@context": "https://schema.org",
@@ -285,7 +285,7 @@ const Index = () => {
             </Link>
           </div>
           
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="grid gap-3">
             {topPosts.map((post) => (
               <Link key={post.id} to={`/blog/${post.slug}`} className="group">
                 <Card className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth h-full">
