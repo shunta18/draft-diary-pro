@@ -3,13 +3,47 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { useParams, Link } from "react-router-dom";
 import { blogPosts } from "@/lib/blogData";
-import { Calendar, User, ArrowLeft, Tag } from "lucide-react";
+import { Calendar, User, ArrowLeft, Tag, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { getBlogLikes, incrementBlogLikes } from "@/lib/blogLikes";
+import { useState, useEffect } from "react";
+import { toast } from "@/hooks/use-toast";
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const post = blogPosts.find((p) => p.slug === slug);
+  const [likes, setLikes] = useState<number>(0);
+  const [isLiking, setIsLiking] = useState(false);
+
+  useEffect(() => {
+    if (slug) {
+      getBlogLikes(slug).then(setLikes);
+    }
+  }, [slug]);
+
+  const handleLike = async () => {
+    if (!slug || isLiking) return;
+    
+    setIsLiking(true);
+    try {
+      const newLikes = await incrementBlogLikes(slug);
+      setLikes(newLikes);
+      toast({
+        title: "いいねしました！",
+        description: "この記事を気に入っていただきありがとうございます。",
+      });
+    } catch (error) {
+      console.error("Error liking post:", error);
+      toast({
+        title: "エラー",
+        description: "いいねに失敗しました。もう一度お試しください。",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   if (!post) {
     return (
@@ -64,15 +98,27 @@ export default function BlogPost() {
             <h1 className="text-4xl font-bold mb-4">{post.title}</h1>
             <p className="text-lg text-muted-foreground mb-6">{post.description}</p>
             
-            <div className="flex items-center gap-6 text-sm text-muted-foreground border-t border-b py-4">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>{post.publishedAt}</span>
+            <div className="flex items-center justify-between border-t border-b py-4">
+              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
+                  <span>{post.publishedAt}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  <span>{post.author}</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span>{post.author}</span>
-              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLike}
+                disabled={isLiking}
+                className="gap-2"
+              >
+                <Heart className={`w-4 h-4 ${likes > 0 ? 'fill-current text-red-500' : ''}`} />
+                <span>{likes}</span>
+              </Button>
             </div>
 
             <div className="flex flex-wrap gap-2 mt-4">

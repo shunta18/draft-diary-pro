@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_likes: {
+        Row: {
+          blog_slug: string
+          created_at: string
+          id: string
+          likes_count: number
+          updated_at: string
+        }
+        Insert: {
+          blog_slug: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          updated_at?: string
+        }
+        Update: {
+          blog_slug?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string
