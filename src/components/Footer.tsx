@@ -4,7 +4,7 @@ export const Footer = () => {
   return (
     <footer className="border-t border-border/30 mt-auto">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* About Section */}
           <div>
             <h3 className="font-semibold text-lg mb-3">BaaS 野球スカウトノート</h3>
@@ -15,11 +15,43 @@ export const Footer = () => {
 
           {/* Quick Links */}
           <div>
-            <h3 className="font-semibold text-lg mb-3">リンク</h3>
+            <h3 className="font-semibold text-lg mb-3">主要機能</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link to="/players" className="text-muted-foreground hover:text-primary transition-colors">
+                  選手リスト
+                </Link>
+              </li>
+              <li>
+                <Link to="/draft" className="text-muted-foreground hover:text-primary transition-colors">
+                  ドラフト構想
+                </Link>
+              </li>
+              <li>
+                <Link to="/virtual-draft" className="text-muted-foreground hover:text-primary transition-colors">
+                  仮想ドラフト
+                </Link>
+              </li>
+              <li>
+                <Link to="/diary" className="text-muted-foreground hover:text-primary transition-colors">
+                  観戦日記
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Information Links */}
+          <div>
+            <h3 className="font-semibold text-lg mb-3">情報</h3>
             <ul className="space-y-2 text-sm">
               <li>
                 <Link to="/about" className="text-muted-foreground hover:text-primary transition-colors">
                   BaaSについて
+                </Link>
+              </li>
+              <li>
+                <Link to="/faq" className="text-muted-foreground hover:text-primary transition-colors">
+                  よくある質問
                 </Link>
               </li>
               <li>
