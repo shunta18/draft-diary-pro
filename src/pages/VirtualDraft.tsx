@@ -158,7 +158,9 @@ const VirtualDraft = () => {
   const [allDraftPicks, setAllDraftPicks] = useState<DraftPick[]>([]);
   const [currentWaiverIndex, setCurrentWaiverIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [maxRounds, setMaxRounds] = useState(10); // 最大ドラフトラウンド数
+  const [maxRounds, setMaxRounds] = useState(10); // 各球団の最大指名人数
+  const [isDevelopmentDraft, setIsDevelopmentDraft] = useState(false); // 育成ドラフトフラグ
+  const MAX_TOTAL_PICKS = 120; // 全体の上限
 
   useEffect(() => {
     loadPlayers();
@@ -252,17 +254,42 @@ const VirtualDraft = () => {
             setCurrentWaiverIndex(prev => prev + 1);
           } else {
             // ラウンド終了
-            if (currentRound < maxRounds) {
+            const totalPicks = allDraftPicks.length + 1; // 今の選手も含む
+            
+            // 各球団の指名数チェック
+            const teamPickCounts = new Map<number, number>();
+            [...allDraftPicks, newPick].forEach(pick => {
+              teamPickCounts.set(pick.teamId, (teamPickCounts.get(pick.teamId) || 0) + 1);
+            });
+            const allTeamsReachedMax = Array.from(teamPickCounts.values()).every(count => count >= maxRounds);
+            
+            if (allTeamsReachedMax) {
+              // 全球団が10名指名済み
+              if (totalPicks < MAX_TOTAL_PICKS) {
+                // 120名未満の場合は育成ドラフトへ
+                setIsDevelopmentDraft(true);
+                toast({
+                  title: "支配下選手指名終了",
+                  description: `育成選手選択会議を開始します（残り枠: ${MAX_TOTAL_PICKS - totalPicks}名）`,
+                });
+              } else {
+                toast({
+                  title: "ドラフト終了",
+                  description: "すべての指名が完了しました（120名到達）",
+                });
+              }
+            } else if (totalPicks >= MAX_TOTAL_PICKS) {
+              // 120名到達
+              toast({
+                title: "ドラフト終了",
+                description: "指名枠の上限120名に到達しました",
+              });
+            } else if (currentRound < maxRounds) {
               setCurrentRound(prev => prev + 1);
               setCurrentWaiverIndex(0);
               toast({
                 title: `${currentRound}位指名終了`,
                 description: `${currentRound + 1}位指名を開始します`,
-              });
-            } else {
-              toast({
-                title: "ドラフト終了",
-                description: "すべての指名が完了しました",
               });
             }
           }
@@ -428,7 +455,7 @@ const VirtualDraft = () => {
     }
   };
 
-  const isDraftComplete = currentRound > maxRounds || (currentRound === maxRounds && currentWaiverIndex >= getWaiverOrder(currentRound).length);
+  const isDraftComplete = allDraftPicks.length >= MAX_TOTAL_PICKS || (currentRound > maxRounds && currentWaiverIndex >= getWaiverOrder(currentRound).length);
 
   if (loading) {
     return (
@@ -512,7 +539,11 @@ const VirtualDraft = () => {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 各球団の指名状況
-                <Badge variant="outline">{currentRound}位指名{currentRound > 1 ? `（${teams.find(t => t.id === getCurrentPickingTeam())?.shortName || ''}指名中）` : ''}</Badge>
+                <Badge variant="outline">
+                  {isDevelopmentDraft ? '育成選手選択会議' : `${currentRound}位指名`}
+                  {currentRound > 1 && !isDevelopmentDraft ? `（${teams.find(t => t.id === getCurrentPickingTeam())?.shortName || ''}指名中）` : ''}
+                </Badge>
+                <Badge variant="secondary">{allDraftPicks.length} / {MAX_TOTAL_PICKS}名</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -779,15 +810,25 @@ const VirtualDraft = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p><strong>1位指名：</strong></p>
+            <p><strong>ドラフト会議のルール：</strong></p>
+            <p>・各球団は最大10名まで指名できます</p>
+            <p>・ドラフト会議全体では120名が上限です</p>
+            <p>・全球団が10名指名を終えて120名未満の場合、育成選手選択会議が開始されます</p>
+            
+            <p className="mt-4"><strong>1位指名：</strong></p>
             <p>・各球団の1位指名選手を選択してください</p>
             <p>・すべての球団で選択が完了したら「抽選実行」ボタンが表示されます</p>
             <p>・複数球団が同じ選手を指名した場合、ランダムで獲得球団が決まります</p>
+            
             <p className="mt-4"><strong>2位以降：</strong></p>
             <p>・ウェーバー方式で順番に指名します</p>
             <p>・奇数指名（1位、3位、5位...）：ソフトバンク→阪神→日ハム→DeNA→オリックス→巨人→楽天→中日→西武→広島→ロッテ→ヤクルト</p>
             <p>・偶数指名（2位、4位...）：ヤクルト→ロッテ→広島→西武→中日→楽天→巨人→オリックス→DeNA→日ハム→阪神→ソフトバンク</p>
             <p>・既に指名された選手は選択できません</p>
+            
+            <p className="mt-4"><strong>育成選手選択会議：</strong></p>
+            <p>・各球団が全て指名を終え、まだ120名の枠に空きがある場合に開催されます</p>
+            <p>・支配下登録ではない育成選手として獲得を希望する選手を指名できます</p>
           </CardContent>
         </Card>
 

@@ -121,6 +121,7 @@ export type Database = {
           height: number | null
           hometown: string | null
           id: number
+          is_favorite: boolean
           memo: string | null
           name: string
           position: string
@@ -144,6 +145,7 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: number
+          is_favorite?: boolean
           memo?: string | null
           name: string
           position: string
@@ -167,6 +169,7 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: number
+          is_favorite?: boolean
           memo?: string | null
           name?: string
           position?: string

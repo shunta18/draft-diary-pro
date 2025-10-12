@@ -25,6 +25,7 @@ export interface Player {
   };
   usage?: string;
   videos?: string[];
+  is_favorite?: boolean;
 }
 
 export interface DiaryEntry {
@@ -59,6 +60,7 @@ export const getPlayers = async (): Promise<Player[]> => {
     const { data, error } = await supabase
       .from('players')
       .select('*')
+      .order('is_favorite', { ascending: false })
       .order('created_at', { ascending: false });
     
     if (error) throw error;
