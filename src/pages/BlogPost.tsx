@@ -6,33 +6,45 @@ import { blogPosts } from "@/lib/blogData";
 import { Calendar, User, ArrowLeft, Tag, Heart } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { getBlogLikes, incrementBlogLikes } from "@/lib/blogLikes";
+import { getBlogLikes, incrementBlogLikes, hasUserLiked } from "@/lib/blogLikes";
 import { useState, useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const post = blogPosts.find((p) => p.slug === slug);
   const [likes, setLikes] = useState<number>(0);
   const [isLiking, setIsLiking] = useState(false);
+  const [hasLiked, setHasLiked] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (slug) {
       getBlogLikes(slug).then(setLikes);
+      hasUserLiked(slug, user?.id ?? null).then(setHasLiked);
     }
-  }, [slug]);
+  }, [slug, user]);
 
   const handleLike = async () => {
-    if (!slug || isLiking) return;
+    if (!slug || isLiking || hasLiked) return;
     
     setIsLiking(true);
     try {
-      const newLikes = await incrementBlogLikes(slug);
-      setLikes(newLikes);
-      toast({
-        title: "いいねしました！",
-        description: "この記事を気に入っていただきありがとうございます。",
-      });
+      const result = await incrementBlogLikes(slug, user?.id ?? null);
+      if (result.success) {
+        setLikes(result.count);
+        setHasLiked(true);
+        toast({
+          title: "いいねしました！",
+          description: "この記事を気に入っていただきありがとうございます。",
+        });
+      } else {
+        toast({
+          title: "すでにいいね済みです",
+          description: "この記事にはすでにいいねしています。",
+        });
+      }
     } catch (error) {
       console.error("Error liking post:", error);
       toast({
@@ -113,10 +125,10 @@ export default function BlogPost() {
                 variant="outline"
                 size="sm"
                 onClick={handleLike}
-                disabled={isLiking}
+                disabled={isLiking || hasLiked}
                 className="gap-2"
               >
-                <Heart className={`w-4 h-4 ${likes > 0 ? 'fill-current text-red-500' : ''}`} />
+                <Heart className={`w-4 h-4 ${hasLiked ? 'fill-current text-red-500' : ''}`} />
                 <span>{likes}</span>
               </Button>
             </div>
@@ -143,10 +155,16 @@ export default function BlogPost() {
                 return <li key={index} className="ml-6 mb-1">{line.slice(2)}</li>;
               } else if (line.trim() === '') {
                 return <br key={index} />;
-              } else if (line.startsWith('**') && line.endsWith('**')) {
-                return <p key={index} className="font-bold mb-2">{line.slice(2, -2)}</p>;
               } else {
-                return <p key={index} className="mb-4 text-foreground">{line}</p>;
+                // Process bold text (**text**)
+                const parts = line.split(/(\*\*.*?\*\*)/g);
+                const processedLine = parts.map((part, i) => {
+                  if (part.startsWith('**') && part.endsWith('**')) {
+                    return <strong key={i}>{part.slice(2, -2)}</strong>;
+                  }
+                  return part;
+                });
+                return <p key={index} className="mb-4 text-foreground">{processedLine}</p>;
               }
             })}
           </div>
