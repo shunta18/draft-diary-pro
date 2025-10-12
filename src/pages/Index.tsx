@@ -1,15 +1,17 @@
-import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle } from "lucide-react";
+import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
 import { SEO } from "@/components/SEO";
 import { Footer } from "@/components/Footer";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { getPlayers, getDiaryEntries, getDraftData } from "@/lib/supabase-storage";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { blogPosts } from "@/lib/blogData";
 
 const Index = () => {
   const { user } = useAuth();
@@ -256,6 +258,43 @@ const Index = () => {
             </Button>
           </Link>
         </div>
+
+        {/* Blog Section */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <BookOpen className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-bold text-primary">ブログ</h2>
+            </div>
+            <Link to="/blog">
+              <Button variant="ghost" size="sm" className="flex items-center space-x-1">
+                <span className="text-sm">もっと見る</span>
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+          </div>
+          
+          <div className="grid gap-3 md:grid-cols-2">
+            {blogPosts.slice(0, 2).map((post) => (
+              <Link key={post.id} to={`/blog/${post.slug}`} className="group">
+                <Card className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth h-full">
+                  <CardHeader className="pb-3">
+                    <Badge variant="secondary" className="w-fit mb-2">{post.category}</Badge>
+                    <CardTitle className="text-base group-hover:text-accent transition-colors line-clamp-2">
+                      {post.title}
+                    </CardTitle>
+                    <CardDescription className="text-sm line-clamp-2">
+                      {post.description}
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-xs text-muted-foreground">{post.publishedAt}</p>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
+          </div>
+        </section>
 
         {/* About Section - SEO & AdSense対策（常時表示） */}
         <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4">
