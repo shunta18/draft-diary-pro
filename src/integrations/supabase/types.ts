@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      blog_likes: {
+        Row: {
+          blog_slug: string
+          created_at: string
+          id: string
+          likes_count: number
+          updated_at: string
+        }
+        Insert: {
+          blog_slug: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          updated_at?: string
+        }
+        Update: {
+          blog_slug?: string
+          created_at?: string
+          id?: string
+          likes_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_user_likes: {
+        Row: {
+          blog_slug: string
+          created_at: string
+          id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          blog_slug: string
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          blog_slug?: string
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       contact_messages: {
         Row: {
           created_at: string

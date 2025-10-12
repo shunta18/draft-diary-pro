@@ -9,6 +9,7 @@ import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { SEO } from "@/components/SEO";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { ProfileEditDialog } from "@/components/ProfileEditDialog";
 import { getProfile, Profile } from "@/lib/supabase-storage";
@@ -122,7 +123,8 @@ export default function Settings() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <SEO 
+      <Navigation />
+      <SEO
         title="設定"
         description="アカウント情報の確認、利用規約・プライバシーポリシーの閲覧、ログアウト、アカウント削除などの設定を管理。"
         keywords={[

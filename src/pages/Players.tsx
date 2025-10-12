@@ -16,6 +16,7 @@ import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 
@@ -316,7 +317,8 @@ export default function Players() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <SEO 
+      <Navigation />
+      <SEO
         title="選手一覧"
         description={`ドラフト候補選手${filteredPlayers.length}名の詳細データベース。高校生、大学生、社会人野球の有望選手情報を完全網羅。`}
         keywords={[

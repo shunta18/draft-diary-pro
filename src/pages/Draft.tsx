@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { getDraftData as getSupabaseDraftData, saveDraftData as saveSupabaseDraftData } from "@/lib/supabase-storage";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 // Helper function to normalize position data
@@ -330,6 +331,7 @@ export default function Draft() {
           background: `linear-gradient(135deg, hsl(${team.colors.primary} / 0.1), hsl(${team.colors.secondary} / 0.05))`
         }}
       >
+        <Navigation />
         {/* Header with team colors */}
         <div 
           className="border-b shadow-soft"
@@ -910,6 +912,7 @@ export default function Draft() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted pb-8">
+      <Navigation />
       <SEO 
         title="ドラフト構想"
         description="プロ野球12球団のドラフト指名予想を作成。球団別の戦略的ドラフト構想をシミュレーション。育成ドラフトにも対応。"

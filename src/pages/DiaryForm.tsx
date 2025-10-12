@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { DiaryEntry, addDiaryEntry as addLocalDiaryEntry, updateDiaryEntry as updateLocalDiaryEntry, getDiaryEntryById as getLocalDiaryEntryById } from "@/lib/diaryStorage";
 import { addDiaryEntry, updateDiaryEntry, getDiaryEntryById, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
 import { useAuth } from "@/hooks/useAuth";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 export default function DiaryForm() {
@@ -169,6 +170,7 @@ export default function DiaryForm() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+      <Navigation />
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
         <div className="flex items-center justify-between p-4">

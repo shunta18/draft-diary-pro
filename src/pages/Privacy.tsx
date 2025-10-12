@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 export default function Privacy() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <SEO 
+      <Navigation />
+      <SEO
         title="プライバシーポリシー"
         description="BaaS野球スカウトノートのプライバシーポリシー。個人情報の収集・利用目的、Cookie、広告配信、データ保護について詳しく説明。"
         keywords={[

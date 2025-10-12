@@ -11,6 +11,7 @@ import { DiaryEntry, getDiaryEntries as getLocalDiaryEntries } from "@/lib/diary
 import { getDiaryEntries, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
 import { useAuth } from "@/hooks/useAuth";
 import { SEO } from "@/components/SEO";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 const categoryColors = {
@@ -132,7 +133,8 @@ export default function Diary() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <SEO 
+      <Navigation />
+      <SEO
         title="観戦日記"
         description={`野球観戦記録${filteredEntries.length}件を管理。高校野球、大学野球、社会人野球の詳細な観戦レポートと選手評価。`}
         keywords={[

@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import { SEO } from "@/components/SEO";
+import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
 export default function Terms() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
-      <SEO 
+      <Navigation />
+      <SEO
         title="利用規約"
         description="BaaS野球スカウトノートの利用規約。サービス概要、利用条件、禁止事項、データの取り扱い、免責事項について説明。"
         keywords={[
