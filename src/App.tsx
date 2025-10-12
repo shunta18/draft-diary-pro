@@ -21,6 +21,8 @@ import About from "./pages/About";
 import Help from "./pages/Help";
 import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
+import Blog from "./pages/Blog";
+import BlogPost from "./pages/BlogPost";
 
 const queryClient = new QueryClient();
 
