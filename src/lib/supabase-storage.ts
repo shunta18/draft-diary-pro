@@ -6,6 +6,7 @@ export interface Player {
   name: string;
   team: string;
   position: string;
+  main_position?: string;
   category: string;
   evaluations?: string[];
   recommended_teams?: string[];

@@ -59,6 +59,7 @@ export default function PlayerForm() {
     category: "",
     team: "",
     positions: [] as string[],
+    mainPosition: "",
     battingThrowing: "",
     hometown: "",
     age: undefined as number | undefined,
@@ -100,6 +101,7 @@ export default function PlayerForm() {
             category: player.category,
             team: player.team,
             positions: sortPositions(Array.isArray(player.position) ? player.position : player.position.split(/[,、]/).map(p => p.trim()).filter(p => p)),
+            mainPosition: player.main_position || "",
             battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
             hometown: player.hometown || "",
             age: player.age,
@@ -204,6 +206,7 @@ export default function PlayerForm() {
       category: formData.category,
       team: formData.team,
       position: sortPositions(formData.positions).join("、"),
+      main_position: formData.mainPosition,
       batting_hand: formData.battingThrowing.includes("右打") ? "右" : formData.battingThrowing.includes("左打") ? "左" : undefined,
       throwing_hand: formData.battingThrowing.includes("右投") ? "右" : formData.battingThrowing.includes("左投") ? "左" : undefined,
       hometown: formData.hometown,
@@ -448,7 +451,7 @@ export default function PlayerForm() {
               )}
 
               <div>
-                <Label>ポジション *</Label>
+                <Label>ポジション（複数選択可）*</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {positions.map(position => (
                     <Badge
@@ -465,6 +468,24 @@ export default function PlayerForm() {
                     </Badge>
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <Label>メインポジション *</Label>
+                <Select 
+                  value={formData.mainPosition} 
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, mainPosition: value }))}
+                  disabled={formData.positions.length === 0}
+                >
+                  <SelectTrigger className="shadow-soft">
+                    <SelectValue placeholder={formData.positions.length > 0 ? "メインポジションを選択" : "先にポジションを選択してください"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {formData.positions.map(position => (
+                      <SelectItem key={position} value={position}>{position}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
