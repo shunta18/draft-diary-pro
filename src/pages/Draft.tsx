@@ -742,6 +742,7 @@ export default function Draft() {
   if (!selectedTeam) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-muted">
+        <Navigation />
         <SEO 
           title="ドラフト構想"
           description="プロ野球12球団のドラフト指名予想を作成。球団別の戦略的ドラフト構想をシミュレーション。育成ドラフトにも対応。"
@@ -751,30 +752,6 @@ export default function Draft() {
           ]}
           structuredData={draftStructuredData}
         />
-        {/* Header */}
-        <div className="bg-card border-b shadow-soft">
-          <div className="flex items-center justify-between p-4">
-            <div className="flex items-center space-x-4">
-              <Link to="/">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-            <h1 className="text-xl font-bold text-primary">ドラフト構想</h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            {!user && (
-              <Button 
-                variant="default" 
-                size="sm"
-                onClick={() => navigate('/auth')}
-              >
-                ログイン
-              </Button>
-            )}
-          </div>
-          </div>
-        </div>
 
         <div className="p-4 space-y-6">
           {/* Login Notice for Guest Users */}
