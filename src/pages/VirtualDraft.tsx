@@ -565,6 +565,9 @@ const VirtualDraft = () => {
                   <h3 className="font-semibold text-lg mb-2">大正製薬 リポビタンD 100ml×3本</h3>
                   <p className="text-sm text-muted-foreground">指定医薬部外品</p>
                   <p className="text-base font-bold mt-2">価格：409円（税込、送料別）</p>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    ※このページでは、Amazonアソシエイトプログラムおよび楽天アフィリエイトプログラムを利用しています。
+                  </p>
                 </div>
 
                 {/* Purchase Buttons */}
@@ -727,65 +730,68 @@ const VirtualDraft = () => {
               if (finalSelections.length < teams.length) {
                 // 1位指名の抽選フェーズ
                 return (
-                  <Card key={team.id}>
-                     <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
-                      <CardTitle className="text-lg flex items-center justify-between">
-                        <span>{team.name}</span>
-                        <Badge variant="secondary" className="bg-white/20">第{currentRound}次</Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {currentRound === 1 ? "1位指名" : `第${currentRound}次選択`}
-                          </p>
-                          {currentSelection?.playerName ? (
-                            <div className="space-y-2">
-                              <p className="font-semibold text-lg">{currentSelection.playerName}</p>
-                            </div>
-                          ) : (
-                            <p className="text-muted-foreground">未選択</p>
-                          )}
-                        </div>
-                        
-                        {lostPlayers.length > 0 && (
-                          <div className="bg-muted/50 p-3 rounded-lg">
-                            <p className="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
-                            <div className="space-y-1">
-                              {lostPlayers.map((lostPlayer, idx) => (
-                                <p key={idx} className="text-sm">
-                                  {lostPlayer.playerName} <span className="text-xs text-muted-foreground">(第{lostPlayer.round}次)</span>
-                                </p>
-                              ))}
-                            </div>
+                  <>
+                    <Card key={team.id}>
+                      <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
+                        <CardTitle className="text-lg flex items-center justify-between">
+                          <span>{team.name}</span>
+                          <Badge variant="secondary" className="bg-white/20">第{currentRound}次</Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {currentRound === 1 ? "1位指名" : `第${currentRound}次選択`}
+                            </p>
+                            {currentSelection?.playerName ? (
+                              <div className="space-y-2">
+                                <p className="font-semibold text-lg">{currentSelection.playerName}</p>
+                              </div>
+                            ) : (
+                              <p className="text-muted-foreground">未選択</p>
+                            )}
                           </div>
-                        )}
-                        
-                        <PlayerSelectionDialog
-                          players={availablePlayers}
-                          selectedPlayerId={currentSelection?.playerId || null}
-                          onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
-                        >
-                          <Button variant="outline" className="w-full">
-                            選手を選択
-                          </Button>
-                        </PlayerSelectionDialog>
-
-                        {/* ヤクルトスワローズの場合は抽選ボタンも表示 */}
-                        {team.id === 8 && canExecuteLottery() && (
-                          <Button 
-                            size="default" 
-                            onClick={executeLottery}
-                            className="w-full gap-2"
+                          
+                          {lostPlayers.length > 0 && (
+                            <div className="bg-muted/50 p-3 rounded-lg">
+                              <p className="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
+                              <div className="space-y-1">
+                                {lostPlayers.map((lostPlayer, idx) => (
+                                  <p key={idx} className="text-sm">
+                                    {lostPlayer.playerName} <span className="text-xs text-muted-foreground">(第{lostPlayer.round}次)</span>
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <PlayerSelectionDialog
+                            players={availablePlayers}
+                            selectedPlayerId={currentSelection?.playerId || null}
+                            onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
                           >
-                            <Shuffle className="h-5 w-5" />
-                            第{currentRound}次選択抽選実行
-                          </Button>
-                        )}
+                            <Button variant="outline" className="w-full">
+                              選手を選択
+                            </Button>
+                          </PlayerSelectionDialog>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* ヤクルトスワローズの下に抽選ボタンを表示 */}
+                    {team.id === 8 && canExecuteLottery() && (
+                      <div className="mt-4">
+                        <Button 
+                          size="default" 
+                          onClick={executeLottery}
+                          className="w-full gap-2"
+                        >
+                          <Shuffle className="h-5 w-5" />
+                          第{currentRound}次選択抽選実行
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
+                    )}
+                  </>
                 );
               } else {
                 // 2位以降のウェーバー方式フェーズ
