@@ -176,7 +176,22 @@ export default function Privacy() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-primary mb-3">7. 外部リンクについて</h2>
+              <h2 className="text-lg font-semibold text-primary mb-3">7. アフィリエイトプログラムについて</h2>
+              <p className="text-muted-foreground leading-relaxed mb-2">
+                当サービスでは、以下のアフィリエイトプログラムを利用しています：
+              </p>
+              <ul className="text-muted-foreground leading-relaxed space-y-1 mb-2">
+                <li>• Amazonアソシエイトプログラム</li>
+                <li>• 楽天アフィリエイトプログラム</li>
+              </ul>
+              <p className="text-muted-foreground leading-relaxed">
+                これらのプログラムを通じて商品を紹介し、適格販売により収入を得る場合があります。
+                アフィリエイトリンクを通じた購入において、ユーザーに追加の費用が発生することはありません。
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-semibold text-primary mb-3">8. 外部リンクについて</h2>
               <p className="text-muted-foreground leading-relaxed">
                 当サービスには、外部のウェブサイトへのリンクが含まれる場合があります。
                 リンク先の外部サイトにおける個人情報の取り扱いやプライバシーポリシーについて、
@@ -186,14 +201,14 @@ export default function Privacy() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-primary mb-3">8. 未成年者の個人情報</h2>
+              <h2 className="text-lg font-semibold text-primary mb-3">9. 未成年者の個人情報</h2>
               <p className="text-muted-foreground leading-relaxed">
                 13歳未満の方は、保護者の同意なく個人情報を提供しないでください。
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-primary mb-3">9. プライバシーポリシーの変更</h2>
+              <h2 className="text-lg font-semibold text-primary mb-3">10. プライバシーポリシーの変更</h2>
               <p className="text-muted-foreground leading-relaxed">
                 本ポリシーは、必要に応じて予告なく変更される場合があります。
                 重要な変更がある場合は、サイト上で通知いたします。
@@ -202,7 +217,7 @@ export default function Privacy() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-primary mb-3">10. 運営者情報</h2>
+              <h2 className="text-lg font-semibold text-primary mb-3">11. 運営者情報</h2>
               <div className="text-muted-foreground space-y-2">
                 <p><strong>サービス名：</strong>BaaS 野球スカウトノート</p>
                 <p><strong>運営者：</strong>なかむら</p>
@@ -211,7 +226,7 @@ export default function Privacy() {
             </section>
 
             <section>
-              <h2 className="text-lg font-semibold text-primary mb-3">11. お問い合わせ先</h2>
+              <h2 className="text-lg font-semibold text-primary mb-3">12. お問い合わせ先</h2>
               <p className="text-muted-foreground leading-relaxed mb-3">
                 プライバシーポリシーに関するご質問、個人情報の取り扱いに関するお問い合わせは、
                 以下のお問い合わせページよりご連絡ください。
