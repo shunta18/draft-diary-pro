@@ -271,11 +271,6 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
                       <div>{player.evaluations ? player.evaluations.join(", ") : ""}</div>
                     </div>
                   </div>
-                  {player.memo && (
-                    <div className="mt-2 text-xs text-muted-foreground">
-                      {player.memo}
-                    </div>
-                  )}
                 </CardContent>
               </Card>
             ))}

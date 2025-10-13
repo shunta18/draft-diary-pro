@@ -728,7 +728,7 @@ const VirtualDraft = () => {
                 // 1位指名の抽選フェーズ
                 return (
                   <Card key={team.id}>
-                    <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
+                     <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
                       <CardTitle className="text-lg flex items-center justify-between">
                         <span>{team.name}</span>
                         <Badge variant="secondary" className="bg-white/20">第{currentRound}次</Badge>
@@ -771,6 +771,18 @@ const VirtualDraft = () => {
                             選手を選択
                           </Button>
                         </PlayerSelectionDialog>
+
+                        {/* ヤクルトスワローズの場合は抽選ボタンも表示 */}
+                        {team.id === 8 && canExecuteLottery() && (
+                          <Button 
+                            size="default" 
+                            onClick={executeLottery}
+                            className="w-full gap-2"
+                          >
+                            <Shuffle className="h-5 w-5" />
+                            第{currentRound}次選択抽選実行
+                          </Button>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
