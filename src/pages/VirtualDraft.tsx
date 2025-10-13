@@ -147,8 +147,8 @@ const VirtualDraft = () => {
   const [selections, setSelections] = useState<TeamSelection[]>(
     teams.map(team => ({ 
       teamId: team.id, 
-      playerId: null, 
-      playerName: null
+      playerId: team.id === 12 ? 2 : null, // 広島カープ(12)は立石選手(2)をデフォルト選択
+      playerName: team.id === 12 ? "立石 正広" : null
     }))
   );
   const [currentRound, setCurrentRound] = useState(1);
