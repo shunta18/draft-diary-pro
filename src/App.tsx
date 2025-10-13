@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
+import { useConnectionMonitor } from "@/hooks/useConnectionMonitor";
 import Index from "./pages/Index";
 import Players from "./pages/Players";
 import PlayerForm from "./pages/PlayerForm";
@@ -26,40 +27,50 @@ import BlogPost from "./pages/BlogPost";
 
 const queryClient = new QueryClient();
 
+const AppContent = () => {
+  useConnectionMonitor();
+  
+  return (
+    <>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/players" element={<Players />} />
+          <Route path="/players/new" element={<PlayerForm />} />
+          <Route path="/players/:id/edit" element={<PlayerForm />} />
+          <Route path="/draft" element={<Draft />} />
+          <Route path="/virtual-draft" element={<VirtualDraft />} />
+          <Route path="/diary" element={<Diary />} />
+          <Route path="/diary/form" element={<DiaryForm />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/terms" element={<Terms />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/help" element={<Help />} />
+          <Route path="/faq" element={<FAQ />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/auth" element={<Auth />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <HelmetProvider>
       <AuthProvider>
         <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/players" element={<Players />} />
-            <Route path="/players/new" element={<PlayerForm />} />
-            <Route path="/players/:id/edit" element={<PlayerForm />} />
-            <Route path="/draft" element={<Draft />} />
-            <Route path="/virtual-draft" element={<VirtualDraft />} />
-            <Route path="/diary" element={<Diary />} />
-            <Route path="/diary/form" element={<DiaryForm />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/help" element={<Help />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:slug" element={<BlogPost />} />
-            <Route path="/auth" element={<Auth />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </AuthProvider>
-  </HelmetProvider>
+          <AppContent />
+        </TooltipProvider>
+      </AuthProvider>
+    </HelmetProvider>
   </QueryClientProvider>
 );
 
