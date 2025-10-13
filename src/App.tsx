@@ -5,7 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/hooks/useAuth";
-import { useConnectionMonitor } from "@/hooks/useConnectionMonitor";
 import Index from "./pages/Index";
 import Players from "./pages/Players";
 import PlayerForm from "./pages/PlayerForm";
@@ -28,8 +27,6 @@ import BlogPost from "./pages/BlogPost";
 const queryClient = new QueryClient();
 
 const AppContent = () => {
-  useConnectionMonitor();
-  
   return (
     <>
       <Toaster />
