@@ -158,8 +158,9 @@ const VirtualDraft = () => {
   const [allDraftPicks, setAllDraftPicks] = useState<DraftPick[]>([]);
   const [currentWaiverIndex, setCurrentWaiverIndex] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [maxRounds, setMaxRounds] = useState(10); // 各球団の最大指名人数
+  const [maxRounds, setMaxRounds] = useState(10); // 各球団の基本指名人数
   const [isDevelopmentDraft, setIsDevelopmentDraft] = useState(false); // 育成ドラフトフラグ
+  const [finishedTeams, setFinishedTeams] = useState<Set<number>>(new Set()); // 選択終了した球団
   const MAX_TOTAL_PICKS = 120; // 全体の上限
 
   useEffect(() => {
@@ -249,42 +250,50 @@ const VirtualDraft = () => {
           };
           setAllDraftPicks(prev => [...prev, newPick]);
           
-          // 次の指名へ
-          if (currentWaiverIndex < waiverOrder.length - 1) {
-            setCurrentWaiverIndex(prev => prev + 1);
+          // 次の指名へ（選択終了していない球団のみ）
+          let nextIndex = currentWaiverIndex + 1;
+          while (nextIndex < waiverOrder.length && finishedTeams.has(waiverOrder[nextIndex])) {
+            nextIndex++;
+          }
+          
+          if (nextIndex < waiverOrder.length) {
+            setCurrentWaiverIndex(nextIndex);
           } else {
             // ラウンド終了
-            const totalPicks = allDraftPicks.length + 1; // 今の選手も含む
+            const updatedPicks = [...allDraftPicks, newPick];
+            const actualCount = updatedPicks.filter(p => {
+              const pl = players.find(plr => plr.id === p.playerId);
+              return pl?.category !== "独立リーグ";
+            }).length;
             
             // 各球団の指名数チェック
             const teamPickCounts = new Map<number, number>();
-            [...allDraftPicks, newPick].forEach(pick => {
+            updatedPicks.forEach(pick => {
               teamPickCounts.set(pick.teamId, (teamPickCounts.get(pick.teamId) || 0) + 1);
             });
-            const allTeamsReachedMax = Array.from(teamPickCounts.values()).every(count => count >= maxRounds);
             
-            if (allTeamsReachedMax) {
-              // 全球団が10名指名済み
-              if (totalPicks < MAX_TOTAL_PICKS) {
-                // 120名未満の場合は育成ドラフトへ
+            // 全球団が選択終了したかチェック
+            const allFinished = teams.every(t => finishedTeams.has(t.id));
+            
+            if (allFinished || actualCount >= MAX_TOTAL_PICKS) {
+              // ドラフト終了
+              if (actualCount < MAX_TOTAL_PICKS && !isDevelopmentDraft) {
                 setIsDevelopmentDraft(true);
+                setFinishedTeams(new Set()); // 育成ドラフト用にリセット
+                setCurrentRound(1);
+                setCurrentWaiverIndex(0);
                 toast({
-                  title: "支配下選手指名終了",
-                  description: `育成選手選択会議を開始します（残り枠: ${MAX_TOTAL_PICKS - totalPicks}名）`,
+                  title: "新人選手選択会議終了",
+                  description: `育成選手選択会議を開始します（残り枠: ${MAX_TOTAL_PICKS - actualCount}名）`,
                 });
               } else {
                 toast({
                   title: "ドラフト終了",
-                  description: "すべての指名が完了しました（120名到達）",
+                  description: "すべての指名が完了しました",
                 });
               }
-            } else if (totalPicks >= MAX_TOTAL_PICKS) {
-              // 120名到達
-              toast({
-                title: "ドラフト終了",
-                description: "指名枠の上限120名に到達しました",
-              });
-            } else if (currentRound < maxRounds) {
+            } else {
+              // 次のラウンドへ
               setCurrentRound(prev => prev + 1);
               setCurrentWaiverIndex(0);
               toast({
@@ -406,6 +415,14 @@ const VirtualDraft = () => {
     // 2位以降は allDraftPicks から取得
     return allDraftPicks.map(pick => pick.playerId);
   };
+
+  // 120名カウント（独立リーグ選手を除外）
+  const getActualPickCount = () => {
+    return allDraftPicks.filter(pick => {
+      const player = players.find(p => p.id === pick.playerId);
+      return player?.category !== "独立リーグ";
+    }).length;
+  };
   
   const getTeamPicks = (teamId: number) => {
     return allDraftPicks.filter(pick => pick.teamId === teamId).sort((a, b) => a.round - b.round);
@@ -455,7 +472,55 @@ const VirtualDraft = () => {
     }
   };
 
-  const isDraftComplete = allDraftPicks.length >= MAX_TOTAL_PICKS || (currentRound > maxRounds && currentWaiverIndex >= getWaiverOrder(currentRound).length);
+  const isDraftComplete = getActualPickCount() >= MAX_TOTAL_PICKS || teams.every(t => finishedTeams.has(t.id));
+  
+  const handleTeamFinish = (teamId: number) => {
+    if (window.confirm(`${teams.find(t => t.id === teamId)?.name}は選択終了しますか？`)) {
+      setFinishedTeams(prev => new Set([...prev, teamId]));
+      
+      // 現在指名中の球団が選択終了した場合、次の球団へ
+      if (getCurrentPickingTeam() === teamId) {
+        const waiverOrder = getWaiverOrder(currentRound);
+        let nextIndex = currentWaiverIndex + 1;
+        while (nextIndex < waiverOrder.length && finishedTeams.has(waiverOrder[nextIndex])) {
+          nextIndex++;
+        }
+        
+        if (nextIndex < waiverOrder.length) {
+          setCurrentWaiverIndex(nextIndex);
+        } else {
+          // ラウンド終了
+          const actualCount = getActualPickCount();
+          const allFinished = teams.every(t => finishedTeams.has(t.id) || t.id === teamId);
+          
+          if (allFinished || actualCount >= MAX_TOTAL_PICKS) {
+            if (actualCount < MAX_TOTAL_PICKS && !isDevelopmentDraft) {
+              setIsDevelopmentDraft(true);
+              setFinishedTeams(new Set());
+              setCurrentRound(1);
+              setCurrentWaiverIndex(0);
+              toast({
+                title: "新人選手選択会議終了",
+                description: `育成選手選択会議を開始します（残り枠: ${MAX_TOTAL_PICKS - actualCount}名）`,
+              });
+            } else {
+              toast({
+                title: "ドラフト終了",
+                description: "すべての指名が完了しました",
+              });
+            }
+          } else {
+            setCurrentRound(prev => prev + 1);
+            setCurrentWaiverIndex(0);
+            toast({
+              title: `${currentRound}位指名終了`,
+              description: `${currentRound + 1}位指名を開始します`,
+            });
+          }
+        }
+      }
+    }
+  };
 
   if (loading) {
     return (
@@ -602,7 +667,7 @@ const VirtualDraft = () => {
                   {isDevelopmentDraft ? '育成選手選択会議' : `${currentRound}位指名`}
                   {currentRound > 1 && !isDevelopmentDraft ? `（${teams.find(t => t.id === getCurrentPickingTeam())?.shortName || ''}指名中）` : ''}
                 </Badge>
-                <Badge variant="secondary">{allDraftPicks.length} / {MAX_TOTAL_PICKS}名</Badge>
+                <Badge variant="secondary">{getActualPickCount()} / {MAX_TOTAL_PICKS}名</Badge>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -642,6 +707,48 @@ const VirtualDraft = () => {
                   })}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        )}
+
+        {allRoundResults.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shuffle className="h-5 w-5" />
+                抽選結果
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                {allRoundResults.map((roundResults, roundIndex) => (
+                  <div key={roundIndex}>
+                    {roundResults.length > 0 && (
+                      <>
+                        <h3 className="font-semibold mb-3">第{roundIndex + 1}次選択抽選</h3>
+                        <div className="space-y-4">
+                          {roundResults.map(result => (
+                            <div key={result.playerId} className="border-b pb-4 last:border-b-0">
+                              <h4 className="font-semibold text-lg mb-2">
+                                {result.playerName} 
+                                <Badge variant="outline" className="ml-2">{result.competingTeams.length}球団競合</Badge>
+                              </h4>
+                              <p className="text-sm text-muted-foreground mb-2">
+                                競合: {result.competingTeams.map(id => getTeamName(id)).join(", ")}
+                              </p>
+                              <p className="text-sm">
+                                <span className="font-semibold text-green-600">
+                                  獲得: {getTeamName(result.winner)}
+                                </span>
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -814,16 +921,32 @@ const VirtualDraft = () => {
                           ))}
                         </div>
                         
-                        {isCurrentPickingTeam && (
-                          <PlayerSelectionDialog
-                            players={availablePlayers}
-                            selectedPlayerId={null}
-                            onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
-                          >
-                            <Button variant="default" className="w-full">
-                              {currentRound}位指名する
-                            </Button>
-                          </PlayerSelectionDialog>
+                        {isCurrentPickingTeam && !finishedTeams.has(team.id) && (
+                          <div className="space-y-2">
+                            <PlayerSelectionDialog
+                              players={availablePlayers}
+                              selectedPlayerId={null}
+                              onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                            >
+                              <Button variant="default" className="w-full">
+                                {currentRound}位指名する
+                              </Button>
+                            </PlayerSelectionDialog>
+                            {currentRound > 1 && (
+                              <Button 
+                                variant="outline" 
+                                className="w-full"
+                                onClick={() => handleTeamFinish(team.id)}
+                              >
+                                選択終了
+                              </Button>
+                            )}
+                          </div>
+                        )}
+                        {finishedTeams.has(team.id) && (
+                          <Badge variant="secondary" className="w-full justify-center py-2">
+                            選択終了
+                          </Badge>
                         )}
                       </div>
                     </CardContent>
@@ -833,48 +956,6 @@ const VirtualDraft = () => {
             });
           })()}
         </div>
-
-        {allRoundResults.length > 0 && (
-          <Card className="mt-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shuffle className="h-5 w-5" />
-                抽選結果
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {allRoundResults.map((roundResults, roundIndex) => (
-                  <div key={roundIndex}>
-                    {roundResults.length > 0 && (
-                      <>
-                        <h3 className="font-semibold mb-3">第{roundIndex + 1}次選択抽選</h3>
-                        <div className="space-y-4">
-                          {roundResults.map(result => (
-                            <div key={result.playerId} className="border-b pb-4 last:border-b-0">
-                              <h4 className="font-semibold text-lg mb-2">
-                                {result.playerName} 
-                                <Badge variant="outline" className="ml-2">{result.competingTeams.length}球団競合</Badge>
-                              </h4>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                競合: {result.competingTeams.map(id => getTeamName(id)).join(", ")}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-semibold text-green-600">
-                                  獲得: {getTeamName(result.winner)}
-                                </span>
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Lipovitan D Affiliate Section */}
         <Card className="mt-8 bg-gradient-to-r from-yellow-50/50 to-amber-50/50 dark:from-yellow-950/20 dark:to-amber-950/20 border-yellow-200 dark:border-yellow-800">
@@ -944,9 +1025,10 @@ const VirtualDraft = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             <p><strong>ドラフト会議のルール：</strong></p>
-            <p>・各球団は最大10名まで指名できます</p>
-            <p>・ドラフト会議全体では120名が上限です</p>
-            <p>・全球団が10名指名を終えて120名未満の場合、育成選手選択会議が開始されます</p>
+            <p>・各球団は原則として10名まで指名できます</p>
+            <p>・全体で120名が上限です（独立リーグ所属選手はカウント外）</p>
+            <p>・全球団が「選択終了」となるか、120名に達したところで終了します</p>
+            <p>・全体で120名に達していない場合は、11人目以降も指名可能です</p>
             
             <p className="mt-4"><strong>1位指名：</strong></p>
             <p>・各球団の1位指名選手を選択してください</p>
@@ -955,12 +1037,13 @@ const VirtualDraft = () => {
             
             <p className="mt-4"><strong>2位以降：</strong></p>
             <p>・ウェーバー方式で順番に指名します</p>
+            <p>・1巡目以外は「選択終了」ボタンで指名を終了できます</p>
             <p>・奇数指名（1位、3位、5位...）：ソフトバンク→阪神→日ハム→DeNA→オリックス→巨人→楽天→中日→西武→広島→ロッテ→ヤクルト</p>
             <p>・偶数指名（2位、4位...）：ヤクルト→ロッテ→広島→西武→中日→楽天→巨人→オリックス→DeNA→日ハム→阪神→ソフトバンク</p>
             <p>・既に指名された選手は選択できません</p>
             
             <p className="mt-4"><strong>育成選手選択会議：</strong></p>
-            <p>・各球団が全て指名を終え、まだ120名の枠に空きがある場合に開催されます</p>
+            <p>・新人選手選択会議終了時点で120名未満の場合に開催されます</p>
             <p>・支配下登録ではない育成選手として獲得を希望する選手を指名できます</p>
           </CardContent>
         </Card>
