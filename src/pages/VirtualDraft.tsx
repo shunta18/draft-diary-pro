@@ -802,6 +802,63 @@ const VirtualDraft = () => {
           </Card>
         )}
 
+        {/* Lipovitan D Affiliate Section */}
+        <Card className="mt-8 bg-gradient-to-r from-yellow-50/50 to-amber-50/50 dark:from-yellow-950/20 dark:to-amber-950/20 border-yellow-200 dark:border-yellow-800">
+          <CardHeader>
+            <CardTitle className="text-center text-lg">
+              大正製薬 リポビタンD - ドラフト会議公式スポンサー
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col lg:flex-row gap-6 items-center">
+              {/* Product Image */}
+              <div className="flex-shrink-0">
+                <a 
+                  href="https://hb.afl.rakuten.co.jp/ichiba/4d43813e.d3f5e4c3.4d43813f.8ae3c061/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmatsukiyo%2F4987306007352%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIyNDB4MjQwIiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D"
+                  target="_blank"
+                  rel="nofollow sponsored noopener"
+                  className="block"
+                >
+                  <img
+                    src="https://hbb.afl.rakuten.co.jp/hgb/4d43813e.d3f5e4c3.4d43813f.8ae3c061/?me_id=1294451&item_id=10479281&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fmatsukiyo%2Fcabinet%2Fd0004%2F4987306007352_1.jpg%3F_ex%3D240x240&s=240x240&t=picttext"
+                    alt="大正製薬 リポビタンD 100ml×3本"
+                    className="w-48 h-48 object-contain"
+                  />
+                </a>
+              </div>
+
+              {/* Product Info and Purchase Buttons */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">大正製薬 リポビタンD 100ml×3本</h3>
+                  <p className="text-sm text-muted-foreground">指定医薬部外品</p>
+                  <p className="text-base font-bold mt-2">価格：409円（税込、送料別）</p>
+                </div>
+
+                {/* Purchase Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="https://a.r10.to/hNkLlq"
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#bf0000] hover:bg-[#a00000] text-white font-medium px-6 py-3 transition-all hover:scale-105"
+                  >
+                    🛒 楽天で購入
+                  </a>
+                  <a
+                    href="https://amzn.to/471TsIK"
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#FF9900] hover:bg-[#e88b00] text-white font-medium px-6 py-3 transition-all hover:scale-105"
+                  >
+                    🛒 Amazonで購入
+                  </a>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="mt-8">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
