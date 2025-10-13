@@ -50,13 +50,6 @@ export const SEO = ({
       <meta name="twitter:title" content={fullTitle} />
       <meta name="twitter:description" content={description} />
       
-      {/* Google AdSense */}
-      <script 
-        async 
-        src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-7320539573217757"
-        crossOrigin="anonymous"
-      />
-      
       {/* Structured Data */}
       {structuredData && (
         <script type="application/ld+json">
