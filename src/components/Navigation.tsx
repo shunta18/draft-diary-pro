@@ -38,14 +38,17 @@ export const Navigation = () => {
       <div className="flex items-center justify-between p-4">
         <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
           <img src={logoIcon} alt="ロゴ" className="h-8 w-8" />
-          <h1 className="text-xl font-bold text-primary">
+          <h1 className="text-xl font-bold text-primary hidden sm:block">
             BaaS 野球スカウトノート
+          </h1>
+          <h1 className="text-xl font-bold text-primary sm:hidden">
+            BaaS
           </h1>
         </Link>
         
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="ghost" size="icon" className="md:hidden">
+            <Button variant="ghost" size="icon" className="lg:hidden">
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
@@ -96,7 +99,7 @@ export const Navigation = () => {
         </Sheet>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex space-x-2">
+        <nav className="hidden lg:flex space-x-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
