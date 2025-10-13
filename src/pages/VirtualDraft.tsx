@@ -906,7 +906,9 @@ const VirtualDraft = () => {
                 <div>
                   <h3 className="font-semibold text-lg mb-2">大正製薬 リポビタンD 100ml×3本</h3>
                   <p className="text-sm text-muted-foreground">指定医薬部外品</p>
-                  <p className="text-base font-bold mt-2">価格：409円（税込、送料別）</p>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    ※このページでは、Amazonアソシエイトプログラムおよび楽天アフィリエイトプログラムを利用しています。
+                  </p>
                 </div>
 
                 {/* Purchase Buttons */}
