@@ -147,8 +147,8 @@ const VirtualDraft = () => {
   const [selections, setSelections] = useState<TeamSelection[]>(
     teams.map(team => ({ 
       teamId: team.id, 
-      playerId: null, 
-      playerName: null
+      playerId: team.id === 12 ? 2 : null, // 広島カープ(12)は立石選手(2)をデフォルト選択
+      playerName: team.id === 12 ? "立石 正広" : null
     }))
   );
   const [currentRound, setCurrentRound] = useState(1);
@@ -534,6 +534,66 @@ const VirtualDraft = () => {
           </div>
         </header>
 
+        {/* Lipovitan D Affiliate Section - Top of Page */}
+        <Card className="mb-8 bg-gradient-to-r from-yellow-50/50 to-amber-50/50 dark:from-yellow-950/20 dark:to-amber-950/20 border-yellow-200 dark:border-yellow-800">
+          <CardHeader>
+            <CardTitle className="text-center text-lg">
+              大正製薬 リポビタンD - ドラフト会議公式スポンサー
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col lg:flex-row gap-6 items-center">
+              {/* Product Image */}
+              <div className="flex-shrink-0">
+                <a 
+                  href="https://hb.afl.rakuten.co.jp/ichiba/4d43813e.d3f5e4c3.4d43813f.8ae3c061/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmatsukiyo%2F4987306007352%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIyNDB4MjQwIiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D"
+                  target="_blank"
+                  rel="nofollow sponsored noopener"
+                  className="block"
+                >
+                  <img
+                    src="https://hbb.afl.rakuten.co.jp/hgb/4d43813e.d3f5e4c3.4d43813f.8ae3c061/?me_id=1294451&item_id=10479281&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fmatsukiyo%2Fcabinet%2Fd0004%2F4987306007352_1.jpg%3F_ex%3D240x240&s=240x240&t=picttext"
+                    alt="大正製薬 リポビタンD 100ml×3本"
+                    className="w-48 h-48 object-contain"
+                  />
+                </a>
+              </div>
+
+              {/* Product Info and Purchase Buttons */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">大正製薬 リポビタンD 100ml×3本</h3>
+                  <p className="text-sm text-muted-foreground">指定医薬部外品</p>
+                  <p className="text-base font-bold mt-2">価格：409円（税込、送料別）</p>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    ※このページでは、Amazonアソシエイトプログラムおよび楽天アフィリエイトプログラムを利用しています。
+                  </p>
+                </div>
+
+                {/* Purchase Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="https://a.r10.to/hNkLlq"
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#bf0000] hover:bg-[#a00000] text-white font-medium px-6 py-3 transition-all hover:scale-105"
+                  >
+                    🛒 楽天で購入
+                  </a>
+                  <a
+                    href="https://amzn.to/471TsIK"
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#FF9900] hover:bg-[#e88b00] text-white font-medium px-6 py-3 transition-all hover:scale-105"
+                  >
+                    🛒 Amazonで購入
+                  </a>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {allDraftPicks.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
@@ -670,53 +730,68 @@ const VirtualDraft = () => {
               if (finalSelections.length < teams.length) {
                 // 1位指名の抽選フェーズ
                 return (
-                  <Card key={team.id}>
-                    <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
-                      <CardTitle className="text-lg flex items-center justify-between">
-                        <span>{team.name}</span>
-                        <Badge variant="secondary" className="bg-white/20">第{currentRound}次</Badge>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                      <div className="space-y-4">
-                        <div>
-                          <p className="text-sm text-muted-foreground mb-2">
-                            {currentRound === 1 ? "1位指名" : `第${currentRound}次選択`}
-                          </p>
-                          {currentSelection?.playerName ? (
-                            <div className="space-y-2">
-                              <p className="font-semibold text-lg">{currentSelection.playerName}</p>
-                            </div>
-                          ) : (
-                            <p className="text-muted-foreground">未選択</p>
-                          )}
-                        </div>
-                        
-                        {lostPlayers.length > 0 && (
-                          <div className="bg-muted/50 p-3 rounded-lg">
-                            <p className="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
-                            <div className="space-y-1">
-                              {lostPlayers.map((lostPlayer, idx) => (
-                                <p key={idx} className="text-sm">
-                                  {lostPlayer.playerName} <span className="text-xs text-muted-foreground">(第{lostPlayer.round}次)</span>
-                                </p>
-                              ))}
-                            </div>
+                  <>
+                    <Card key={team.id}>
+                      <CardHeader className={`bg-gradient-to-r ${team.color} text-white rounded-t-lg`}>
+                        <CardTitle className="text-lg flex items-center justify-between">
+                          <span>{team.name}</span>
+                          <Badge variant="secondary" className="bg-white/20">第{currentRound}次</Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-6">
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-2">
+                              {currentRound === 1 ? "1位指名" : `第${currentRound}次選択`}
+                            </p>
+                            {currentSelection?.playerName ? (
+                              <div className="space-y-2">
+                                <p className="font-semibold text-lg">{currentSelection.playerName}</p>
+                              </div>
+                            ) : (
+                              <p className="text-muted-foreground">未選択</p>
+                            )}
                           </div>
-                        )}
-                        
-                        <PlayerSelectionDialog
-                          players={availablePlayers}
-                          selectedPlayerId={currentSelection?.playerId || null}
-                          onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                          
+                          {lostPlayers.length > 0 && (
+                            <div className="bg-muted/50 p-3 rounded-lg">
+                              <p className="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
+                              <div className="space-y-1">
+                                {lostPlayers.map((lostPlayer, idx) => (
+                                  <p key={idx} className="text-sm">
+                                    {lostPlayer.playerName} <span className="text-xs text-muted-foreground">(第{lostPlayer.round}次)</span>
+                                  </p>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          
+                          <PlayerSelectionDialog
+                            players={availablePlayers}
+                            selectedPlayerId={currentSelection?.playerId || null}
+                            onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                          >
+                            <Button variant="outline" className="w-full">
+                              選手を選択
+                            </Button>
+                          </PlayerSelectionDialog>
+                        </div>
+                      </CardContent>
+                    </Card>
+                    {/* ヤクルトスワローズの下に抽選ボタンを表示 */}
+                    {team.id === 8 && canExecuteLottery() && (
+                      <div className="mt-4">
+                        <Button 
+                          size="default" 
+                          onClick={executeLottery}
+                          className="w-full gap-2"
                         >
-                          <Button variant="outline" className="w-full">
-                            選手を選択
-                          </Button>
-                        </PlayerSelectionDialog>
+                          <Shuffle className="h-5 w-5" />
+                          第{currentRound}次選択抽選実行
+                        </Button>
                       </div>
-                    </CardContent>
-                  </Card>
+                    )}
+                  </>
                 );
               } else {
                 // 2位以降のウェーバー方式フェーズ
@@ -801,6 +876,63 @@ const VirtualDraft = () => {
             </CardContent>
           </Card>
         )}
+
+        {/* Lipovitan D Affiliate Section */}
+        <Card className="mt-8 bg-gradient-to-r from-yellow-50/50 to-amber-50/50 dark:from-yellow-950/20 dark:to-amber-950/20 border-yellow-200 dark:border-yellow-800">
+          <CardHeader>
+            <CardTitle className="text-center text-lg">
+              大正製薬 リポビタンD - ドラフト会議公式スポンサー
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col lg:flex-row gap-6 items-center">
+              {/* Product Image */}
+              <div className="flex-shrink-0">
+                <a 
+                  href="https://hb.afl.rakuten.co.jp/ichiba/4d43813e.d3f5e4c3.4d43813f.8ae3c061/?pc=https%3A%2F%2Fitem.rakuten.co.jp%2Fmatsukiyo%2F4987306007352%2F&link_type=picttext&ut=eyJwYWdlIjoiaXRlbSIsInR5cGUiOiJwaWN0dGV4dCIsInNpemUiOiIyNDB4MjQwIiwibmFtIjoxLCJuYW1wIjoicmlnaHQiLCJjb20iOjEsImNvbXAiOiJkb3duIiwicHJpY2UiOjEsImJvciI6MSwiY29sIjoxLCJiYnRuIjoxLCJwcm9kIjowLCJhbXAiOmZhbHNlfQ%3D%3D"
+                  target="_blank"
+                  rel="nofollow sponsored noopener"
+                  className="block"
+                >
+                  <img
+                    src="https://hbb.afl.rakuten.co.jp/hgb/4d43813e.d3f5e4c3.4d43813f.8ae3c061/?me_id=1294451&item_id=10479281&pc=https%3A%2F%2Fthumbnail.image.rakuten.co.jp%2F%400_mall%2Fmatsukiyo%2Fcabinet%2Fd0004%2F4987306007352_1.jpg%3F_ex%3D240x240&s=240x240&t=picttext"
+                    alt="大正製薬 リポビタンD 100ml×3本"
+                    className="w-48 h-48 object-contain"
+                  />
+                </a>
+              </div>
+
+              {/* Product Info and Purchase Buttons */}
+              <div className="flex-1 space-y-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">大正製薬 リポビタンD 100ml×3本</h3>
+                  <p className="text-sm text-muted-foreground">指定医薬部外品</p>
+                  <p className="text-base font-bold mt-2">価格：409円（税込、送料別）</p>
+                </div>
+
+                {/* Purchase Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <a
+                    href="https://a.r10.to/hNkLlq"
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#bf0000] hover:bg-[#a00000] text-white font-medium px-6 py-3 transition-all hover:scale-105"
+                  >
+                    🛒 楽天で購入
+                  </a>
+                  <a
+                    href="https://amzn.to/471TsIK"
+                    target="_blank"
+                    rel="nofollow sponsored noopener"
+                    className="inline-flex items-center justify-center gap-2 rounded-full bg-[#FF9900] hover:bg-[#e88b00] text-white font-medium px-6 py-3 transition-all hover:scale-105"
+                  >
+                    🛒 Amazonで購入
+                  </a>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card className="mt-8">
           <CardHeader>
