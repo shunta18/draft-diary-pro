@@ -344,16 +344,21 @@ export default function PublicPlayers() {
           </DialogHeader>
           {selectedPlayer && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+              <Link 
+                to={`/public-players/users/${selectedPlayer.user_id}`}
+                className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                onClick={() => setSelectedPlayer(null)}
+              >
                 <Avatar className="h-12 w-12">
                   <AvatarImage src={selectedPlayer.profiles?.avatar_url} />
                   <AvatarFallback><User /></AvatarFallback>
                 </Avatar>
-                <div>
+                <div className="flex-1">
                   <p className="font-medium">{selectedPlayer.profiles?.display_name || "名無し"}</p>
                   <p className="text-sm text-muted-foreground">投稿者</p>
                 </div>
-              </div>
+                <ChevronDown className="h-4 w-4 rotate-[-90deg] text-muted-foreground" />
+              </Link>
 
               <div className="grid gap-2">
                 <div>
