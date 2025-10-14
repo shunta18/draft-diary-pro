@@ -96,6 +96,8 @@ export default function Players() {
   const [loading, setLoading] = useState(true);
   const [isAddingSamplePlayers, setIsAddingSamplePlayers] = useState(false);
   const [uploadingPlayerId, setUploadingPlayerId] = useState<number | null>(null);
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
+  const [isUploadingBulk, setIsUploadingBulk] = useState(false);
 
   useEffect(() => {
     loadPlayers();
@@ -319,14 +321,21 @@ export default function Players() {
     setUploadingPlayerId(player.id);
     
     try {
-      await uploadPlayerToPublic(player.id);
+      const result = await uploadPlayerToPublic(player.id);
       
-      toast({
-        title: "アップロードしました",
-        description: `${player.name}を共通DBに公開しました。`,
-      });
-      
-      await loadPlayers();
+      if (result.success) {
+        toast({
+          title: "アップロードしました",
+          description: `${player.name}を共通DBに公開しました。`,
+        });
+        await loadPlayers();
+      } else {
+        toast({
+          title: "エラー",
+          description: result.message || "アップロードに失敗しました。",
+          variant: "destructive",
+        });
+      }
     } catch (error: any) {
       console.error('Failed to upload player:', error);
       toast({
@@ -337,6 +346,87 @@ export default function Players() {
     } finally {
       setUploadingPlayerId(null);
     }
+  };
+
+  const handleBulkUpload = async (playerIds: number[]) => {
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "共通DBにアップロードするにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (playerIds.length === 0) {
+      toast({
+        title: "選手が選択されていません",
+        description: "アップロードする選手を選択してください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingBulk(true);
+    
+    try {
+      let successCount = 0;
+      let skipCount = 0;
+      let errorCount = 0;
+
+      for (const playerId of playerIds) {
+        try {
+          const result = await uploadPlayerToPublic(playerId);
+          if (result.success) {
+            successCount++;
+          } else if (result.message?.includes("既に")) {
+            skipCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          errorCount++;
+        }
+      }
+
+      const messages = [];
+      if (successCount > 0) messages.push(`${successCount}名をアップロード`);
+      if (skipCount > 0) messages.push(`${skipCount}名はスキップ（既存）`);
+      if (errorCount > 0) messages.push(`${errorCount}名は失敗`);
+
+      toast({
+        title: "一括アップロード完了",
+        description: messages.join("、"),
+      });
+
+      setSelectedPlayerIds([]);
+      await loadPlayers();
+    } catch (error: any) {
+      console.error('Failed to bulk upload:', error);
+      toast({
+        title: "エラー",
+        description: "一括アップロードに失敗しました。",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingBulk(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPlayerIds.length === filteredPlayers.length) {
+      setSelectedPlayerIds([]);
+    } else {
+      setSelectedPlayerIds(filteredPlayers.map(p => p.id!).filter(id => id !== undefined));
+    }
+  };
+
+  const togglePlayerSelection = (playerId: number) => {
+    setSelectedPlayerIds(prev => 
+      prev.includes(playerId) 
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    );
   };
 
   const playersStructuredData = {
@@ -412,6 +502,43 @@ export default function Players() {
       </div>
 
       <div className="p-4 space-y-4">
+        {/* 一括操作ボタン */}
+        {user && filteredPlayers.length > 0 && (
+          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
+            <Checkbox
+              id="select-all"
+              checked={selectedPlayerIds.length === filteredPlayers.length && filteredPlayers.length > 0}
+              onCheckedChange={handleSelectAll}
+            />
+            <Label htmlFor="select-all" className="cursor-pointer text-sm">
+              すべて選択 ({selectedPlayerIds.length}/{filteredPlayers.length})
+            </Label>
+            <div className="flex-1" />
+            <Button
+              onClick={() => handleBulkUpload(filteredPlayers.map(p => p.id!).filter(id => id !== undefined))}
+              variant="default"
+              size="sm"
+              disabled={isUploadingBulk}
+              className="gap-2"
+            >
+              <Upload className="h-4 w-4" />
+              {isUploadingBulk ? "アップロード中..." : "すべてアップロード"}
+            </Button>
+            {selectedPlayerIds.length > 0 && (
+              <Button
+                onClick={() => handleBulkUpload(selectedPlayerIds)}
+                variant="secondary"
+                size="sm"
+                disabled={isUploadingBulk}
+                className="gap-2"
+              >
+                <Upload className="h-4 w-4" />
+                {isUploadingBulk ? "アップロード中..." : `選択した${selectedPlayerIds.length}名をアップロード`}
+              </Button>
+            )}
+          </div>
+        )}
+
         {/* Search and Filters */}
         <div className="space-y-3">
           <div className="relative">
@@ -590,6 +717,15 @@ export default function Players() {
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
+                  {user && (
+                    <div className="flex items-center pt-1">
+                      <Checkbox
+                        checked={selectedPlayerIds.includes(player.id!)}
+                        onCheckedChange={() => togglePlayerSelection(player.id!)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
                   <div 
                     className="flex-1 cursor-pointer" 
                     onClick={() => setSelectedPlayer(player)}

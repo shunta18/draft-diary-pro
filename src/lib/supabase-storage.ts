@@ -503,13 +503,25 @@ export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | nu
   }
 };
 
-export const uploadPlayerToPublic = async (playerId: number): Promise<PublicPlayer | null> => {
+export const uploadPlayerToPublic = async (playerId: number): Promise<{ success: boolean; message?: string; data?: PublicPlayer }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    if (!user) return { success: false, message: 'User not authenticated' };
 
     const player = await getPlayerById(playerId);
-    if (!player) throw new Error('Player not found');
+    if (!player) return { success: false, message: 'Player not found' };
+
+    // 既にアップロード済みかチェック（original_player_idとuser_idで）
+    const { data: existing } = await supabase
+      .from('public_players')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('original_player_id', playerId)
+      .maybeSingle();
+
+    if (existing) {
+      return { success: false, message: '既にアップロード済みの選手です' };
+    }
 
     const { data, error } = await supabase
       .from('public_players')
@@ -538,14 +550,18 @@ export const uploadPlayerToPublic = async (playerId: number): Promise<PublicPlay
       .select()
       .single();
     
-    if (error) throw error;
-    return data ? {
-      ...data,
-      career_path: data.career_path as PublicPlayer['career_path']
-    } : null;
+    if (error) return { success: false, message: error.message };
+    
+    return { 
+      success: true, 
+      data: data ? {
+        ...data,
+        career_path: data.career_path as PublicPlayer['career_path']
+      } : undefined
+    };
   } catch (error) {
     console.error('Failed to upload player to public:', error);
-    return null;
+    return { success: false, message: 'アップロードに失敗しました' };
   }
 };
 
