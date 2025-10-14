@@ -301,10 +301,10 @@ const VirtualDraft = () => {
               // 次のラウンドの指名順を取得
               const nextWaiverOrder = getWaiverOrder(nextRound);
               
-              // 選択終了していない最初のチームを探す
+              // 選択終了していない最初のチームを探す（updatedFinishedを使用）
               let nextStartIndex = 0;
               while (nextStartIndex < nextWaiverOrder.length && 
-                     finishedTeams.has(nextWaiverOrder[nextStartIndex])) {
+                     updatedFinished.has(nextWaiverOrder[nextStartIndex])) {
                 nextStartIndex++;
               }
               
@@ -525,11 +525,25 @@ const VirtualDraft = () => {
               });
             }
           } else {
-            setCurrentRound(prev => prev + 1);
-            setCurrentWaiverIndex(0);
+            // 次のラウンドへ
+            const nextRound = currentRound + 1;
+            setCurrentRound(nextRound);
+            
+            // 次のラウンドの指名順を取得
+            const nextWaiverOrder = getWaiverOrder(nextRound);
+            
+            // 選択終了していない最初のチームを探す（updatedFinishedを使用）
+            let nextStartIndex = 0;
+            while (nextStartIndex < nextWaiverOrder.length && 
+                   updatedFinished.has(nextWaiverOrder[nextStartIndex])) {
+              nextStartIndex++;
+            }
+            
+            setCurrentWaiverIndex(nextStartIndex);
+            
             toast({
               title: `${currentRound}位指名終了`,
-              description: `${currentRound + 1}位指名を開始します`,
+              description: `${nextRound}位指名を開始します`,
             });
           }
         }
