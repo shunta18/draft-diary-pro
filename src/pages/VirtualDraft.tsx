@@ -805,13 +805,13 @@ const VirtualDraft = () => {
           </div>
         )}
         
-        {finalSelections.length === teams.length && currentRound > 1 && !isDraftComplete && (
+        {((finalSelections.length === teams.length && currentRound > 1) || isDevelopmentDraft) && !isDraftComplete && (
           <div className="mb-8">
             <Card className="bg-primary/5">
               <CardContent className="pt-6">
                 <div className="text-center">
                   <p className="text-lg font-semibold mb-2">
-                    {currentRound}位指名 - {teams.find(t => t.id === getCurrentPickingTeam())?.name}の番です
+                    {isDevelopmentDraft ? `育成${currentRound}位` : `${currentRound}位`}指名 - {teams.find(t => t.id === getCurrentPickingTeam())?.name}の番です
                   </p>
                   <p className="text-sm text-muted-foreground">
                     指名順 {currentWaiverIndex + 1} / {getWaiverOrder(currentRound, isDevelopmentDraft).length}
@@ -826,7 +826,7 @@ const VirtualDraft = () => {
           {(() => {
             // 1位指名の抽選フェーズでは1位の順番、2位以降は各ラウンドの指名順
             let teamOrder: number[];
-            if (finalSelections.length < teams.length) {
+            if (finalSelections.length < teams.length && !isDevelopmentDraft) {
               // 1位指名の抽選フェーズ（支配下ドラフトのみ）
               teamOrder = oddRoundOrder;
             } else {
@@ -872,8 +872,8 @@ const VirtualDraft = () => {
               }
               
               // 1位指名フェーズで未確定の球団、または2位以降で選択可能な球団
-              if (finalSelections.length < teams.length) {
-                // 1位指名の抽選フェーズ
+              if (finalSelections.length < teams.length && !isDevelopmentDraft) {
+                // 1位指名の抽選フェーズ（支配下ドラフトのみ）
                 return (
                   <>
                     <Card key={team.id}>
@@ -939,7 +939,7 @@ const VirtualDraft = () => {
                   </>
                 );
               } else {
-                // 2位以降のウェーバー方式フェーズ
+                // 2位以降のウェーバー方式フェーズ（または育成ドラフト）
                 const teamPicks = getTeamPicks(team.id);
                 return (
                   <Card key={team.id} className={isCurrentPickingTeam ? "ring-2 ring-primary" : ""}>
@@ -968,10 +968,10 @@ const VirtualDraft = () => {
                               onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
                             >
                               <Button variant="default" className="w-full">
-                                {currentRound}位指名する
+                                {isDevelopmentDraft ? `育成${currentRound}位` : `${currentRound}位`}指名する
                               </Button>
                             </PlayerSelectionDialog>
-                            {currentRound > 1 && (
+                            {(currentRound > 1 || isDevelopmentDraft) && (
                               <Button 
                                 variant="outline" 
                                 className="w-full"
