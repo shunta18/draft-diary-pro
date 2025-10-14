@@ -843,7 +843,7 @@ const VirtualDraft = () => {
               const selectedPlayerIds = getSelectedPlayerIds();
               const availablePlayers = players.filter(p => !selectedPlayerIds.includes(p.id));
               const lostPlayers = getLostPlayers(team.id);
-              const isCurrentPickingTeam = finalSelections.length === teams.length && currentRound > 1 && getCurrentPickingTeam() === team.id;
+              const isCurrentPickingTeam = ((finalSelections.length === teams.length && currentRound > 1) || isDevelopmentDraft) && getCurrentPickingTeam() === team.id;
               
               // 1位指名フェーズで確定済みの球団、または2位以降で指名済みの球団
               if (teamStatus.decided && finalSelections.length < teams.length) {
