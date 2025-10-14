@@ -269,6 +269,172 @@ export type Database = {
         }
         Relationships: []
       }
+      public_player_imports: {
+        Row: {
+          created_at: string
+          id: string
+          public_player_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          public_player_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          public_player_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_player_imports_public_player_id_fkey"
+            columns: ["public_player_id"]
+            isOneToOne: false
+            referencedRelation: "public_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_player_views: {
+        Row: {
+          created_at: string
+          id: string
+          public_player_id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          public_player_id: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          public_player_id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_player_views_public_player_id_fkey"
+            columns: ["public_player_id"]
+            isOneToOne: false
+            referencedRelation: "public_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      public_players: {
+        Row: {
+          age: number | null
+          batting_hand: string | null
+          career_path: Json | null
+          category: string
+          created_at: string
+          evaluations: string[] | null
+          height: number | null
+          hometown: string | null
+          id: string
+          import_count: number
+          main_position: string | null
+          memo: string | null
+          name: string
+          original_player_id: number | null
+          position: string
+          recommended_teams: string[] | null
+          team: string
+          throwing_hand: string | null
+          updated_at: string
+          usage: string | null
+          user_id: string
+          videos: string[] | null
+          view_count: number
+          weight: number | null
+          year: number | null
+        }
+        Insert: {
+          age?: number | null
+          batting_hand?: string | null
+          career_path?: Json | null
+          category: string
+          created_at?: string
+          evaluations?: string[] | null
+          height?: number | null
+          hometown?: string | null
+          id?: string
+          import_count?: number
+          main_position?: string | null
+          memo?: string | null
+          name: string
+          original_player_id?: number | null
+          position: string
+          recommended_teams?: string[] | null
+          team: string
+          throwing_hand?: string | null
+          updated_at?: string
+          usage?: string | null
+          user_id: string
+          videos?: string[] | null
+          view_count?: number
+          weight?: number | null
+          year?: number | null
+        }
+        Update: {
+          age?: number | null
+          batting_hand?: string | null
+          career_path?: Json | null
+          category?: string
+          created_at?: string
+          evaluations?: string[] | null
+          height?: number | null
+          hometown?: string | null
+          id?: string
+          import_count?: number
+          main_position?: string | null
+          memo?: string | null
+          name?: string
+          original_player_id?: number | null
+          position?: string
+          recommended_teams?: string[] | null
+          team?: string
+          throwing_hand?: string | null
+          updated_at?: string
+          usage?: string | null
+          user_id?: string
+          videos?: string[] | null
+          view_count?: number
+          weight?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -278,9 +444,24 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      increment_player_import_count: {
+        Args: { player_id: string }
+        Returns: undefined
+      }
+      increment_player_view_count: {
+        Args: { player_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -407,6 +588,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
