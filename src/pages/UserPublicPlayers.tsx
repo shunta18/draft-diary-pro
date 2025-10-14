@@ -166,6 +166,25 @@ export default function UserPublicPlayers() {
                   {profile.bio && (
                     <p className="text-muted-foreground mt-1">{profile.bio}</p>
                   )}
+                  {profile.social_links && profile.social_links.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {profile.social_links.map((link: any, index: number) => (
+                        <a
+                          key={index}
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                        >
+                          {link.platform === 'twitter' && '𝕏'}
+                          {link.platform === 'instagram' && '📷'}
+                          {link.platform === 'youtube' && '▶️'}
+                          {link.platform === 'other' && '🔗'}
+                          {link.label || link.platform}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                     <span>{players.length} 選手を公開</span>
                     <span>総閲覧数: {players.reduce((sum, p) => sum + p.view_count, 0)}</span>
