@@ -60,6 +60,21 @@ const sortPositions = (positionsStr: string) => {
   }).join("、");
 };
 
+const teamColors: { [key: string]: string } = {
+  "読売ジャイアンツ": "bg-orange-500 text-white",
+  "阪神タイガース": "bg-yellow-500 text-black",
+  "中日ドラゴンズ": "bg-blue-500 text-white",
+  "広島東洋カープ": "bg-red-500 text-white",
+  "東京ヤクルトスワローズ": "bg-green-500 text-white",
+  "横浜DeNAベイスターズ": "bg-blue-600 text-white",
+  "福岡ソフトバンクホークス": "bg-yellow-400 text-black",
+  "北海道日本ハムファイターズ": "bg-blue-700 text-white",
+  "千葉ロッテマリーンズ": "bg-blue-400 text-white",
+  "埼玉西武ライオンズ": "bg-blue-800 text-white",
+  "東北楽天ゴールデンイーグルス": "bg-red-600 text-white",
+  "オリックス・バファローズ": "bg-blue-900 text-white",
+};
+
 export default function PublicPlayers() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -349,6 +364,16 @@ export default function PublicPlayers() {
                   <Label>ポジション</Label>
                   <p>{sortPositions(selectedPlayer.position)}</p>
                 </div>
+                <div>
+                  <Label>カテゴリ</Label>
+                  <p>{selectedPlayer.category}</p>
+                </div>
+                {selectedPlayer.year && (
+                  <div>
+                    <Label>年度</Label>
+                    <p>{selectedPlayer.year}年</p>
+                  </div>
+                )}
                 {selectedPlayer.evaluations && selectedPlayer.evaluations.length > 0 && (
                   <div>
                     <Label>評価</Label>
@@ -361,10 +386,76 @@ export default function PublicPlayers() {
                     </div>
                   </div>
                 )}
+                {selectedPlayer.recommended_teams && selectedPlayer.recommended_teams.length > 0 && (
+                  <div>
+                    <Label>推奨球団</Label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {selectedPlayer.recommended_teams.map((team, index) => (
+                        <Badge key={index} className={teamColors[team as keyof typeof teamColors] || "bg-gray-500 text-white"}>
+                          {team}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedPlayer.batting_hand && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>打席</Label>
+                      <p>{selectedPlayer.batting_hand}</p>
+                    </div>
+                    {selectedPlayer.throwing_hand && (
+                      <div>
+                        <Label>投球</Label>
+                        <p>{selectedPlayer.throwing_hand}</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {(selectedPlayer.height || selectedPlayer.weight) && (
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedPlayer.height && (
+                      <div>
+                        <Label>身長</Label>
+                        <p>{selectedPlayer.height}cm</p>
+                      </div>
+                    )}
+                    {selectedPlayer.weight && (
+                      <div>
+                        <Label>体重</Label>
+                        <p>{selectedPlayer.weight}kg</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {selectedPlayer.usage && (
+                  <div>
+                    <Label>起用法</Label>
+                    <p>{selectedPlayer.usage}</p>
+                  </div>
+                )}
                 {selectedPlayer.memo && (
                   <div>
                     <Label>メモ</Label>
                     <p className="text-sm whitespace-pre-wrap">{selectedPlayer.memo}</p>
+                  </div>
+                )}
+                {selectedPlayer.videos && selectedPlayer.videos.length > 0 && (
+                  <div>
+                    <Label>動画</Label>
+                    <div className="space-y-1">
+                      {selectedPlayer.videos.map((video, index) => (
+                        <a
+                          key={index}
+                          href={video}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline block"
+                        >
+                          {video}
+                        </a>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
