@@ -79,6 +79,7 @@ export default function PlayerForm() {
 
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // 未認証の場合は認証ページにリダイレクト
   useEffect(() => {
@@ -191,36 +192,49 @@ export default function PlayerForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Handle video file uploads
-    const videoUrls: string[] = [...formData.videos];
-    if (videoFiles) {
-      for (let i = 0; i < videoFiles.length; i++) {
-        const file = videoFiles[i];
-        const videoUrl = URL.createObjectURL(file);
-        videoUrls.push(videoUrl);
-      }
+    // 二重送信防止
+    if (isSubmitting) {
+      console.log("Form submission already in progress, ignoring duplicate submit");
+      return;
     }
     
-    const playerData = {
-      name: formData.name,
-      year: parseInt(formData.draftYear),
-      category: formData.category,
-      team: formData.team,
-      position: sortPositions(formData.positions).join("、"),
-      main_position: formData.mainPosition,
-      batting_hand: formData.battingThrowing.includes("右打") ? "右" : formData.battingThrowing.includes("左打") ? "左" : undefined,
-      throwing_hand: formData.battingThrowing.includes("右投") ? "右" : formData.battingThrowing.includes("左投") ? "左" : undefined,
-      hometown: formData.hometown,
-      age: formData.age,
-      career_path: formData.careerPath,
-      usage: formData.usage,
-      evaluations: formData.evaluations,
-      recommended_teams: formData.recommended_teams,
-      memo: formData.memo,
-      videos: videoUrls,
-    };
-
+    console.log("Starting form submission...");
+    setIsSubmitting(true);
+    
+    // Handle video file uploads
+    const videoUrls: string[] = [...formData.videos];
+    const createdUrls: string[] = [];
+    
     try {
+      if (videoFiles) {
+        console.log(`Processing ${videoFiles.length} video files...`);
+        for (let i = 0; i < videoFiles.length; i++) {
+          const file = videoFiles[i];
+          const videoUrl = URL.createObjectURL(file);
+          createdUrls.push(videoUrl);
+          videoUrls.push(videoUrl);
+        }
+      }
+      
+      const playerData = {
+        name: formData.name,
+        year: parseInt(formData.draftYear),
+        category: formData.category,
+        team: formData.team,
+        position: sortPositions(formData.positions).join("、"),
+        main_position: formData.mainPosition,
+        batting_hand: formData.battingThrowing.includes("右打") ? "右" : formData.battingThrowing.includes("左打") ? "左" : undefined,
+        throwing_hand: formData.battingThrowing.includes("右投") ? "右" : formData.battingThrowing.includes("左投") ? "左" : undefined,
+        hometown: formData.hometown,
+        age: formData.age,
+        career_path: formData.careerPath,
+        usage: formData.usage,
+        evaluations: formData.evaluations,
+        recommended_teams: formData.recommended_teams,
+        memo: formData.memo,
+        videos: videoUrls,
+      };
+
       // フォームバリデーション
       if (!formData.name || !formData.category || !formData.team || formData.positions.length === 0 || formData.evaluations.length === 0) {
         toast({
@@ -228,27 +242,52 @@ export default function PlayerForm() {
           description: "必須項目を全て入力してください。",
           variant: "destructive",
         });
+        setIsSubmitting(false);
         return;
       }
 
+      console.log("Validation passed, saving to database...");
+
       if (isEditing && id) {
+        console.log(`Updating player ID: ${id}`);
         const result = await updatePlayer(parseInt(id), playerData);
+        console.log("Update result:", result ? "success" : "failed");
+        
         if (result) {
           toast({
             title: "選手情報を更新しました",
             description: `${formData.name}の情報が正常に更新されました。`,
           });
+          
+          // メモリリークを防止: URL.createObjectURLで作成したURLを解放
+          createdUrls.forEach(url => URL.revokeObjectURL(url));
+          
+          // ナビゲーション前に少し遅延を入れる（Android端末での問題対策）
+          console.log("Preparing to navigate...");
+          await new Promise(resolve => setTimeout(resolve, 100));
+          console.log("Navigating to /players");
           navigate("/players");
         } else {
           throw new Error("Failed to update player");
         }
       } else {
+        console.log("Adding new player");
         const result = await addPlayer(playerData);
+        console.log("Add result:", result ? "success" : "failed");
+        
         if (result) {
           toast({
             title: "選手を追加しました",
             description: `${formData.name}が正常に登録されました。`,
           });
+          
+          // メモリリークを防止: URL.createObjectURLで作成したURLを解放
+          createdUrls.forEach(url => URL.revokeObjectURL(url));
+          
+          // ナビゲーション前に少し遅延を入れる（Android端末での問題対策）
+          console.log("Preparing to navigate...");
+          await new Promise(resolve => setTimeout(resolve, 100));
+          console.log("Navigating to /players");
           navigate("/players");
         } else {
           throw new Error("Failed to add player");
@@ -257,6 +296,9 @@ export default function PlayerForm() {
     } catch (error) {
       console.error("Failed to save player:", error);
       const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
+      
+      // エラー時もURLを解放
+      createdUrls.forEach(url => URL.revokeObjectURL(url));
       
       if (errorMessage.includes("not authenticated")) {
         toast({
@@ -272,6 +314,8 @@ export default function PlayerForm() {
           variant: "destructive",
         });
       }
+      
+      setIsSubmitting(false);
     }
   };
 
@@ -303,9 +347,10 @@ export default function PlayerForm() {
               form="player-form"
               variant="secondary"
               className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth h-10 flex-1 sm:flex-none"
+              disabled={isSubmitting}
             >
               <Save className="h-4 w-4 mr-2" />
-              保存
+              {isSubmitting ? "保存中..." : "保存"}
             </Button>
           </div>
         </div>
