@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus, ThumbsUp, Upload, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { getPlayers, deletePlayer, addPlayer, updatePlayer, type Player } from "@/lib/supabase-storage";
+import { getPlayers, deletePlayer, addPlayer, updatePlayer, uploadPlayerToPublic, type Player } from "@/lib/supabase-storage";
 import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -95,6 +95,9 @@ export default function Players() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddingSamplePlayers, setIsAddingSamplePlayers] = useState(false);
+  const [uploadingPlayerId, setUploadingPlayerId] = useState<number | null>(null);
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
+  const [isUploadingBulk, setIsUploadingBulk] = useState(false);
 
   useEffect(() => {
     loadPlayers();
@@ -296,6 +299,136 @@ export default function Players() {
     }
   };
 
+  const handleUploadToPublic = async (player: Player) => {
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "共通DBにアップロードするにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!player.id) {
+      toast({
+        title: "エラー",
+        description: "選手IDが見つかりません。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingPlayerId(player.id);
+    
+    try {
+      const result = await uploadPlayerToPublic(player.id);
+      
+      if (result.success) {
+        toast({
+          title: "アップロードしました",
+          description: `${player.name}を共通DBに公開しました。`,
+        });
+        await loadPlayers();
+      } else {
+        toast({
+          title: "エラー",
+          description: result.message || "アップロードに失敗しました。",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
+      console.error('Failed to upload player:', error);
+      toast({
+        title: "エラー",
+        description: error.message || "アップロードに失敗しました。",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingPlayerId(null);
+    }
+  };
+
+  const handleBulkUpload = async (playerIds: number[]) => {
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "共通DBにアップロードするにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (playerIds.length === 0) {
+      toast({
+        title: "選手が選択されていません",
+        description: "アップロードする選手を選択してください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploadingBulk(true);
+    
+    try {
+      let successCount = 0;
+      let skipCount = 0;
+      let errorCount = 0;
+
+      for (const playerId of playerIds) {
+        try {
+          const result = await uploadPlayerToPublic(playerId);
+          if (result.success) {
+            successCount++;
+          } else if (result.message?.includes("既に")) {
+            skipCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          errorCount++;
+        }
+      }
+
+      const messages = [];
+      if (successCount > 0) messages.push(`${successCount}名をアップロード`);
+      if (skipCount > 0) messages.push(`${skipCount}名はスキップ（既存）`);
+      if (errorCount > 0) messages.push(`${errorCount}名は失敗`);
+
+      toast({
+        title: "一括アップロード完了",
+        description: messages.join("、"),
+      });
+
+      setSelectedPlayerIds([]);
+      await loadPlayers();
+    } catch (error: any) {
+      console.error('Failed to bulk upload:', error);
+      toast({
+        title: "エラー",
+        description: "一括アップロードに失敗しました。",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUploadingBulk(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (selectedPlayerIds.length === filteredPlayers.length) {
+      setSelectedPlayerIds([]);
+    } else {
+      setSelectedPlayerIds(filteredPlayers.map(p => p.id!).filter(id => id !== undefined));
+    }
+  };
+
+  const togglePlayerSelection = (playerId: number) => {
+    setSelectedPlayerIds(prev => 
+      prev.includes(playerId) 
+        ? prev.filter(id => id !== playerId)
+        : [...prev, playerId]
+    );
+  };
+
   const playersStructuredData = {
     "@context": "https://schema.org",
     "@type": "ItemList",
@@ -369,6 +502,46 @@ export default function Players() {
       </div>
 
       <div className="p-4 space-y-4">
+        {/* 一括操作ボタン */}
+        {user && filteredPlayers.length > 0 && (
+          <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="select-all"
+                checked={selectedPlayerIds.length === filteredPlayers.length && filteredPlayers.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+              <Label htmlFor="select-all" className="cursor-pointer text-sm flex-1">
+                すべて選択 ({selectedPlayerIds.length}/{filteredPlayers.length})
+              </Label>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
+              <Button
+                onClick={() => handleBulkUpload(filteredPlayers.map(p => p.id!).filter(id => id !== undefined))}
+                variant="default"
+                size="sm"
+                disabled={isUploadingBulk}
+                className="gap-2 w-full sm:w-auto"
+              >
+                <Upload className="h-4 w-4" />
+                {isUploadingBulk ? "アップロード中..." : "すべてアップロード"}
+              </Button>
+              {selectedPlayerIds.length > 0 && (
+                <Button
+                  onClick={() => handleBulkUpload(selectedPlayerIds)}
+                  variant="secondary"
+                  size="sm"
+                  disabled={isUploadingBulk}
+                  className="gap-2 w-full sm:w-auto"
+                >
+                  <Upload className="h-4 w-4" />
+                  {isUploadingBulk ? "アップロード中..." : `選択した${selectedPlayerIds.length}名をアップロード`}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Search and Filters */}
         <div className="space-y-3">
           <div className="relative">
@@ -547,6 +720,15 @@ export default function Players() {
             >
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
+                  {user && (
+                    <div className="flex items-center pt-1">
+                      <Checkbox
+                        checked={selectedPlayerIds.includes(player.id!)}
+                        onCheckedChange={() => togglePlayerSelection(player.id!)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    </div>
+                  )}
                   <div 
                     className="flex-1 cursor-pointer" 
                     onClick={() => setSelectedPlayer(player)}
@@ -562,6 +744,12 @@ export default function Players() {
                       <Badge variant="secondary" className="text-xs">
                         {player.category}
                       </Badge>
+                      {(player as any).is_public && (
+                        <Badge className="bg-green-500 text-white text-xs">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          公開中
+                        </Badge>
+                      )}
                       {player.id === 1 && (
                         <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
                           サンプル
@@ -578,19 +766,51 @@ export default function Players() {
                     </div>
                   </div>
                   {user && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(player);
-                      }}
-                      className="flex-shrink-0"
-                    >
-                      <ThumbsUp 
-                        className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
-                      />
-                    </Button>
+                    <div className="flex gap-2 flex-shrink-0">
+                      {!(player as any).is_public && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={uploadingPlayerId === player.id}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              {uploadingPlayerId === player.id ? "アップロード中..." : "共有"}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>共通DBにアップロード</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                「{player.name}」を共通データベースに公開しますか？
+                                <br />
+                                公開後は他のユーザーが閲覧・インポートできるようになります。
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleUploadToPublic(player)}>
+                                アップロード
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(player);
+                        }}
+                      >
+                        <ThumbsUp 
+                          className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
+                        />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>

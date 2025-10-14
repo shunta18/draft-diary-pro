@@ -55,6 +55,51 @@ export interface Profile {
   social_links?: SocialLink[];
 }
 
+export interface PublicPlayer {
+  id: string;
+  user_id: string;
+  original_player_id?: number;
+  name: string;
+  team: string;
+  position: string;
+  category: string;
+  evaluations?: string[];
+  recommended_teams?: string[];
+  year?: number;
+  batting_hand?: string;
+  throwing_hand?: string;
+  height?: number;
+  weight?: number;
+  age?: number;
+  memo?: string;
+  hometown?: string;
+  career_path?: {
+    middle_school?: string;
+    high_school?: string;
+    university?: string;
+    corporate?: string;
+  };
+  usage?: string;
+  videos?: string[];
+  main_position?: string;
+  view_count: number;
+  import_count: number;
+  created_at: string;
+  updated_at: string;
+  profiles?: any;
+}
+
+export interface UserProfileWithStats {
+  user_id: string;
+  display_name?: string;
+  avatar_url?: string;
+  bio?: string;
+  social_links?: SocialLink[];
+  upload_count: number;
+  total_views: number;
+  total_imports: number;
+}
+
 // Player Functions
 export const getPlayers = async (): Promise<Player[]> => {
   try {
@@ -388,6 +433,383 @@ export const uploadAvatar = async (file: File): Promise<string | null> => {
     return data.publicUrl;
   } catch (error) {
     console.error('Failed to upload avatar:', error);
+    return null;
+  }
+};
+
+// Public Players Functions
+export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('public_players')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    if (!data) return [];
+    
+    // 各選手の投稿者情報を個別に取得
+    const playersWithProfiles = await Promise.all(
+      data.map(async (player) => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_id, display_name, avatar_url, bio, social_links')
+          .eq('user_id', player.user_id)
+          .maybeSingle();
+        
+        return {
+          ...player,
+          profiles: profile || null,
+          career_path: player.career_path as PublicPlayer['career_path']
+        };
+      })
+    );
+    
+    return playersWithProfiles;
+  } catch (error) {
+    console.error('Failed to load public players:', error);
+    return [];
+  }
+};
+
+export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('public_players')
+      .select('*')
+      .eq('id', id)
+      .single();
+    
+    if (error) throw error;
+    
+    if (!data) return null;
+    
+    // 投稿者情報を個別に取得
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .eq('user_id', data.user_id)
+      .maybeSingle();
+    
+    return {
+      ...data,
+      profiles: profile || null,
+      career_path: data.career_path as PublicPlayer['career_path']
+    };
+  } catch (error) {
+    console.error('Failed to get public player by id:', error);
+    return null;
+  }
+};
+
+export const uploadPlayerToPublic = async (playerId: number): Promise<{ success: boolean; message?: string; data?: PublicPlayer }> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, message: 'User not authenticated' };
+
+    const player = await getPlayerById(playerId);
+    if (!player) return { success: false, message: 'Player not found' };
+
+    // 既にアップロード済みかチェック（original_player_idとuser_idで）
+    const { data: existing } = await supabase
+      .from('public_players')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('original_player_id', playerId)
+      .maybeSingle();
+
+    if (existing) {
+      return { success: false, message: '既にアップロード済みの選手です' };
+    }
+
+    const { data, error } = await supabase
+      .from('public_players')
+      .insert([{
+        user_id: user.id,
+        original_player_id: playerId,
+        name: player.name,
+        team: player.team,
+        position: player.position,
+        category: player.category,
+        evaluations: player.evaluations,
+        recommended_teams: player.recommended_teams,
+        year: player.year,
+        batting_hand: player.batting_hand,
+        throwing_hand: player.throwing_hand,
+        height: player.height,
+        weight: player.weight,
+        age: player.age,
+        memo: player.memo,
+        hometown: player.hometown,
+        career_path: player.career_path,
+        usage: player.usage,
+        videos: player.videos,
+        main_position: player.main_position,
+      }])
+      .select()
+      .single();
+    
+    if (error) return { success: false, message: error.message };
+    
+    return { 
+      success: true, 
+      data: data ? {
+        ...data,
+        career_path: data.career_path as PublicPlayer['career_path']
+      } : undefined
+    };
+  } catch (error) {
+    console.error('Failed to upload player to public:', error);
+    return { success: false, message: 'アップロードに失敗しました' };
+  }
+};
+
+export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Player | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    const publicPlayer = await getPublicPlayerById(publicPlayerId);
+    if (!publicPlayer) throw new Error('Public player not found');
+
+    // インポート記録を追加
+    await supabase
+      .from('public_player_imports')
+      .insert([{
+        user_id: user.id,
+        public_player_id: publicPlayerId
+      }]);
+
+    // インポート数をインクリメント
+    await supabase.rpc('increment_player_import_count', { player_id: publicPlayerId });
+
+    // 自分の選手リストに追加
+    const { data, error } = await supabase
+      .from('players')
+      .insert([{
+        user_id: user.id,
+        name: publicPlayer.name,
+        team: publicPlayer.team,
+        position: publicPlayer.position,
+        category: publicPlayer.category,
+        evaluations: publicPlayer.evaluations,
+        recommended_teams: publicPlayer.recommended_teams,
+        year: publicPlayer.year,
+        batting_hand: publicPlayer.batting_hand,
+        throwing_hand: publicPlayer.throwing_hand,
+        height: publicPlayer.height,
+        weight: publicPlayer.weight,
+        age: publicPlayer.age,
+        memo: publicPlayer.memo,
+        hometown: publicPlayer.hometown,
+        career_path: publicPlayer.career_path,
+        usage: publicPlayer.usage,
+        videos: publicPlayer.videos,
+        main_position: publicPlayer.main_position,
+      }])
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data ? {
+      ...data,
+      career_path: data.career_path as Player['career_path']
+    } : null;
+  } catch (error) {
+    console.error('Failed to import player from public:', error);
+    return null;
+  }
+};
+
+export const updatePublicPlayer = async (id: string, playerData: Partial<PublicPlayer>): Promise<PublicPlayer | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('public_players')
+      .update({
+        name: playerData.name,
+        team: playerData.team,
+        position: playerData.position,
+        category: playerData.category,
+        evaluations: playerData.evaluations,
+        recommended_teams: playerData.recommended_teams,
+        year: playerData.year,
+        batting_hand: playerData.batting_hand,
+        throwing_hand: playerData.throwing_hand,
+        height: playerData.height,
+        weight: playerData.weight,
+        age: playerData.age,
+        memo: playerData.memo,
+        hometown: playerData.hometown,
+        career_path: playerData.career_path,
+        usage: playerData.usage,
+        videos: playerData.videos,
+        main_position: playerData.main_position,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data ? {
+      ...data,
+      career_path: data.career_path as PublicPlayer['career_path']
+    } : null;
+  } catch (error) {
+    console.error('Failed to update public player:', error);
+    return null;
+  }
+};
+
+export const deletePublicPlayer = async (id: string): Promise<boolean> => {
+  try {
+    const { error } = await supabase
+      .from('public_players')
+      .delete()
+      .eq('id', id);
+    
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error('Failed to delete public player:', error);
+    return false;
+  }
+};
+
+export const incrementPublicPlayerViewCount = async (publicPlayerId: string): Promise<boolean> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    const sessionId = sessionStorage.getItem('session_id') || Math.random().toString(36);
+    
+    if (!sessionStorage.getItem('session_id')) {
+      sessionStorage.setItem('session_id', sessionId);
+    }
+
+    // 既に閲覧済みかチェック
+    const { data: existingView } = await supabase
+      .from('public_player_views')
+      .select('id')
+      .eq('public_player_id', publicPlayerId)
+      .or(user ? `user_id.eq.${user.id}` : `session_id.eq.${sessionId}`)
+      .maybeSingle();
+
+    if (existingView) {
+      return true; // 既に閲覧済み
+    }
+
+    // 閲覧記録を追加
+    await supabase
+      .from('public_player_views')
+      .insert([{
+        public_player_id: publicPlayerId,
+        user_id: user?.id,
+        session_id: sessionId
+      }]);
+
+    // 閲覧数をインクリメント
+    await supabase.rpc('increment_player_view_count', { player_id: publicPlayerId });
+
+    return true;
+  } catch (error) {
+    console.error('Failed to increment view count:', error);
+    return false;
+  }
+};
+
+export const getPublicPlayersByUserId = async (userId: string): Promise<PublicPlayer[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('public_players')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    
+    if (error) throw error;
+    
+    if (!data) return [];
+    
+    // 投稿者情報を個別に取得
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    return data.map(player => ({
+      ...player,
+      profiles: profile || null,
+      career_path: player.career_path as PublicPlayer['career_path']
+    }));
+  } catch (error) {
+    console.error('Failed to load public players by user id:', error);
+    return [];
+  }
+};
+
+export const getUserProfiles = async (): Promise<UserProfileWithStats[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        user_id,
+        display_name,
+        avatar_url,
+        bio,
+        social_links
+      `);
+    
+    if (error) throw error;
+    
+    // 各ユーザーの統計情報を取得
+    const profilesWithStats = await Promise.all(
+      (data || []).map(async (profile) => {
+        const { data: publicPlayers } = await supabase
+          .from('public_players')
+          .select('view_count, import_count')
+          .eq('user_id', profile.user_id);
+        
+        const upload_count = publicPlayers?.length || 0;
+        const total_views = publicPlayers?.reduce((sum, p) => sum + (p.view_count || 0), 0) || 0;
+        const total_imports = publicPlayers?.reduce((sum, p) => sum + (p.import_count || 0), 0) || 0;
+        
+        return {
+          user_id: profile.user_id,
+          display_name: profile.display_name,
+          avatar_url: profile.avatar_url,
+          bio: profile.bio,
+          social_links: (profile.social_links as any) || [],
+          upload_count,
+          total_views,
+          total_imports
+        };
+      })
+    );
+    
+    return profilesWithStats.filter(p => p.upload_count > 0);
+  } catch (error) {
+    console.error('Failed to load user profiles:', error);
+    return [];
+  }
+};
+
+export const getUserProfileById = async (userId: string): Promise<Profile | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    
+    if (error) throw error;
+    return {
+      user_id: data.user_id,
+      display_name: data.display_name,
+      avatar_url: data.avatar_url,
+      bio: data.bio,
+      social_links: (data.social_links as any) || []
+    };
+  } catch (error) {
+    console.error('Failed to load user profile by id:', error);
     return null;
   }
 };
