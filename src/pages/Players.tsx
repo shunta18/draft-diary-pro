@@ -504,38 +504,41 @@ export default function Players() {
       <div className="p-4 space-y-4">
         {/* 一括操作ボタン */}
         {user && filteredPlayers.length > 0 && (
-          <div className="flex items-center gap-2 p-3 bg-muted/50 rounded-lg">
-            <Checkbox
-              id="select-all"
-              checked={selectedPlayerIds.length === filteredPlayers.length && filteredPlayers.length > 0}
-              onCheckedChange={handleSelectAll}
-            />
-            <Label htmlFor="select-all" className="cursor-pointer text-sm">
-              すべて選択 ({selectedPlayerIds.length}/{filteredPlayers.length})
-            </Label>
-            <div className="flex-1" />
-            <Button
-              onClick={() => handleBulkUpload(filteredPlayers.map(p => p.id!).filter(id => id !== undefined))}
-              variant="default"
-              size="sm"
-              disabled={isUploadingBulk}
-              className="gap-2"
-            >
-              <Upload className="h-4 w-4" />
-              {isUploadingBulk ? "アップロード中..." : "すべてアップロード"}
-            </Button>
-            {selectedPlayerIds.length > 0 && (
+          <div className="space-y-2 p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <Checkbox
+                id="select-all"
+                checked={selectedPlayerIds.length === filteredPlayers.length && filteredPlayers.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+              <Label htmlFor="select-all" className="cursor-pointer text-sm flex-1">
+                すべて選択 ({selectedPlayerIds.length}/{filteredPlayers.length})
+              </Label>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
-                onClick={() => handleBulkUpload(selectedPlayerIds)}
-                variant="secondary"
+                onClick={() => handleBulkUpload(filteredPlayers.map(p => p.id!).filter(id => id !== undefined))}
+                variant="default"
                 size="sm"
                 disabled={isUploadingBulk}
-                className="gap-2"
+                className="gap-2 w-full sm:w-auto"
               >
                 <Upload className="h-4 w-4" />
-                {isUploadingBulk ? "アップロード中..." : `選択した${selectedPlayerIds.length}名をアップロード`}
+                {isUploadingBulk ? "アップロード中..." : "すべてアップロード"}
               </Button>
-            )}
+              {selectedPlayerIds.length > 0 && (
+                <Button
+                  onClick={() => handleBulkUpload(selectedPlayerIds)}
+                  variant="secondary"
+                  size="sm"
+                  disabled={isUploadingBulk}
+                  className="gap-2 w-full sm:w-auto"
+                >
+                  <Upload className="h-4 w-4" />
+                  {isUploadingBulk ? "アップロード中..." : `選択した${selectedPlayerIds.length}名をアップロード`}
+                </Button>
+              )}
+            </div>
           </div>
         )}
 
