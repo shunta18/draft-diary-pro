@@ -342,6 +342,7 @@ export type Database = {
           hometown: string | null
           id: string
           import_count: number
+          is_favorite: boolean
           main_position: string | null
           memo: string | null
           name: string
@@ -369,6 +370,7 @@ export type Database = {
           hometown?: string | null
           id?: string
           import_count?: number
+          is_favorite?: boolean
           main_position?: string | null
           memo?: string | null
           name: string
@@ -396,6 +398,7 @@ export type Database = {
           hometown?: string | null
           id?: string
           import_count?: number
+          is_favorite?: boolean
           main_position?: string | null
           memo?: string | null
           name?: string

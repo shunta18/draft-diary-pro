@@ -88,7 +88,13 @@ export default function UserPublicPlayers() {
         getPublicPlayersByUserId(userId)
       ]);
       setProfile(profileData);
-      setPlayers(playersData);
+      // イチオシの選手を上位に表示
+      const sortedPlayers = [...playersData].sort((a, b) => {
+        if (a.is_favorite && !b.is_favorite) return -1;
+        if (!a.is_favorite && b.is_favorite) return 1;
+        return 0;
+      });
+      setPlayers(sortedPlayers);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -208,9 +214,16 @@ export default function UserPublicPlayers() {
                 <CardContent className="p-4" onClick={() => handlePlayerClick(player)}>
                   <div className="space-y-3">
                     <div className="flex items-start justify-between">
-                      <div>
-                        <h3 className="font-bold text-lg">{player.name}</h3>
-                        <p className="text-sm text-muted-foreground">{player.team}</p>
+                      <div className="flex items-center gap-2">
+                        <div>
+                          <h3 className="font-bold text-lg">{player.name}</h3>
+                          <p className="text-sm text-muted-foreground">{player.team}</p>
+                        </div>
+                        {player.is_favorite && (
+                          <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600 text-white">
+                            ⭐ イチオシ
+                          </Badge>
+                        )}
                       </div>
                       <Badge variant="outline">{player.category}</Badge>
                     </div>

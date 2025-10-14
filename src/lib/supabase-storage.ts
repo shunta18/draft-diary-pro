@@ -82,6 +82,7 @@ export interface PublicPlayer {
   usage?: string;
   videos?: string[];
   main_position?: string;
+  is_favorite?: boolean;
   view_count: number;
   import_count: number;
   created_at: string;
@@ -148,6 +149,9 @@ export const addPlayer = async (playerData: Omit<Player, 'id'>): Promise<Player 
 
 export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): Promise<Player | null> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('players')
       .update({
@@ -159,6 +163,40 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
       .single();
     
     if (error) throw error;
+    
+    // 公開選手データベースの同一選手も更新
+    if (data) {
+      const { error: publicUpdateError } = await supabase
+        .from('public_players')
+        .update({
+          name: playerData.name,
+          team: playerData.team,
+          position: Array.isArray(playerData.position) ? playerData.position[0] : playerData.position,
+          category: playerData.category,
+          evaluations: playerData.evaluations,
+          recommended_teams: playerData.recommended_teams,
+          year: playerData.year,
+          batting_hand: playerData.batting_hand,
+          throwing_hand: playerData.throwing_hand,
+          height: playerData.height,
+          weight: playerData.weight,
+          age: playerData.age,
+          memo: playerData.memo,
+          hometown: playerData.hometown,
+          career_path: playerData.career_path,
+          usage: playerData.usage,
+          videos: playerData.videos,
+          main_position: playerData.main_position,
+          is_favorite: playerData.is_favorite,
+        })
+        .eq('user_id', user.id)
+        .eq('original_player_id', id);
+      
+      if (publicUpdateError) {
+        console.log('Public player update skipped or failed:', publicUpdateError);
+      }
+    }
+    
     return data ? {
       ...data,
       career_path: data.career_path as Player['career_path']
@@ -546,6 +584,7 @@ export const uploadPlayerToPublic = async (playerId: number): Promise<{ success:
         usage: player.usage,
         videos: player.videos,
         main_position: player.main_position,
+        is_favorite: player.is_favorite,
       }])
       .select()
       .single();
@@ -645,6 +684,7 @@ export const updatePublicPlayer = async (id: string, playerData: Partial<PublicP
         usage: playerData.usage,
         videos: playerData.videos,
         main_position: playerData.main_position,
+        is_favorite: playerData.is_favorite,
       })
       .eq('id', id)
       .select()
