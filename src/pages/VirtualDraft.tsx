@@ -955,7 +955,7 @@ const VirtualDraft = () => {
                           <p className="text-sm text-muted-foreground mb-2">指名選手</p>
                           {teamPicks.map(pick => (
                             <p key={pick.round} className="text-sm">
-                              {pick.round}位: {pick.playerName}
+                              {isDevelopmentDraft ? `育成${pick.round}位` : `${pick.round}位`}: {pick.playerName}
                             </p>
                           ))}
                         </div>
