@@ -853,3 +853,85 @@ export const getUserProfileById = async (userId: string): Promise<Profile | null
     return null;
   }
 };
+
+// Follow/Unfollow functions
+export const followUser = async (followingId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be logged in to follow');
+  }
+
+  const { error } = await supabase
+    .from('user_follows')
+    .insert({
+      follower_id: user.id,
+      following_id: followingId
+    });
+
+  if (error) {
+    console.error('Error following user:', error);
+    throw error;
+  }
+};
+
+export const unfollowUser = async (followingId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be logged in to unfollow');
+  }
+
+  const { error } = await supabase
+    .from('user_follows')
+    .delete()
+    .eq('follower_id', user.id)
+    .eq('following_id', followingId);
+
+  if (error) {
+    console.error('Error unfollowing user:', error);
+    throw error;
+  }
+};
+
+export const getFollowedUsers = async (): Promise<string[]> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return [];
+  }
+
+  const { data, error } = await supabase
+    .from('user_follows')
+    .select('following_id')
+    .eq('follower_id', user.id);
+
+  if (error) {
+    console.error('Error fetching followed users:', error);
+    throw error;
+  }
+
+  return data?.map(f => f.following_id) || [];
+};
+
+export const isFollowing = async (followingId: string): Promise<boolean> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return false;
+  }
+
+  const { data, error } = await supabase
+    .from('user_follows')
+    .select('id')
+    .eq('follower_id', user.id)
+    .eq('following_id', followingId)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error checking follow status:', error);
+    return false;
+  }
+
+  return !!data;
+};
