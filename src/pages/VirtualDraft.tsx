@@ -67,13 +67,23 @@ const teams = [
 ];
 
 // ウェーバー方式の指名順（2位以降）
+// 支配下ドラフト指名順
 // 奇数ラウンド（1位、3位、5位...）: ソフトバンク、阪神、日ハム、DeNA、オリックス、巨人、楽天、中日、西武、広島、ロッテ、ヤクルト
 const oddRoundOrder = [6, 11, 1, 9, 5, 7, 2, 10, 3, 12, 4, 8];
 // 偶数ラウンド（2位、4位...）: ヤクルト、ロッテ、広島、西武、中日、楽天、巨人、オリックス、DeNA、日ハム、阪神、ソフトバンク
 const evenRoundOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
 
+// 育成ドラフト指名順
+// 育成奇数ラウンド（育成1位、育成3位...）: ヤクルト、ロッテ、広島、西武、中日、楽天、巨人、オリックス、DeNA、日ハム、阪神、ソフトバンク
+const devOddRoundOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
+// 育成偶数ラウンド（育成2位、育成4位...）: ソフトバンク、阪神、日ハム、DeNA、オリックス、巨人、楽天、中日、西武、広島、ロッテ、ヤクルト
+const devEvenRoundOrder = [6, 11, 1, 9, 5, 7, 2, 10, 3, 12, 4, 8];
+
 // 指名順を取得する関数
-const getWaiverOrder = (round: number) => {
+const getWaiverOrder = (round: number, isDev: boolean = false) => {
+  if (isDev) {
+    return round % 2 === 1 ? devOddRoundOrder : devEvenRoundOrder;
+  }
   return round % 2 === 1 ? oddRoundOrder : evenRoundOrder;
 };
 
@@ -201,8 +211,8 @@ const VirtualDraft = () => {
   };
 
   const handlePlayerSelect = (teamId: number, playerId: number | null) => {
-    // 1位指名の抽選フェーズ（全球団が確定するまで）
-    if (finalSelections.length < teams.length) {
+    // 1位指名の抽選フェーズ（全球団が確定するまで）- 支配下ドラフトのみ
+    if (finalSelections.length < teams.length && !isDevelopmentDraft) {
       // 第1次選択
       if (currentRound === 1) {
         setSelections(prev => 
@@ -236,8 +246,8 @@ const VirtualDraft = () => {
         });
       }
     } else {
-      // 2位以降はウェーバー方式なので、現在指名中の球団のみ選択可能
-      const waiverOrder = getWaiverOrder(currentRound);
+      // 2位以降（または育成ドラフト）はウェーバー方式なので、現在指名中の球団のみ選択可能
+      const waiverOrder = getWaiverOrder(currentRound, isDevelopmentDraft);
       const currentPickingTeamId = waiverOrder[currentWaiverIndex];
       if (teamId === currentPickingTeamId && playerId) {
         const player = players.find(p => p.id === playerId);
@@ -299,7 +309,7 @@ const VirtualDraft = () => {
               setCurrentRound(nextRound);
               
               // 次のラウンドの指名順を取得
-              const nextWaiverOrder = getWaiverOrder(nextRound);
+              const nextWaiverOrder = getWaiverOrder(nextRound, isDevelopmentDraft);
               
               // 選択終了していない最初のチームを探す（updatedFinishedを使用）
               let nextStartIndex = 0;
@@ -443,8 +453,8 @@ const VirtualDraft = () => {
   };
   
   const getCurrentPickingTeam = () => {
-    if (currentRound === 1) return null;
-    const waiverOrder = getWaiverOrder(currentRound);
+    if (currentRound === 1 && !isDevelopmentDraft) return null;
+    const waiverOrder = getWaiverOrder(currentRound, isDevelopmentDraft);
     return waiverOrder[currentWaiverIndex];
   };
 
@@ -494,7 +504,7 @@ const VirtualDraft = () => {
       
       // 現在指名中の球団が選択終了した場合、次の球団へ
       if (getCurrentPickingTeam() === teamId) {
-        const waiverOrder = getWaiverOrder(currentRound);
+        const waiverOrder = getWaiverOrder(currentRound, isDevelopmentDraft);
         const updatedFinished = new Set([...finishedTeams, teamId]);
         let nextIndex = currentWaiverIndex + 1;
         while (nextIndex < waiverOrder.length && updatedFinished.has(waiverOrder[nextIndex])) {
@@ -530,7 +540,7 @@ const VirtualDraft = () => {
             setCurrentRound(nextRound);
             
             // 次のラウンドの指名順を取得
-            const nextWaiverOrder = getWaiverOrder(nextRound);
+            const nextWaiverOrder = getWaiverOrder(nextRound, isDevelopmentDraft);
             
             // 選択終了していない最初のチームを探す（updatedFinishedを使用）
             let nextStartIndex = 0;
@@ -804,7 +814,7 @@ const VirtualDraft = () => {
                     {currentRound}位指名 - {teams.find(t => t.id === getCurrentPickingTeam())?.name}の番です
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    指名順 {currentWaiverIndex + 1} / {getWaiverOrder(currentRound).length}
+                    指名順 {currentWaiverIndex + 1} / {getWaiverOrder(currentRound, isDevelopmentDraft).length}
                   </p>
                 </div>
               </CardContent>
@@ -817,11 +827,11 @@ const VirtualDraft = () => {
             // 1位指名の抽選フェーズでは1位の順番、2位以降は各ラウンドの指名順
             let teamOrder: number[];
             if (finalSelections.length < teams.length) {
-              // 1位指名の抽選フェーズ
+              // 1位指名の抽選フェーズ（支配下ドラフトのみ）
               teamOrder = oddRoundOrder;
             } else {
-              // 2位以降のウェーバー方式：現在のラウンドに応じた指名順
-              teamOrder = getWaiverOrder(currentRound);
+              // 2位以降（または育成ドラフト）のウェーバー方式：現在のラウンドに応じた指名順
+              teamOrder = getWaiverOrder(currentRound, isDevelopmentDraft);
             }
             
             return teamOrder.map(teamId => {
