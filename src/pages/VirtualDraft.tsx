@@ -274,13 +274,13 @@ const VirtualDraft = () => {
             });
             
             // 全球団が選択終了したかチェック
-            const allFinished = teams.every(t => finishedTeams.has(t.id));
+            const allFinished = teams.every(t => updatedFinished.has(t.id));
             
             if (allFinished || actualCount >= MAX_TOTAL_PICKS) {
               // ドラフト終了
               if (actualCount < MAX_TOTAL_PICKS && !isDevelopmentDraft) {
                 setIsDevelopmentDraft(true);
-                setFinishedTeams(new Set()); // 育成ドラフト用にリセット
+                setFinishedTeams(new Set()); // 育成ドラフト用にリセット（全球団が再び選択可能に）
                 setCurrentRound(1);
                 setCurrentWaiverIndex(0);
                 toast({
@@ -506,12 +506,12 @@ const VirtualDraft = () => {
         } else {
           // ラウンド終了
           const actualCount = getActualPickCount();
-          const allFinished = teams.every(t => finishedTeams.has(t.id) || t.id === teamId);
+          const allFinished = teams.every(t => updatedFinished.has(t.id) || t.id === teamId);
           
           if (allFinished || actualCount >= MAX_TOTAL_PICKS) {
             if (actualCount < MAX_TOTAL_PICKS && !isDevelopmentDraft) {
               setIsDevelopmentDraft(true);
-              setFinishedTeams(new Set());
+              setFinishedTeams(new Set()); // 育成ドラフト用にリセット（全球団が再び選択可能に）
               setCurrentRound(1);
               setCurrentWaiverIndex(0);
               toast({
