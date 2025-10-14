@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ArrowLeft, Upload, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { ArrowLeft, Upload, X, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,8 @@ import { addDiaryEntry, updateDiaryEntry, getDiaryEntryById, DiaryEntry as Supab
 import { useAuth } from "@/hooks/useAuth";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+
+const DRAFT_KEY = 'diary_form_draft';
 
 export default function DiaryForm() {
   const navigate = useNavigate();
@@ -35,7 +37,12 @@ export default function DiaryForm() {
   });
 
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
+  const [isDraftSaved, setIsDraftSaved] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const saveTimerRef = useRef<NodeJS.Timeout>();
+  const initialDataRef = useRef<string>("");
 
+  // Load existing entry or draft
   useEffect(() => {
     const loadEntry = async () => {
       if (isEditing && !loading) {
@@ -53,7 +60,7 @@ export default function DiaryForm() {
             const playerComments = 'player_comments' in entry ? entry.player_comments : (entry as any).playerComments;
             const overallImpression = 'overall_impression' in entry ? entry.overall_impression : (entry as any).overallImpression;
             
-            setFormData({
+            const loadedData = {
               date: entry.date.replace(/\//g, '-'),
               venue: entry.venue,
               category: entry.category,
@@ -62,7 +69,9 @@ export default function DiaryForm() {
               playerComments: playerComments || "",
               overallImpression: overallImpression || "",
               videos: entry.videos || [],
-            });
+            };
+            setFormData(loadedData);
+            initialDataRef.current = JSON.stringify(loadedData);
           }
         } catch (error) {
           console.error('Failed to load diary entry:', error);
@@ -72,11 +81,120 @@ export default function DiaryForm() {
             variant: "destructive",
           });
         }
+      } else if (!isEditing && !loading) {
+        // Load draft for new entries
+        try {
+          const savedDraft = localStorage.getItem(DRAFT_KEY);
+          if (savedDraft) {
+            const draft = JSON.parse(savedDraft);
+            // Only restore if it's not an editing session
+            if (!draft.editingEntryId) {
+              const shouldRestore = window.confirm(
+                `下書きが見つかりました。\n保存日時: ${new Date(draft.timestamp).toLocaleString()}\n\n復元しますか？`
+              );
+              
+              if (shouldRestore) {
+                setFormData(draft.formData);
+                initialDataRef.current = JSON.stringify(draft.formData);
+                toast({
+                  title: "下書きを復元しました",
+                  description: "前回の入力内容を復元しました。",
+                });
+              } else {
+                localStorage.removeItem(DRAFT_KEY);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Failed to load draft:', error);
+        }
       }
     };
 
     loadEntry();
   }, [isEditing, editingEntryId, user, loading, toast]);
+
+  // Auto-save draft with debouncing
+  useEffect(() => {
+    const hasContent = formData.date || formData.venue || formData.matchCard || 
+                      formData.playerComments || formData.overallImpression;
+    
+    if (!hasContent) {
+      setHasUnsavedChanges(false);
+      return;
+    }
+
+    // Check if data has changed from initial
+    const currentData = JSON.stringify(formData);
+    if (currentData !== initialDataRef.current) {
+      setHasUnsavedChanges(true);
+    }
+
+    // Clear existing timer
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current);
+    }
+
+    // Set new timer for auto-save
+    saveTimerRef.current = setTimeout(() => {
+      try {
+        const draftData = {
+          formData,
+          timestamp: new Date().toISOString(),
+          editingEntryId: isEditing ? editingEntryId : null,
+        };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+        sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+        setIsDraftSaved(true);
+        
+        // Reset draft saved indicator after 2 seconds
+        setTimeout(() => setIsDraftSaved(false), 2000);
+      } catch (error) {
+        console.error('Failed to save draft:', error);
+      }
+    }, 1000);
+
+    return () => {
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+      }
+    };
+  }, [formData, isEditing, editingEntryId]);
+
+  // Page Visibility API - save when page becomes hidden
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden && hasUnsavedChanges) {
+        try {
+          const draftData = {
+            formData,
+            timestamp: new Date().toISOString(),
+            editingEntryId: isEditing ? editingEntryId : null,
+          };
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+          sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+        } catch (error) {
+          console.error('Failed to save on visibility change:', error);
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [formData, hasUnsavedChanges, isEditing, editingEntryId]);
+
+  // Warn before page unload if there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,12 +260,17 @@ export default function DiaryForm() {
         }
       }
       
+      // Clear draft after successful save
+      localStorage.removeItem(DRAFT_KEY);
+      sessionStorage.removeItem(DRAFT_KEY);
+      setHasUnsavedChanges(false);
+      
       navigate("/diary");
     } catch (error) {
       console.error('Save error:', error);
       toast({
         title: "エラーが発生しました",
-        description: "記録の保存に失敗しました。",
+        description: "記録の保存に失敗しました。下書きとして保存されています。",
         variant: "destructive",
       });
     }
@@ -184,6 +307,12 @@ export default function DiaryForm() {
               {isEditing ? "観戦記録編集" : "新規観戦記録"}
             </h1>
           </div>
+          {isDraftSaved && (
+            <div className="flex items-center space-x-2 text-sm text-green-600">
+              <Save className="h-4 w-4" />
+              <span>下書き保存済み</span>
+            </div>
+          )}
         </div>
         
         {!user && !loading && (
