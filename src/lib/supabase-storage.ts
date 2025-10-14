@@ -622,6 +622,45 @@ export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Pl
   }
 };
 
+export const updatePublicPlayer = async (id: string, playerData: Partial<PublicPlayer>): Promise<PublicPlayer | null> => {
+  try {
+    const { data, error } = await supabase
+      .from('public_players')
+      .update({
+        name: playerData.name,
+        team: playerData.team,
+        position: playerData.position,
+        category: playerData.category,
+        evaluations: playerData.evaluations,
+        recommended_teams: playerData.recommended_teams,
+        year: playerData.year,
+        batting_hand: playerData.batting_hand,
+        throwing_hand: playerData.throwing_hand,
+        height: playerData.height,
+        weight: playerData.weight,
+        age: playerData.age,
+        memo: playerData.memo,
+        hometown: playerData.hometown,
+        career_path: playerData.career_path,
+        usage: playerData.usage,
+        videos: playerData.videos,
+        main_position: playerData.main_position,
+      })
+      .eq('id', id)
+      .select()
+      .single();
+    
+    if (error) throw error;
+    return data ? {
+      ...data,
+      career_path: data.career_path as PublicPlayer['career_path']
+    } : null;
+  } catch (error) {
+    console.error('Failed to update public player:', error);
+    return null;
+  }
+};
+
 export const deletePublicPlayer = async (id: string): Promise<boolean> => {
   try {
     const { error } = await supabase

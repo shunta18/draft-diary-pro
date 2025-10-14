@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, Eye, Download, User, Calendar, ChevronDown } from "lucide-react";
+import { Search, Filter, Eye, Download, User, Calendar, ChevronDown, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, type PublicPlayer } from "@/lib/supabase-storage";
+import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer } from "@/lib/supabase-storage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -159,6 +159,37 @@ export default function PublicPlayers() {
       toast({
         title: "エラー",
         description: "選手のインポートに失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (player: PublicPlayer) => {
+    if (!user || user.id !== player.user_id) {
+      toast({
+        title: "エラー",
+        description: "自分の投稿のみ削除できます。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!confirm(`${player.name}を削除しますか？この操作は取り消せません。`)) {
+      return;
+    }
+
+    const success = await deletePublicPlayer(player.id);
+    if (success) {
+      toast({
+        title: "削除しました",
+        description: `${player.name}を削除しました。`,
+      });
+      setSelectedPlayer(null);
+      loadPlayers();
+    } else {
+      toast({
+        title: "エラー",
+        description: "削除に失敗しました。",
         variant: "destructive",
       });
     }
@@ -497,10 +528,33 @@ export default function PublicPlayers() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                <Button onClick={() => handleImport(selectedPlayer)} className="flex-1">
-                  <Download className="h-4 w-4 mr-2" />
-                  インポート
-                </Button>
+                {user && user.id === selectedPlayer.user_id ? (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setSelectedPlayer(null);
+                        navigate(`/players/${selectedPlayer.original_player_id}`);
+                      }}
+                      className="flex-1"
+                    >
+                      <Pencil className="h-4 w-4 mr-2" />
+                      編集
+                    </Button>
+                    <Button 
+                      variant="destructive" 
+                      onClick={() => handleDelete(selectedPlayer)}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      削除
+                    </Button>
+                  </>
+                ) : (
+                  <Button onClick={() => handleImport(selectedPlayer)} className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />
+                    インポート
+                  </Button>
+                )}
                 <Button variant="outline" onClick={() => setSelectedPlayer(null)}>
                   閉じる
                 </Button>
