@@ -82,6 +82,7 @@ export interface PublicPlayer {
   usage?: string;
   videos?: string[];
   main_position?: string;
+  is_favorite?: boolean;
   view_count: number;
   import_count: number;
   created_at: string;
@@ -546,6 +547,7 @@ export const uploadPlayerToPublic = async (playerId: number): Promise<{ success:
         usage: player.usage,
         videos: player.videos,
         main_position: player.main_position,
+        is_favorite: player.is_favorite,
       }])
       .select()
       .single();
@@ -645,6 +647,7 @@ export const updatePublicPlayer = async (id: string, playerData: Partial<PublicP
         usage: playerData.usage,
         videos: playerData.videos,
         main_position: playerData.main_position,
+        is_favorite: playerData.is_favorite,
       })
       .eq('id', id)
       .select()
