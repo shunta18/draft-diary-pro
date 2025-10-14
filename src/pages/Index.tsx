@@ -1,4 +1,4 @@
-import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight, Heart } from "lucide-react";
+import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight, Heart, Database } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
 import { SEO } from "@/components/SEO";
@@ -253,6 +253,23 @@ const Index = () => {
                     <h3 className="text-lg font-semibold text-primary">観戦日記</h3>
                     <p className="text-sm text-muted-foreground">試合観戦の記録と感想を残す</p>
                     <p className="text-xs text-accent mt-1 font-medium">今年{totalWatching}回観戦 →</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/public-players">
+            <Card className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer group">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-blue-500/10 rounded-full flex items-center justify-center group-hover:bg-blue-500/20 transition-smooth">
+                    <Database className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-primary">ドラフト候補データベース</h3>
+                    <p className="text-sm text-muted-foreground">みんなの選手情報を共有・閲覧</p>
+                    <p className="text-xs text-blue-600 mt-1 font-medium">データベースを見る →</p>
                   </div>
                 </div>
               </CardContent>
