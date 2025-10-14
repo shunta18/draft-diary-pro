@@ -123,8 +123,15 @@ export const getPlayers = async (): Promise<Player[]> => {
 
 export const addPlayer = async (playerData: Omit<Player, 'id'>): Promise<Player | null> => {
   try {
+    console.log('[addPlayer] Starting player creation...');
+    
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    if (!user) {
+      console.error('[addPlayer] User not authenticated');
+      throw new Error('User not authenticated');
+    }
+    
+    console.log('[addPlayer] User authenticated, inserting player data...');
 
     const { data, error } = await supabase
       .from('players')
@@ -136,21 +143,34 @@ export const addPlayer = async (playerData: Omit<Player, 'id'>): Promise<Player 
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('[addPlayer] Database error:', error);
+      throw error;
+    }
+    
+    console.log('[addPlayer] Player created successfully:', data?.id);
+    
     return data ? {
       ...data,
       career_path: data.career_path as Player['career_path']
     } : null;
   } catch (error) {
-    console.error('Failed to add player:', error);
-    return null;
+    console.error('[addPlayer] Failed to add player:', error);
+    throw error;
   }
 };
 
 export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): Promise<Player | null> => {
   try {
+    console.log('[updatePlayer] Starting player update for ID:', id);
+    
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error('User not authenticated');
+    if (!user) {
+      console.error('[updatePlayer] User not authenticated');
+      throw new Error('User not authenticated');
+    }
+    
+    console.log('[updatePlayer] User authenticated, updating player data...');
 
     const { data, error } = await supabase
       .from('players')
@@ -162,10 +182,16 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
       .select()
       .single();
     
-    if (error) throw error;
+    if (error) {
+      console.error('[updatePlayer] Database error:', error);
+      throw error;
+    }
+    
+    console.log('[updatePlayer] Player updated successfully');
     
     // 公開選手データベースの同一選手も更新
     if (data) {
+      console.log('[updatePlayer] Updating public player if exists...');
       const { error: publicUpdateError } = await supabase
         .from('public_players')
         .update({
@@ -193,7 +219,9 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
         .eq('original_player_id', id);
       
       if (publicUpdateError) {
-        console.log('Public player update skipped or failed:', publicUpdateError);
+        console.log('[updatePlayer] Public player update skipped or failed:', publicUpdateError);
+      } else {
+        console.log('[updatePlayer] Public player updated successfully');
       }
     }
     
@@ -202,8 +230,8 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
       career_path: data.career_path as Player['career_path']
     } : null;
   } catch (error) {
-    console.error('Failed to update player:', error);
-    return null;
+    console.error('[updatePlayer] Failed to update player:', error);
+    throw error;
   }
 };
 
