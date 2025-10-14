@@ -442,23 +442,31 @@ export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
   try {
     const { data, error } = await supabase
       .from('public_players')
-      .select(`
-        *,
-        profiles (
-          user_id,
-          display_name,
-          avatar_url,
-          bio,
-          social_links
-        )
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return (data || []).map(player => ({
-      ...player,
-      career_path: player.career_path as PublicPlayer['career_path']
-    }));
+    
+    if (!data) return [];
+    
+    // 各選手の投稿者情報を個別に取得
+    const playersWithProfiles = await Promise.all(
+      data.map(async (player) => {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('user_id, display_name, avatar_url, bio, social_links')
+          .eq('user_id', player.user_id)
+          .maybeSingle();
+        
+        return {
+          ...player,
+          profiles: profile || null,
+          career_path: player.career_path as PublicPlayer['career_path']
+        };
+      })
+    );
+    
+    return playersWithProfiles;
   } catch (error) {
     console.error('Failed to load public players:', error);
     return [];
@@ -469,24 +477,26 @@ export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | nu
   try {
     const { data, error } = await supabase
       .from('public_players')
-      .select(`
-        *,
-        profiles (
-          user_id,
-          display_name,
-          avatar_url,
-          bio,
-          social_links
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single();
     
     if (error) throw error;
-    return data ? {
+    
+    if (!data) return null;
+    
+    // 投稿者情報を個別に取得
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .eq('user_id', data.user_id)
+      .maybeSingle();
+    
+    return {
       ...data,
+      profiles: profile || null,
       career_path: data.career_path as PublicPlayer['career_path']
-    } : null;
+    };
   } catch (error) {
     console.error('Failed to get public player by id:', error);
     return null;
@@ -655,22 +665,24 @@ export const getPublicPlayersByUserId = async (userId: string): Promise<PublicPl
   try {
     const { data, error } = await supabase
       .from('public_players')
-      .select(`
-        *,
-        profiles (
-          user_id,
-          display_name,
-          avatar_url,
-          bio,
-          social_links
-        )
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
-    return (data || []).map(player => ({
+    
+    if (!data) return [];
+    
+    // 投稿者情報を個別に取得
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    return data.map(player => ({
       ...player,
+      profiles: profile || null,
       career_path: player.career_path as PublicPlayer['career_path']
     }));
   } catch (error) {
