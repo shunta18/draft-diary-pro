@@ -81,6 +81,42 @@ Deno.serve(async (req) => {
       console.error('Error deleting profile:', deleteProfileError)
     }
 
+    // Delete public player data
+    const { error: deletePublicPlayersError } = await supabaseAdmin
+      .from('public_players')
+      .delete()
+      .eq('user_id', user.id)
+    if (deletePublicPlayersError) {
+      console.error('Error deleting public players:', deletePublicPlayersError)
+    }
+
+    // Delete public player imports
+    const { error: deleteImportsError } = await supabaseAdmin
+      .from('public_player_imports')
+      .delete()
+      .eq('user_id', user.id)
+    if (deleteImportsError) {
+      console.error('Error deleting player imports:', deleteImportsError)
+    }
+
+    // Delete public player views
+    const { error: deleteViewsError } = await supabaseAdmin
+      .from('public_player_views')
+      .delete()
+      .eq('user_id', user.id)
+    if (deleteViewsError) {
+      console.error('Error deleting player views:', deleteViewsError)
+    }
+
+    // Delete blog user likes
+    const { error: deleteBlogLikesError } = await supabaseAdmin
+      .from('blog_user_likes')
+      .delete()
+      .eq('user_id', user.id)
+    if (deleteBlogLikesError) {
+      console.error('Error deleting blog likes:', deleteBlogLikesError)
+    }
+
     // Then delete the user from auth.users
     console.log('Deleting user from auth.users...')
     const { error: deleteUserError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
