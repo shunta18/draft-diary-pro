@@ -176,11 +176,11 @@ export default function UserPublicPlayers() {
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                         >
-                          {link.platform === 'twitter' && '𝕏'}
-                          {link.platform === 'instagram' && '📷'}
-                          {link.platform === 'youtube' && '▶️'}
-                          {link.platform === 'other' && '🔗'}
-                          {link.label || link.platform}
+                          {link.type === 'twitter' && '𝕏'}
+                          {link.type === 'instagram' && '📷'}
+                          {link.type === 'youtube' && '▶️'}
+                          {link.type === 'other' && '🔗'}
+                          {link.label || link.type}
                         </a>
                       ))}
                     </div>
