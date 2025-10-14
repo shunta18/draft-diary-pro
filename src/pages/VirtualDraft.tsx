@@ -122,6 +122,7 @@ interface DraftPick {
   playerId: number;
   playerName: string;
   round: number;
+  isDevelopment?: boolean; // 育成ドラフトフラグ
 }
 
 // データ正規化関数
@@ -257,6 +258,7 @@ const VirtualDraft = () => {
             playerId,
             playerName: player.name,
             round: currentRound,
+            isDevelopment: isDevelopmentDraft,
           };
           setAllDraftPicks(prev => [...prev, newPick]);
           
@@ -955,7 +957,7 @@ const VirtualDraft = () => {
                           <p className="text-sm text-muted-foreground mb-2">指名選手</p>
                           {teamPicks.map(pick => (
                             <p key={pick.round} className="text-sm">
-                              {isDevelopmentDraft ? `育成${pick.round}位` : `${pick.round}位`}: {pick.playerName}
+                              {pick.isDevelopment ? `育成${pick.round}位` : `${pick.round}位`}: {pick.playerName}
                             </p>
                           ))}
                         </div>
