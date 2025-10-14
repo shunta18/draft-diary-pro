@@ -250,9 +250,10 @@ const VirtualDraft = () => {
           };
           setAllDraftPicks(prev => [...prev, newPick]);
           
-          // 次の指名へ（選択終了していない球団のみ）
+          // 次の指名へ（選択終了していない球団のみスキップ）
           let nextIndex = currentWaiverIndex + 1;
-          while (nextIndex < waiverOrder.length && finishedTeams.has(waiverOrder[nextIndex])) {
+          const updatedFinished = new Set(finishedTeams);
+          while (nextIndex < waiverOrder.length && updatedFinished.has(waiverOrder[nextIndex])) {
             nextIndex++;
           }
           
@@ -481,8 +482,9 @@ const VirtualDraft = () => {
       // 現在指名中の球団が選択終了した場合、次の球団へ
       if (getCurrentPickingTeam() === teamId) {
         const waiverOrder = getWaiverOrder(currentRound);
+        const updatedFinished = new Set([...finishedTeams, teamId]);
         let nextIndex = currentWaiverIndex + 1;
-        while (nextIndex < waiverOrder.length && finishedTeams.has(waiverOrder[nextIndex])) {
+        while (nextIndex < waiverOrder.length && updatedFinished.has(waiverOrder[nextIndex])) {
           nextIndex++;
         }
         
@@ -884,13 +886,13 @@ const VirtualDraft = () => {
                         </div>
                       </CardContent>
                     </Card>
-                    {/* ヤクルトスワローズの下に抽選ボタンを表示 */}
+                    {/* ヤクルトスワローズの下に抽選ボタンを中央表示 */}
                     {team.id === 8 && canExecuteLottery() && (
-                      <div className="mt-4">
+                      <div className="col-span-full flex justify-center mt-6">
                         <Button 
-                          size="default" 
+                          size="lg" 
                           onClick={executeLottery}
-                          className="w-full gap-2"
+                          className="gap-2"
                         >
                           <Shuffle className="h-5 w-5" />
                           第{currentRound}次選択抽選実行
