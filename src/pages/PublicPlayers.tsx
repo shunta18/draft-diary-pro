@@ -398,6 +398,12 @@ export default function PublicPlayers() {
                     </div>
                   </div>
                 )}
+                {selectedPlayer.hometown && (
+                  <div>
+                    <Label>出身地</Label>
+                    <p>{selectedPlayer.hometown}</p>
+                  </div>
+                )}
                 {selectedPlayer.batting_hand && (
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -426,6 +432,31 @@ export default function PublicPlayers() {
                         <p>{selectedPlayer.weight}kg</p>
                       </div>
                     )}
+                  </div>
+                )}
+                {selectedPlayer.age && (
+                  <div>
+                    <Label>年齢</Label>
+                    <p>{selectedPlayer.age}歳</p>
+                  </div>
+                )}
+                {selectedPlayer.career_path && (
+                  <div>
+                    <Label>経歴</Label>
+                    <div className="space-y-1 mt-1 text-sm">
+                      {selectedPlayer.career_path.middle_school && (
+                        <p><span className="font-medium">中学:</span> {selectedPlayer.career_path.middle_school}</p>
+                      )}
+                      {selectedPlayer.career_path.high_school && (
+                        <p><span className="font-medium">高校:</span> {selectedPlayer.career_path.high_school}</p>
+                      )}
+                      {selectedPlayer.career_path.university && (
+                        <p><span className="font-medium">大学:</span> {selectedPlayer.career_path.university}</p>
+                      )}
+                      {selectedPlayer.career_path.corporate && (
+                        <p><span className="font-medium">社会人:</span> {selectedPlayer.career_path.corporate}</p>
+                      )}
+                    </div>
                   </div>
                 )}
                 {selectedPlayer.usage && (
