@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus, ThumbsUp, Upload, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { getPlayers, deletePlayer, addPlayer, updatePlayer, type Player } from "@/lib/supabase-storage";
+import { getPlayers, deletePlayer, addPlayer, updatePlayer, uploadPlayerToPublic, type Player } from "@/lib/supabase-storage";
 import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -95,6 +95,7 @@ export default function Players() {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddingSamplePlayers, setIsAddingSamplePlayers] = useState(false);
+  const [uploadingPlayerId, setUploadingPlayerId] = useState<number | null>(null);
 
   useEffect(() => {
     loadPlayers();
@@ -293,6 +294,48 @@ export default function Players() {
       });
     } finally {
       setIsAddingSamplePlayers(false);
+    }
+  };
+
+  const handleUploadToPublic = async (player: Player) => {
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "共通DBにアップロードするにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!player.id) {
+      toast({
+        title: "エラー",
+        description: "選手IDが見つかりません。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setUploadingPlayerId(player.id);
+    
+    try {
+      await uploadPlayerToPublic(player.id);
+      
+      toast({
+        title: "アップロードしました",
+        description: `${player.name}を共通DBに公開しました。`,
+      });
+      
+      await loadPlayers();
+    } catch (error: any) {
+      console.error('Failed to upload player:', error);
+      toast({
+        title: "エラー",
+        description: error.message || "アップロードに失敗しました。",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingPlayerId(null);
     }
   };
 
@@ -562,6 +605,12 @@ export default function Players() {
                       <Badge variant="secondary" className="text-xs">
                         {player.category}
                       </Badge>
+                      {(player as any).is_public && (
+                        <Badge className="bg-green-500 text-white text-xs">
+                          <CheckCircle2 className="h-3 w-3 mr-1" />
+                          公開中
+                        </Badge>
+                      )}
                       {player.id === 1 && (
                         <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
                           サンプル
@@ -578,19 +627,51 @@ export default function Players() {
                     </div>
                   </div>
                   {user && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleFavorite(player);
-                      }}
-                      className="flex-shrink-0"
-                    >
-                      <ThumbsUp 
-                        className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
-                      />
-                    </Button>
+                    <div className="flex gap-2 flex-shrink-0">
+                      {!(player as any).is_public && (
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={uploadingPlayerId === player.id}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <Upload className="h-4 w-4 mr-1" />
+                              {uploadingPlayerId === player.id ? "アップロード中..." : "共有"}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>共通DBにアップロード</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                「{player.name}」を共通データベースに公開しますか？
+                                <br />
+                                公開後は他のユーザーが閲覧・インポートできるようになります。
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleUploadToPublic(player)}>
+                                アップロード
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(player);
+                        }}
+                      >
+                        <ThumbsUp 
+                          className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
+                        />
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>
