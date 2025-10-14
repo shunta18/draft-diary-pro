@@ -173,9 +173,20 @@ const VirtualDraft = () => {
   const [isDevelopmentDraft, setIsDevelopmentDraft] = useState(false); // 育成ドラフトフラグ
   const [finishedTeams, setFinishedTeams] = useState<Set<number>>(new Set()); // 選択終了した球団
   const MAX_TOTAL_PICKS = 120; // 全体の上限
+  const [showSignupDialog, setShowSignupDialog] = useState(false);
 
   useEffect(() => {
     loadPlayers();
+  }, [user]);
+
+  useEffect(() => {
+    // ログインしていないユーザーの利用回数をチェック
+    if (!user) {
+      const usageCount = localStorage.getItem('virtualDraftUsageCount');
+      if (usageCount && parseInt(usageCount) >= 1) {
+        setShowSignupDialog(true);
+      }
+    }
   }, [user]);
 
   const loadPlayers = async () => {
@@ -334,6 +345,12 @@ const VirtualDraft = () => {
   };
 
   const executeLottery = () => {
+    // ログインしていないユーザーの利用回数を記録
+    if (!user) {
+      const currentCount = parseInt(localStorage.getItem('virtualDraftUsageCount') || '0');
+      localStorage.setItem('virtualDraftUsageCount', (currentCount + 1).toString());
+    }
+
     const selectionsToUse = currentRound === 1 ? selections : roundSelections;
     const playerCounts = new Map<number, number[]>();
     
@@ -581,6 +598,51 @@ const VirtualDraft = () => {
         description="プロ野球ドラフト会議のシミュレーション。12球団の1位指名を自分で決めて、被った場合は抽選を行います。ドラフト戦略の検討にご活用ください。"
         keywords={["仮想ドラフト", "ドラフト会議", "シミュレーション", "プロ野球", "指名", "抽選"]}
       />
+      <Navigation />
+
+      {/* アカウント登録促進ダイアログ */}
+      {showSignupDialog && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-primary" />
+                アカウント登録のお願い
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                ゲストモードでの仮想ドラフトは1回までとなっております。
+              </p>
+              <p className="text-sm text-muted-foreground">
+                アカウント登録（無料）すると、以下の機能が利用できるようになります：
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
+                <li>仮想ドラフトの回数制限なし</li>
+                <li>選手データの保存・管理</li>
+                <li>ドラフト結果の保存</li>
+                <li>自分の選手リストでシミュレーション</li>
+              </ul>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => navigate("/auth")}
+                  className="flex-1"
+                >
+                  アカウント登録（無料）
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                  className="flex-1"
+                >
+                  ホームに戻る
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <Navigation />
       
       <main className="container mx-auto px-4 py-8">
