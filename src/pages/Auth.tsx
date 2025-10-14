@@ -215,7 +215,7 @@ export default function Auth() {
                       minLength={2}
                       maxLength={50}
                     />
-                    <p className="text-xs text-muted-foreground">2〜50文字で入力してください</p>
+                    <p className="text-xs text-muted-foreground">2〜50文字で入力してください（ユーザーネームは公開されます）</p>
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">メールアドレス <span className="text-destructive">*</span></Label>

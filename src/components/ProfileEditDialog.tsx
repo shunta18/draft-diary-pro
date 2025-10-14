@@ -196,6 +196,7 @@ export const ProfileEditDialog = ({ profile, onProfileUpdate }: ProfileEditDialo
                   <FormControl>
                     <Input {...field} placeholder="ユーザー名を入力" />
                   </FormControl>
+                  <p className="text-xs text-muted-foreground">ユーザーネームは公開されます</p>
                   <FormMessage />
                 </FormItem>
               )}
