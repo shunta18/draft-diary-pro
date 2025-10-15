@@ -158,8 +158,8 @@ const VirtualDraft = () => {
   const [selections, setSelections] = useState<TeamSelection[]>(
     teams.map(team => ({ 
       teamId: team.id, 
-      playerId: team.id === 12 ? 2 : null, // 広島カープ(12)は立石選手(2)をデフォルト選択
-      playerName: team.id === 12 ? "立石 正広" : null
+      playerId: null,
+      playerName: null
     }))
   );
   const [currentRound, setCurrentRound] = useState(1);
@@ -178,6 +178,26 @@ const VirtualDraft = () => {
   useEffect(() => {
     loadPlayers();
   }, [user]);
+
+  // 広島のデフォルト選手を設定（選手リストロード後）
+  useEffect(() => {
+    if (players.length > 0 && selections.every(s => s.playerId === null)) {
+      // 選手リストに「立石」という名前の選手がいるかチェック
+      const tateishiPlayer = players.find(p => p.name.includes("立石"));
+      
+      if (tateishiPlayer) {
+        // 立石選手が見つかった場合、広島(teamId: 12)の選択として設定
+        setSelections(prev => 
+          prev.map(sel => 
+            sel.teamId === 12 
+              ? { teamId: 12, playerId: tateishiPlayer.id, playerName: tateishiPlayer.name }
+              : sel
+          )
+        );
+      }
+      // 見つからない場合は何もしない（nullのまま）
+    }
+  }, [players]);
 
   useEffect(() => {
     // ログインしていないユーザーの利用回数をチェック
