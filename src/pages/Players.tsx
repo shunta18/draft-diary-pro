@@ -271,10 +271,15 @@ export default function Players() {
       return;
     }
 
-    if (playerIds.length === 0) {
+    // インポートした選手を除外
+    const uploadablePlayers = players.filter(p => 
+      p.id && playerIds.includes(p.id) && !p.imported_from_public_player_id
+    );
+
+    if (uploadablePlayers.length === 0) {
       toast({
-        title: "選手が選択されていません",
-        description: "アップロードする選手を選択してください。",
+        title: "アップロード可能な選手がありません",
+        description: "インポートした選手はアップロードできません。",
         variant: "destructive",
       });
       return;
@@ -287,9 +292,9 @@ export default function Players() {
       let skipCount = 0;
       let errorCount = 0;
 
-      for (const playerId of playerIds) {
+      for (const player of uploadablePlayers) {
         try {
-          const result = await uploadPlayerToPublic(playerId);
+          const result = await uploadPlayerToPublic(player.id!);
           if (result.success) {
             successCount++;
           } else if (result.message?.includes("既に")) {
@@ -418,10 +423,10 @@ export default function Players() {
             </div>
             <div className="flex flex-col sm:flex-row gap-2">
               <Button
-                onClick={() => handleBulkUpload(filteredPlayers.map(p => p.id!).filter(id => id !== undefined))}
+                onClick={() => handleBulkUpload(filteredPlayers.filter(p => !p.imported_from_public_player_id).map(p => p.id!).filter(id => id !== undefined))}
                 variant="default"
                 size="sm"
-                disabled={isUploadingBulk}
+                disabled={isUploadingBulk || filteredPlayers.filter(p => !p.imported_from_public_player_id).length === 0}
                 className="gap-2 w-full sm:w-auto"
               >
                 <Upload className="h-4 w-4" />
@@ -432,7 +437,7 @@ export default function Players() {
                   onClick={() => handleBulkUpload(selectedPlayerIds)}
                   variant="secondary"
                   size="sm"
-                  disabled={isUploadingBulk}
+                  disabled={isUploadingBulk || players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length === 0}
                   className="gap-2 w-full sm:w-auto"
                 >
                   <Upload className="h-4 w-4" />
