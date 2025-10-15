@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -331,6 +331,57 @@ export default function Players() {
     }
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedPlayerIds.length === 0) {
+      toast({
+        title: "選手が選択されていません",
+        description: "削除する選手を選択してください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const playerId of selectedPlayerIds) {
+        try {
+          const success = await deletePlayer(playerId);
+          if (success) {
+            successCount++;
+          } else {
+            errorCount++;
+          }
+        } catch (error) {
+          errorCount++;
+        }
+      }
+
+      if (successCount > 0) {
+        toast({
+          title: "一括削除完了",
+          description: `${successCount}名の選手を削除しました${errorCount > 0 ? `（${errorCount}名は失敗）` : ''}`,
+        });
+        await loadPlayers();
+        setSelectedPlayerIds([]);
+      } else {
+        toast({
+          title: "削除に失敗しました",
+          description: "選手の削除中にエラーが発生しました。",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Failed to delete players:', error);
+      toast({
+        title: "エラー",
+        description: "選手の削除中にエラーが発生しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSelectAll = () => {
     if (selectedPlayerIds.length === filteredPlayers.length) {
       setSelectedPlayerIds([]);
@@ -433,16 +484,46 @@ export default function Players() {
                 {isUploadingBulk ? "アップロード中..." : "すべてアップロード"}
               </Button>
               {selectedPlayerIds.length > 0 && (
-                <Button
-                  onClick={() => handleBulkUpload(selectedPlayerIds)}
-                  variant="secondary"
-                  size="sm"
-                  disabled={isUploadingBulk || players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length === 0}
-                  className="gap-2 w-full sm:w-auto"
-                >
-                  <Upload className="h-4 w-4" />
-                  {isUploadingBulk ? "アップロード中..." : `選択した${selectedPlayerIds.length}名をアップロード`}
-                </Button>
+                <>
+                  <Button
+                    onClick={() => handleBulkUpload(selectedPlayerIds)}
+                    variant="secondary"
+                    size="sm"
+                    disabled={isUploadingBulk || players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length === 0}
+                    className="gap-2 w-full sm:w-auto"
+                  >
+                    <Upload className="h-4 w-4" />
+                    {isUploadingBulk ? "アップロード中..." : `選択した${selectedPlayerIds.length}名をアップロード`}
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="gap-2 w-full sm:w-auto"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        選択した{selectedPlayerIds.length}名を削除
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>選手を一括削除</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          選択した{selectedPlayerIds.length}名の選手を削除しますか？
+                          <br />
+                          この操作は取り消せません。
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                          削除
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
               )}
             </div>
           </div>
