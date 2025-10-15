@@ -796,11 +796,11 @@ const VirtualDraft = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead>球団</TableHead>
-                    <TableHead>1位</TableHead>
-                    <TableHead>2位</TableHead>
-                    <TableHead>3位</TableHead>
-                    <TableHead>4位</TableHead>
-                    <TableHead>5位</TableHead>
+                    {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
+                      <TableHead key={round}>
+                        {isDevelopmentDraft ? `育成${round}位` : `${round}位`}
+                      </TableHead>
+                    ))}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -808,6 +808,9 @@ const VirtualDraft = () => {
                     const team = teams.find(t => t.id === teamId);
                     if (!team) return null;
                     const picks = getTeamPicks(team.id);
+                    const devPicks = picks.filter(p => p.isDevelopment);
+                    const regularPicks = picks.filter(p => !p.isDevelopment);
+                    const displayPicks = isDevelopmentDraft ? devPicks : regularPicks;
                     const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
                     return (
                       <TableRow key={team.id} className={isCurrentPicking ? "bg-primary/10" : ""}>
@@ -815,8 +818,8 @@ const VirtualDraft = () => {
                           {team.shortName}
                           {isCurrentPicking && <Badge className="ml-2" variant="default">指名中</Badge>}
                         </TableCell>
-                        {[1, 2, 3, 4, 5].map(round => {
-                          const pick = picks.find(p => p.round === round);
+                        {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
+                          const pick = displayPicks.find(p => p.round === round);
                           return (
                             <TableCell key={round}>
                               {pick ? pick.playerName : "―"}
