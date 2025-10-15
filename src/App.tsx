@@ -41,6 +41,7 @@ const AppContent = () => {
           <Route path="/players/new" element={<PlayerForm />} />
           <Route path="/players/:id/edit" element={<PlayerForm />} />
           <Route path="/public-players" element={<PublicPlayers />} />
+          <Route path="/public-players/:id/edit" element={<PlayerForm />} />
           <Route path="/public-players/users" element={<PublicPlayersUsers />} />
           <Route path="/public-players/users/:userId" element={<UserPublicPlayers />} />
           <Route path="/draft" element={<Draft />} />

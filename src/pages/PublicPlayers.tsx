@@ -536,7 +536,7 @@ export default function PublicPlayers() {
                       variant="outline" 
                       onClick={() => {
                         setSelectedPlayer(null);
-                        navigate(`/players/${selectedPlayer.original_player_id}`);
+                        navigate(`/public-players/${selectedPlayer.id}/edit`);
                       }}
                       className="flex-1"
                     >
