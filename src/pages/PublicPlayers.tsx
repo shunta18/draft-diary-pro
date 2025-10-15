@@ -77,7 +77,7 @@ const teamColors: { [key: string]: string } = {
 
 export default function PublicPlayers() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedYear, setSelectedYear] = useState("all");
@@ -530,13 +530,13 @@ export default function PublicPlayers() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                {user && user.id === selectedPlayer.user_id ? (
+                {user && (user.id === selectedPlayer.user_id || isAdmin) ? (
                   <>
                     <Button 
                       variant="outline" 
                       onClick={() => {
                         setSelectedPlayer(null);
-                        navigate(`/players/${selectedPlayer.original_player_id}`);
+                        navigate(`/public-players/${selectedPlayer.id}/edit`);
                       }}
                       className="flex-1"
                     >

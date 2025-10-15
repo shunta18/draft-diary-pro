@@ -27,6 +27,7 @@ export interface Player {
   usage?: string;
   videos?: string[];
   is_favorite?: boolean;
+  imported_from_public_player_id?: string;
 }
 
 export interface DiaryEntry {
@@ -577,6 +578,11 @@ export const uploadPlayerToPublic = async (playerId: number): Promise<{ success:
     const player = await getPlayerById(playerId);
     if (!player) return { success: false, message: 'Player not found' };
 
+    // インポートした選手かチェック
+    if (player.imported_from_public_player_id) {
+      return { success: false, message: 'インポートした選手はアップロードできません' };
+    }
+
     // 既にアップロード済みかチェック（original_player_idとuser_idで）
     const { data: existing } = await supabase
       .from('public_players')
@@ -674,6 +680,7 @@ export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Pl
         usage: publicPlayer.usage,
         videos: publicPlayer.videos,
         main_position: publicPlayer.main_position,
+        imported_from_public_player_id: publicPlayerId,
       }])
       .select()
       .single();

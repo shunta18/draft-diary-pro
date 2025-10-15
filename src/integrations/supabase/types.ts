@@ -169,6 +169,7 @@ export type Database = {
           height: number | null
           hometown: string | null
           id: number
+          imported_from_public_player_id: string | null
           is_favorite: boolean
           main_position: string | null
           memo: string | null
@@ -194,6 +195,7 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: number
+          imported_from_public_player_id?: string | null
           is_favorite?: boolean
           main_position?: string | null
           memo?: string | null
@@ -219,6 +221,7 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: number
+          imported_from_public_player_id?: string | null
           is_favorite?: boolean
           main_position?: string | null
           memo?: string | null
@@ -234,7 +237,15 @@ export type Database = {
           weight?: number | null
           year?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "players_imported_from_public_player_id_fkey"
+            columns: ["imported_from_public_player_id"]
+            isOneToOne: false
+            referencedRelation: "public_players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

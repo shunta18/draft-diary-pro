@@ -7,8 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Link, useParams, useNavigate } from "react-router-dom";
-import { addPlayer, updatePlayer, getPlayerById } from "@/lib/supabase-storage";
+import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
+import { addPlayer, updatePlayer, getPlayerById, getPublicPlayerById, updatePublicPlayer } from "@/lib/supabase-storage";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigation } from "@/components/Navigation";
@@ -49,8 +49,10 @@ const teams = [
 export default function PlayerForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const { user, loading } = useAuth();
+  const isPublicPlayer = location.pathname.startsWith('/public-players/');
   const isEditing = !!id;
 
   // All useState hooks must be declared before any early returns
@@ -91,39 +93,73 @@ export default function PlayerForm() {
   useEffect(() => {
     if (isEditing && id) {
       const loadPlayer = async () => {
-        const player = await getPlayerById(parseInt(id));
-        if (player) {
-          const careerPath = player.career_path && typeof player.career_path === 'object' 
-            ? player.career_path as { middle_school?: string; high_school?: string; university?: string; corporate?: string }
-            : { middle_school: "", high_school: "", university: "", corporate: "" };
-          
-          setFormData({
-            name: player.name,
-            draftYear: player.year?.toString() || "2025",
-            category: player.category,
-            team: player.team,
-            positions: sortPositions(Array.isArray(player.position) ? player.position : player.position.split(/[,、]/).map(p => p.trim()).filter(p => p)),
-            mainPosition: player.main_position || "",
-            battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
-            hometown: player.hometown || "",
-            age: player.age,
-            careerPath: {
-              middle_school: careerPath.middle_school || "",
-              high_school: careerPath.high_school || "",
-              university: careerPath.university || "",
-              corporate: careerPath.corporate || "",
-            },
-            usage: player.usage || "",
-            evaluations: player.evaluations || [],
-            recommended_teams: player.recommended_teams || [],
-            memo: player.memo || "",
-            videos: player.videos || [],
-          });
+        if (isPublicPlayer) {
+          // 公開選手を読み込み
+          const player = await getPublicPlayerById(id);
+          if (player) {
+            const careerPath = player.career_path && typeof player.career_path === 'object' 
+              ? player.career_path as { middle_school?: string; high_school?: string; university?: string; corporate?: string }
+              : { middle_school: "", high_school: "", university: "", corporate: "" };
+            
+            setFormData({
+              name: player.name,
+              draftYear: player.year?.toString() || "2025",
+              category: player.category,
+              team: player.team,
+              positions: sortPositions(Array.isArray(player.position) ? player.position : player.position.split(/[,、]/).map(p => p.trim()).filter(p => p)),
+              mainPosition: player.main_position || "",
+              battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
+              hometown: player.hometown || "",
+              age: player.age,
+              careerPath: {
+                middle_school: careerPath.middle_school || "",
+                high_school: careerPath.high_school || "",
+                university: careerPath.university || "",
+                corporate: careerPath.corporate || "",
+              },
+              usage: player.usage || "",
+              evaluations: player.evaluations || [],
+              recommended_teams: player.recommended_teams || [],
+              memo: player.memo || "",
+              videos: player.videos || [],
+            });
+          }
+        } else {
+          // プライベート選手を読み込み
+          const player = await getPlayerById(parseInt(id));
+          if (player) {
+            const careerPath = player.career_path && typeof player.career_path === 'object' 
+              ? player.career_path as { middle_school?: string; high_school?: string; university?: string; corporate?: string }
+              : { middle_school: "", high_school: "", university: "", corporate: "" };
+            
+            setFormData({
+              name: player.name,
+              draftYear: player.year?.toString() || "2025",
+              category: player.category,
+              team: player.team,
+              positions: sortPositions(Array.isArray(player.position) ? player.position : player.position.split(/[,、]/).map(p => p.trim()).filter(p => p)),
+              mainPosition: player.main_position || "",
+              battingThrowing: `${player.throwing_hand || ""}投${player.batting_hand || ""}打`,
+              hometown: player.hometown || "",
+              age: player.age,
+              careerPath: {
+                middle_school: careerPath.middle_school || "",
+                high_school: careerPath.high_school || "",
+                university: careerPath.university || "",
+                corporate: careerPath.corporate || "",
+              },
+              usage: player.usage || "",
+              evaluations: player.evaluations || [],
+              recommended_teams: player.recommended_teams || [],
+              memo: player.memo || "",
+              videos: player.videos || [],
+            });
+          }
         }
       };
       loadPlayer();
     }
-  }, [isEditing, id]);
+  }, [isEditing, id, isPublicPlayer]);
 
   // 認証状態を確認中はローディング表示
   if (loading) {
@@ -250,25 +286,51 @@ export default function PlayerForm() {
 
       if (isEditing && id) {
         console.log(`Updating player ID: ${id}`);
-        const result = await updatePlayer(parseInt(id), playerData);
-        console.log("Update result:", result ? "success" : "failed");
         
-        if (result) {
-          toast({
-            title: "選手情報を更新しました",
-            description: `${formData.name}の情報が正常に更新されました。`,
-          });
+        if (isPublicPlayer) {
+          // 公開選手を更新
+          const result = await updatePublicPlayer(id, playerData);
+          console.log("Update public player result:", result ? "success" : "failed");
           
-          // メモリリークを防止: URL.createObjectURLで作成したURLを解放
-          createdUrls.forEach(url => URL.revokeObjectURL(url));
-          
-          // ナビゲーション前に少し遅延を入れる（Android端末での問題対策）
-          console.log("Preparing to navigate...");
-          await new Promise(resolve => setTimeout(resolve, 100));
-          console.log("Navigating to /players");
-          navigate("/players");
+          if (result) {
+            toast({
+              title: "選手情報を更新しました",
+              description: `${formData.name}の情報が正常に更新されました。`,
+            });
+            
+            // メモリリークを防止: URL.createObjectURLで作成したURLを解放
+            createdUrls.forEach(url => URL.revokeObjectURL(url));
+            
+            // ナビゲーション前に少し遅延を入れる（Android端末での問題対策）
+            console.log("Preparing to navigate...");
+            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log("Navigating to /public-players");
+            navigate("/public-players");
+          } else {
+            throw new Error("Failed to update public player");
+          }
         } else {
-          throw new Error("Failed to update player");
+          // プライベート選手を更新
+          const result = await updatePlayer(parseInt(id), playerData);
+          console.log("Update result:", result ? "success" : "failed");
+          
+          if (result) {
+            toast({
+              title: "選手情報を更新しました",
+              description: `${formData.name}の情報が正常に更新されました。`,
+            });
+            
+            // メモリリークを防止: URL.createObjectURLで作成したURLを解放
+            createdUrls.forEach(url => URL.revokeObjectURL(url));
+            
+            // ナビゲーション前に少し遅延を入れる（Android端末での問題対策）
+            console.log("Preparing to navigate...");
+            await new Promise(resolve => setTimeout(resolve, 100));
+            console.log("Navigating to /players");
+            navigate("/players");
+          } else {
+            throw new Error("Failed to update player");
+          }
         }
       } else {
         console.log("Adding new player");
