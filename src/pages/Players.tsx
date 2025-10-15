@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, UserPlus, ThumbsUp, Upload, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,7 +94,6 @@ export default function Players() {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAddingSamplePlayers, setIsAddingSamplePlayers] = useState(false);
   const [uploadingPlayerId, setUploadingPlayerId] = useState<number | null>(null);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [isUploadingBulk, setIsUploadingBulk] = useState(false);
@@ -180,7 +179,6 @@ export default function Players() {
     setSelectedYear(user ? "2025" : "all");
   }, [user]);
 
-  // サンプル選手を追加する関数
   const toggleFavorite = async (player: Player) => {
     if (!user) {
       toast({
@@ -211,91 +209,6 @@ export default function Players() {
         description: "イチオシの更新に失敗しました。",
         variant: "destructive",
       });
-    }
-  };
-
-  const handleAddSamplePlayers = async () => {
-    if (!user) {
-      toast({
-        title: "ログインが必要です",
-        description: "サンプル選手を追加するにはログインしてください。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsAddingSamplePlayers(true);
-    
-    try {
-      const samplePlayers = [
-        { name: '立石 正広', team: '創価大学', position: '三塁手', category: '大学', evaluations: ['1位競合'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '松下 歩叶', team: '法政大学', position: '二塁手', category: '大学', evaluations: ['1位一本釣り', '外れ1位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '毛利 海大', team: '明治大学', position: '投手', category: '大学', evaluations: ['外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '左打', throwing_hand: '左投', hometown: '', age: null, usage: '先発', memo: '', videos: [] },
-        { name: '増居 翔太', team: 'トヨタ', position: '投手', category: '社会人', evaluations: ['1位一本釣り', '外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '左打', throwing_hand: '左投', hometown: '', age: null, usage: '先発', memo: '', videos: [] },
-        { name: '竹丸 和幸', team: '鷺宮製作所', position: '投手', category: '社会人', evaluations: ['1位一本釣り', '外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '左打', throwing_hand: '左投', hometown: '', age: null, usage: '先発', memo: '', videos: [] },
-        { name: '谷端 将伍', team: '日本大学', position: '二塁手', category: '大学', evaluations: ['1位一本釣り', '外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '中西 聖輝', team: '青山学院大', position: '投手', category: '大学', evaluations: ['1位一本釣り', '外れ1位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '先発', memo: '', videos: [] },
-        { name: '櫻井 頼之介', team: '東北福祉大', position: '投手', category: '大学', evaluations: ['2位', '3位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '藤原 聡大', team: '花園大学', position: '投手', category: '大学', evaluations: ['2位', '3位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '櫻井 ユウヤ', team: '昌平高校', position: '三塁手', category: '高校', evaluations: ['外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '石垣 元気', team: '健大高崎', position: '投手', category: '高校', evaluations: ['1位一本釣り'], recommended_teams: [], year: 2025, batting_hand: '左打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '小島 大河', team: '明治大学', position: '捕手', category: '大学', evaluations: ['1位一本釣り', '外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '左打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: 'エドポロ ケイン', team: '大阪学院大学', position: '外野手', category: '大学', evaluations: ['2位', '3位', '4位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '堀越 啓太', team: '東北福祉大', position: '投手', category: '大学', evaluations: ['2位', '3位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '伊藤 樹', team: '早稲田大学', position: '投手', category: '大学', evaluations: ['2位', '3位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '齊藤 汰直', team: '亜細亜大学', position: '投手', category: '大学', evaluations: ['1位一本釣り', '外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '山城 京平', team: '亜細亜大学', position: '投手', category: '大学', evaluations: ['外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '大塚 瑠晏', team: '東海大学', position: '遊撃手', category: '大学', evaluations: ['1位一本釣り', '外れ1位', '2位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '秋山 俊', team: '中京大学', position: '外野手', category: '大学', evaluations: ['2位', '3位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '森 陽樹', team: '大阪桐蔭高校', position: '投手', category: '高校', evaluations: ['3位', '4位', '5位', '6位以下', '育成'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '藤井 健翔', team: '浦和学院', position: '外野手', category: '高校', evaluations: ['3位', '4位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '谷脇 弘起', team: '日本生命', position: '投手', category: '社会人', evaluations: ['2位', '外れ1位', '3位'], recommended_teams: [], year: 2025, batting_hand: '右打', throwing_hand: '右投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '髙橋 隆慶', team: 'JR東日本', position: '三塁手', category: '社会人', evaluations: ['2位', '3位'], recommended_teams: [], year: 2025, batting_hand: '左打', throwing_hand: '左投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-        { name: '冨重 英二郎', team: '神奈川FD', position: '投手', category: '社会人', evaluations: ['2位', '4位', '3位'], recommended_teams: [], year: 2025, batting_hand: '左打', throwing_hand: '左投', hometown: '', age: null, usage: '', memo: '', videos: [] },
-      ];
-
-      // 既存の選手名を取得
-      const existingPlayerNames = new Set(players.map(p => p.name));
-      
-      // 重複していない選手のみをフィルタリング
-      const playersToAdd = samplePlayers.filter(p => !existingPlayerNames.has(p.name));
-      
-      if (playersToAdd.length === 0) {
-        toast({
-          title: "候補は既に追加済みです",
-          description: "すべてのサンプル選手が既に存在しています。",
-        });
-        setIsAddingSamplePlayers(false);
-        return;
-      }
-
-      // 選手を追加
-      let addedCount = 0;
-      for (const playerData of playersToAdd) {
-        const result = await addPlayer(playerData);
-        if (result) {
-          addedCount++;
-        }
-      }
-
-      if (addedCount > 0) {
-        toast({
-          title: "候補を追加しました",
-          description: `${addedCount}名の選手を追加しました。`,
-        });
-        
-        // リストを更新
-        await loadPlayers();
-      }
-    } catch (error) {
-      console.error('Failed to add sample players:', error);
-      toast({
-        title: "エラー",
-        description: "候補の追加に失敗しました。",
-        variant: "destructive",
-      });
-    } finally {
-      setIsAddingSamplePlayers(false);
     }
   };
 
@@ -475,18 +388,6 @@ export default function Players() {
           </div>
           
           <div className="flex items-center gap-2 flex-wrap">
-            {user && (
-              <Button 
-                variant="outline"
-                onClick={handleAddSamplePlayers}
-                disabled={isAddingSamplePlayers}
-                className="shadow-soft flex-1 sm:flex-none h-10"
-              >
-                <UserPlus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">候補を追加</span>
-                <span className="sm:hidden">候補追加</span>
-              </Button>
-            )}
             <Link to="/players/new" className="flex-1 sm:flex-none">
               <Button 
                 variant="secondary"
