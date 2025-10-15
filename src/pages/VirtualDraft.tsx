@@ -791,13 +791,13 @@ const VirtualDraft = () => {
                 <Badge variant="secondary">{getActualPickCount()} / {MAX_TOTAL_PICKS}名</Badge>
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>球団</TableHead>
+                    <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10">球団</TableHead>
                     {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
-                      <TableHead key={round}>
+                      <TableHead key={round} className="whitespace-nowrap">
                         {isDevelopmentDraft ? `育成${round}位` : `${round}位`}
                       </TableHead>
                     ))}
@@ -814,14 +814,14 @@ const VirtualDraft = () => {
                     const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
                     return (
                       <TableRow key={team.id} className={isCurrentPicking ? "bg-primary/10" : ""}>
-                        <TableCell className="font-medium">
+                        <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10">
                           {team.shortName}
                           {isCurrentPicking && <Badge className="ml-2" variant="default">指名中</Badge>}
                         </TableCell>
                         {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
                           const pick = displayPicks.find(p => p.round === round);
                           return (
-                            <TableCell key={round}>
+                            <TableCell key={round} className="whitespace-nowrap">
                               {pick ? pick.playerName : "―"}
                             </TableCell>
                           );
