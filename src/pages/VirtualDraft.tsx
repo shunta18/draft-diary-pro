@@ -786,7 +786,11 @@ const VirtualDraft = () => {
                 <span>各球団の指名状況</span>
                 <div className="flex items-center gap-2 flex-wrap">
                   <Badge variant="outline" className="whitespace-nowrap">
-                    {isDevelopmentDraft ? '育成選手選択会議' : `${currentRound - 1}位指名`}
+                    {isDevelopmentDraft 
+                      ? '育成選手選択会議' 
+                      : currentRound === 1 
+                        ? '1位指名前' 
+                        : `${currentRound}位指名`}
                     {currentRound > 1 && !isDevelopmentDraft && getCurrentPickingTeam() ? `（${teams.find(t => t.id === getCurrentPickingTeam())?.shortName}）` : ''}
                   </Badge>
                   <Badge variant="secondary" className="whitespace-nowrap">
@@ -824,9 +828,10 @@ const VirtualDraft = () => {
                         </TableCell>
                         {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
                           const pick = displayPicks.find(p => p.round === round);
+                          const isFinished = finishedTeams.has(team.id);
                           return (
                             <TableCell key={round} className="whitespace-nowrap">
-                              {pick ? pick.playerName : "―"}
+                              {pick ? pick.playerName : isFinished ? "選択終了" : "―"}
                             </TableCell>
                           );
                         })}
