@@ -829,9 +829,18 @@ const VirtualDraft = () => {
                         {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
                           const pick = displayPicks.find(p => p.round === round);
                           const isFinished = finishedTeams.has(team.id);
+                          // 最後のピックのラウンドを特定
+                          const lastPickRound = displayPicks.length > 0 
+                            ? Math.max(...displayPicks.map(p => p.round))
+                            : 0;
+                          
                           return (
                             <TableCell key={round} className="whitespace-nowrap">
-                              {pick ? pick.playerName : isFinished ? "選択終了" : "―"}
+                              {pick 
+                                ? pick.playerName 
+                                : isFinished && round === lastPickRound + 1
+                                  ? "選択終了"
+                                  : "―"}
                             </TableCell>
                           );
                         })}
