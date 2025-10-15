@@ -804,9 +804,14 @@ const VirtualDraft = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10">球団</TableHead>
-                    {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
-                      <TableHead key={round} className="whitespace-nowrap">
-                        {isDevelopmentDraft ? `育成${round}位` : `${round}位`}
+                    {Array.from({ length: 7 }, (_, i) => i + 1).map(round => (
+                      <TableHead key={`regular-${round}`} className="whitespace-nowrap">
+                        {round}位
+                      </TableHead>
+                    ))}
+                    {isDevelopmentDraft && Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
+                      <TableHead key={`dev-${round}`} className="whitespace-nowrap">
+                        育成{round}位
                       </TableHead>
                     ))}
                   </TableRow>
@@ -818,7 +823,6 @@ const VirtualDraft = () => {
                     const picks = getTeamPicks(team.id);
                     const devPicks = picks.filter(p => p.isDevelopment);
                     const regularPicks = picks.filter(p => !p.isDevelopment);
-                    const displayPicks = isDevelopmentDraft ? devPicks : regularPicks;
                     const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
                     return (
                       <TableRow key={team.id} className={isCurrentPicking ? "bg-primary/10" : ""}>
@@ -826,21 +830,45 @@ const VirtualDraft = () => {
                           {team.shortName}
                           {isCurrentPicking && <Badge className="ml-2" variant="default">指名中</Badge>}
                         </TableCell>
-                        {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
-                          const pick = displayPicks.find(p => p.round === round);
+                        {/* 通常指名の7位まで */}
+                        {Array.from({ length: 7 }, (_, i) => i + 1).map(round => {
+                          const pick = regularPicks.find(p => p.round === round);
                           const isFinished = finishedTeams.has(team.id);
-                          // 最後のピックのラウンドを特定
-                          const lastPickRound = displayPicks.length > 0 
-                            ? Math.max(...displayPicks.map(p => p.round))
+                          const lastPickRound = regularPicks.length > 0 
+                            ? Math.max(...regularPicks.map(p => p.round))
                             : 0;
+                          const isCurrentRoundPicking = !isDevelopmentDraft && round === currentRound && isCurrentPicking;
                           
                           return (
-                            <TableCell key={round} className="whitespace-nowrap">
+                            <TableCell key={`regular-${round}`} className="whitespace-nowrap">
                               {pick 
                                 ? pick.playerName 
                                 : isFinished && round === lastPickRound + 1
                                   ? "選択終了"
-                                  : "―"}
+                                  : isCurrentRoundPicking
+                                    ? ""
+                                    : "―"}
+                            </TableCell>
+                          );
+                        })}
+                        {/* 育成指名 */}
+                        {isDevelopmentDraft && Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
+                          const pick = devPicks.find(p => p.round === round);
+                          const isFinished = finishedTeams.has(team.id);
+                          const lastPickRound = devPicks.length > 0 
+                            ? Math.max(...devPicks.map(p => p.round))
+                            : 0;
+                          const isCurrentRoundPicking = isDevelopmentDraft && round === currentRound && isCurrentPicking;
+                          
+                          return (
+                            <TableCell key={`dev-${round}`} className="whitespace-nowrap">
+                              {pick 
+                                ? pick.playerName 
+                                : isFinished && round === lastPickRound + 1
+                                  ? "選択終了"
+                                  : isCurrentRoundPicking
+                                    ? ""
+                                    : "―"}
                             </TableCell>
                           );
                         })}
