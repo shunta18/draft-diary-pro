@@ -257,15 +257,17 @@ export default function PublicPlayers() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="all">すべて</SelectItem>
+                            <SelectItem value="2028">2028年</SelectItem>
+                            <SelectItem value="2027">2027年</SelectItem>
+                            <SelectItem value="2026">2026年</SelectItem>
                             <SelectItem value="2025">2025年</SelectItem>
-                            <SelectItem value="2024">2024年</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label>カテゴリ</Label>
-                        {["高校", "大学", "社会人"].map((category) => (
+                        {["高校", "大学", "社会人", "独立リーグ"].map((category) => (
                           <div key={category} className="flex items-center space-x-2">
                             <Checkbox
                               id={`category-${category}`}

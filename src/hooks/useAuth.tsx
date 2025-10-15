@@ -131,14 +131,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(`アカウント削除に失敗しました: ${error.message}`);
       }
       
-      // Clear local storage data
-      localStorage.removeItem('baseball_scout_players');
-      localStorage.removeItem('baseball_scout_diary');
-      localStorage.removeItem('draftData');
-      
-      // Clear local state
-      setSession(null);
-      setUser(null);
+      // アカウント削除後に自動ログアウト
+      await signOut();
       
       console.log('Account successfully deleted');
     } catch (error: any) {
