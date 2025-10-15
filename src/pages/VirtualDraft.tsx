@@ -782,13 +782,17 @@ const VirtualDraft = () => {
         {allDraftPicks.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                各球団の指名状況
-                <Badge variant="outline">
-                  {isDevelopmentDraft ? '育成選手選択会議' : `${currentRound}位指名`}
-                  {currentRound > 1 && !isDevelopmentDraft ? `（${teams.find(t => t.id === getCurrentPickingTeam())?.shortName || ''}指名中）` : ''}
-                </Badge>
-                <Badge variant="secondary">{getActualPickCount()} / {MAX_TOTAL_PICKS}名</Badge>
+              <CardTitle className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <span>各球団の指名状況</span>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge variant="outline" className="whitespace-nowrap">
+                    {isDevelopmentDraft ? '育成選手選択会議' : `${currentRound - 1}位指名`}
+                    {currentRound > 1 && !isDevelopmentDraft && getCurrentPickingTeam() ? `（${teams.find(t => t.id === getCurrentPickingTeam())?.shortName}）` : ''}
+                  </Badge>
+                  <Badge variant="secondary" className="whitespace-nowrap">
+                    {getActualPickCount()} / {MAX_TOTAL_PICKS}名
+                  </Badge>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
