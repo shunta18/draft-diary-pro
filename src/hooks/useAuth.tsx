@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
+import { updateLastActive } from '@/lib/supabase-storage';
 
 interface AuthContextType {
   user: User | null;
@@ -29,10 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Check admin status
+        // Check admin status and update last active time
         if (session?.user) {
           setTimeout(() => {
             checkAdminStatus(session.user.id);
+            // Update last active time when user is authenticated (login or token refresh)
+            updateLastActive();
           }, 0);
         } else {
           setIsAdmin(false);
