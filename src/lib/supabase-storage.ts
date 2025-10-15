@@ -54,6 +54,7 @@ export interface Profile {
   avatar_url?: string;
   bio?: string;
   social_links?: SocialLink[];
+  last_active_at?: string;
 }
 
 export interface PublicPlayer {
@@ -888,6 +889,28 @@ export const getUserProfileById = async (userId: string): Promise<Profile | null
     return null;
   }
 };
+
+// ============= Last Active Tracking =============
+
+export async function updateLastActive() {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return { success: false, error: 'User not authenticated' };
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ last_active_at: new Date().toISOString() })
+    .eq('user_id', user.id);
+
+  if (error) {
+    console.error('Error updating last active:', error);
+    return { success: false, error };
+  }
+
+  return { success: true };
+}
 
 // Follow/Unfollow functions
 export const followUser = async (followingId: string): Promise<void> => {
