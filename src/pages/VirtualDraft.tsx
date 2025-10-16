@@ -10,10 +10,11 @@ import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getDefaultPlayers, Player as LocalPlayer } from "@/lib/playerStorage";
-import { Shuffle, Trophy, AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { Shuffle, Trophy, AlertCircle, CheckCircle2, Clock, Download, Maximize2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Footer } from "@/components/Footer";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -53,18 +54,18 @@ interface NormalizedPlayer {
 type PlayerData = NormalizedPlayer;
 
 const teams = [
-  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800" },
-  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900" },
-  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武", color: "from-blue-500 to-blue-700" },
-  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ", color: "from-gray-800 to-black" },
-  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス", color: "from-blue-600 to-gray-800" },
-  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク", color: "from-yellow-500 to-yellow-700" },
-  { id: 7, name: "読売ジャイアンツ", shortName: "巨人", color: "from-orange-500 to-orange-700" },
-  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト", color: "from-green-600 to-green-800" },
-  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA", color: "from-blue-500 to-blue-700" },
-  { id: 10, name: "中日ドラゴンズ", shortName: "中日", color: "from-blue-700 to-blue-900" },
-  { id: 11, name: "阪神タイガース", shortName: "阪神", color: "from-yellow-500 to-yellow-700" },
-  { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800" },
+  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800", colors: { primary: "220 100% 50%", secondary: "0 0% 100%" } },
+  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900", colors: { primary: "350 70% 35%", secondary: "0 0% 100%" } },
+  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武", color: "from-blue-500 to-blue-700", colors: { primary: "220 100% 50%", secondary: "220 100% 30%" } },
+  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ", color: "from-gray-800 to-black", colors: { primary: "0 0% 0%", secondary: "0 0% 100%" } },
+  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス", color: "from-blue-600 to-gray-800", colors: { primary: "220 100% 20%", secondary: "45 100% 50%" } },
+  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク", color: "from-yellow-500 to-yellow-700", colors: { primary: "45 100% 50%", secondary: "0 0% 0%" } },
+  { id: 7, name: "読売ジャイアンツ", shortName: "巨人", color: "from-orange-500 to-orange-700", colors: { primary: "16 85% 50%", secondary: "0 0% 0%" } },
+  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト", color: "from-green-600 to-green-800", colors: { primary: "220 100% 50%", secondary: "0 0% 10%" } },
+  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA", color: "from-blue-500 to-blue-700", colors: { primary: "220 100% 50%", secondary: "0 0% 100%" } },
+  { id: 10, name: "中日ドラゴンズ", shortName: "中日", color: "from-blue-700 to-blue-900", colors: { primary: "220 100% 50%", secondary: "220 100% 50%" } },
+  { id: 11, name: "阪神タイガース", shortName: "阪神", color: "from-yellow-500 to-yellow-700", colors: { primary: "45 100% 50%", secondary: "0 0% 0%" } },
+  { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800", colors: { primary: "0 85% 55%", secondary: "0 85% 55%" } },
 ];
 
 // ウェーバー方式の指名順（2位以降）
@@ -176,6 +177,7 @@ const VirtualDraft = () => {
   const [finishedTeams, setFinishedTeams] = useState<Set<number>>(new Set()); // 選択終了した球団
   const MAX_TOTAL_PICKS = 120; // 全体の上限
   const [showSignupDialog, setShowSignupDialog] = useState(false);
+  const [isFullscreenView, setIsFullscreenView] = useState(false); // 全画面表示用
 
   useEffect(() => {
     loadPlayers();
@@ -823,7 +825,19 @@ const VirtualDraft = () => {
                   </TabsList>
                   
                   {/* 全体タブ：テーブル表示（縦横反転、抽選は複数行） */}
-                  <TabsContent value="overall" className="overflow-x-auto">
+                  <TabsContent value="overall" className="space-y-4">
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={() => setIsFullscreenView(true)}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <Maximize2 className="h-4 w-4" />
+                        📸 全画面で表示（スクショ用）
+                      </Button>
+                    </div>
+                    <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -832,7 +846,10 @@ const VirtualDraft = () => {
                             const team = teams.find(t => t.id === teamId);
                             if (!team) return null;
                             return (
-                              <TableHead key={team.id} className="whitespace-nowrap text-center text-xs font-bold border-r">
+                              <TableHead 
+                                key={team.id} 
+                                className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white`}
+                              >
                                 {team.shortName}
                               </TableHead>
                             );
@@ -1061,6 +1078,7 @@ const VirtualDraft = () => {
                         })()}
                       </TableBody>
                     </Table>
+                    </div>
                   </TabsContent>
                   
                   {/* 球団ごとタブ：カード表示 */}
@@ -1123,13 +1141,16 @@ const VirtualDraft = () => {
                   return (
                     <Card 
                       key={team.id} 
-                      className={`${isCurrentPicking ? "bg-primary/10" : ""} cursor-pointer hover:shadow-md transition-shadow`}
+                      className={`${isCurrentPicking ? "ring-2 ring-primary" : ""} cursor-pointer hover:shadow-md transition-shadow overflow-hidden border-0`}
+                      style={{
+                        background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
+                      }}
                       onClick={() => {
                         const dialog = document.createElement('div');
                         dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
                         dialog.innerHTML = `
                           <div class="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-                            <div class="bg-gradient-to-r ${team.color} text-white p-4 rounded-t-lg sticky top-0">
+                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))">
                               <h3 class="font-bold text-lg">${team.name}</h3>
                               ${isCurrentPicking ? '<span class="inline-block mt-1 px-2 py-1 bg-white/20 rounded text-sm">指名中</span>' : ''}
                             </div>
@@ -1172,17 +1193,17 @@ const VirtualDraft = () => {
                         document.body.appendChild(dialog);
                       }}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
+                      <div className="p-4">
+                        <div className="flex items-center justify-between text-white">
                           <div>
-                            <p className="font-semibold">{team.shortName}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="font-semibold text-lg">{team.shortName}</p>
+                            <p className="text-sm text-white/90">
                               {picks.length}名指名
                             </p>
                           </div>
-                          {isCurrentPicking && <Badge variant="default">指名中</Badge>}
+                          {isCurrentPicking && <Badge variant="secondary" className="bg-white/20 text-white border-white/40">指名中</Badge>}
                         </div>
-                      </CardContent>
+                      </div>
                     </Card>
                   );
                 })}
@@ -1572,6 +1593,251 @@ const VirtualDraft = () => {
       </main>
       
       <Footer />
+
+      {/* 全画面表示ダイアログ */}
+      <Dialog open={isFullscreenView} onOpenChange={setIsFullscreenView}>
+        <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white">
+          <div className="h-full w-full flex flex-col overflow-hidden">
+            <DialogClose className="absolute right-2 top-2 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-white p-2 shadow-md">
+              <span className="text-black text-xl">✕</span>
+            </DialogClose>
+            
+            <div className="flex-1 flex flex-col items-center justify-center p-2 overflow-hidden">
+              <div className="flex flex-col items-center justify-center h-full w-full">
+                {/* ロゴとブランディング */}
+                <div className="mb-1 flex justify-center shrink-0">
+                  <div className="flex items-center gap-1">
+                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-4 w-auto" />
+                    <span className="font-semibold text-[10px] text-black">BaaS 野球スカウトノート</span>
+                  </div>
+                </div>
+                
+                {/* スケーリングされたテーブル */}
+                <div className="flex justify-center items-center shrink-0" style={{ transform: 'scale(0.5)', transformOrigin: 'center center' }}>
+                  <Table className="border-collapse">
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="whitespace-nowrap bg-white text-black p-1 border border-gray-300 text-[10px]"></TableHead>
+                        {displayOrder.map(teamId => {
+                          const team = teams.find(t => t.id === teamId);
+                          if (!team) return null;
+                          return (
+                            <TableHead 
+                              key={team.id} 
+                              className="whitespace-nowrap text-center font-bold border border-gray-300 p-1 text-white text-[10px]"
+                              style={{
+                                background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
+                              }}
+                            >
+                              {team.shortName}
+                            </TableHead>
+                          );
+                        })}
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {(() => {
+                          const allRegularPicks = allDraftPicks.filter(p => !p.isDevelopment);
+                          const maxRegularRound = allRegularPicks.length > 0 
+                            ? Math.max(...allRegularPicks.map(p => p.round))
+                            : isDevelopmentDraft ? 7 : currentRound;
+                          
+                          const rows = [];
+                          
+                          const getMaxLotteryAttemptsForRound = (round: number) => {
+                            let maxAttempts = 1;
+                            displayOrder.forEach(teamId => {
+                              const lostPlayers = getLostPlayers(teamId);
+                              const lostInRound = lostPlayers.filter(lp => lp.round === round).length;
+                              maxAttempts = Math.max(maxAttempts, lostInRound + 1);
+                            });
+                            return maxAttempts;
+                          };
+                          
+                          // 通常指名のラウンド
+                          if (isDevelopmentDraft) {
+                            for (let round = 1; round <= maxRegularRound; round++) {
+                              const maxAttempts = getMaxLotteryAttemptsForRound(round);
+                              
+                              for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                                rows.push(
+                                  <TableRow key={`regular-${round}-attempt-${attempt}`}>
+                                    {attempt === 0 ? (
+                                      <TableCell 
+                                        rowSpan={maxAttempts} 
+                                        className="font-medium whitespace-nowrap bg-white text-black align-middle border border-gray-300 p-1 text-[10px]"
+                                      >
+                                        {round}位
+                                      </TableCell>
+                                    ) : null}
+                                    {displayOrder.map(teamId => {
+                                      const team = teams.find(t => t.id === teamId);
+                                      if (!team) return null;
+                                      const picks = getTeamPicks(team.id);
+                                      const lostPlayers = getLostPlayers(team.id);
+                                      const regularPicks = picks.filter(p => !p.isDevelopment);
+                                      const isFinished = finishedTeams.has(team.id);
+                                      
+                                      const pick = regularPicks.find(p => p.round === round);
+                                      const lostInRound = lostPlayers.filter(lp => lp.round === round);
+                                      const lastPickRound = regularPicks.length > 0 
+                                        ? Math.max(...regularPicks.map(p => p.round))
+                                        : 0;
+                                      
+                                      if (attempt < lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-gray-400 border border-gray-300 bg-white p-1 text-[10px]">
+                                            {lostInRound[attempt].playerName}
+                                          </TableCell>
+                                        );
+                                      }
+                                      else if (attempt === lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-[10px] border border-gray-300 bg-white text-black p-1">
+                                            {pick ? (
+                                              pick.playerName
+                                            ) : isFinished && round === lastPickRound + 1 ? (
+                                              "選択終了"
+                                            ) : (
+                                              "―"
+                                            )}
+                                          </TableCell>
+                                        );
+                                      }
+                                      else {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center border border-gray-300 bg-white text-black p-1 text-[10px]">
+                                            ―
+                                          </TableCell>
+                                        );
+                                      }
+                                    })}
+                                  </TableRow>
+                                );
+                              }
+                            }
+                          } else {
+                            for (let round = 1; round <= currentRound; round++) {
+                              const maxAttempts = getMaxLotteryAttemptsForRound(round);
+                              
+                              for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                                rows.push(
+                                  <TableRow key={`regular-${round}-attempt-${attempt}`}>
+                                    {attempt === 0 ? (
+                                      <TableCell 
+                                        rowSpan={maxAttempts} 
+                                        className="font-medium whitespace-nowrap bg-white text-black align-middle border border-gray-300 p-1 text-[10px]"
+                                      >
+                                        {round}位
+                                      </TableCell>
+                                    ) : null}
+                                    {displayOrder.map(teamId => {
+                                      const team = teams.find(t => t.id === teamId);
+                                      if (!team) return null;
+                                      const picks = getTeamPicks(team.id);
+                                      const lostPlayers = getLostPlayers(team.id);
+                                      const regularPicks = picks.filter(p => !p.isDevelopment);
+                                      const isFinished = finishedTeams.has(team.id);
+                                      
+                                      const pick = regularPicks.find(p => p.round === round);
+                                      const lostInRound = lostPlayers.filter(lp => lp.round === round);
+                                      const lastPickRound = regularPicks.length > 0 
+                                        ? Math.max(...regularPicks.map(p => p.round))
+                                        : 0;
+                                      const isCurrentRoundPicking = round === currentRound && !isFinished;
+                                      
+                                      if (attempt < lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-gray-400 border border-gray-300 bg-white p-1 text-[10px]">
+                                            {lostInRound[attempt].playerName}
+                                          </TableCell>
+                                        );
+                                      }
+                                      else if (attempt === lostInRound.length) {
+                                        return (
+                                          <TableCell 
+                                            key={team.id} 
+                                            className="whitespace-nowrap text-center border border-gray-300 bg-white text-black p-1 text-[10px]"
+                                          >
+                                            {pick ? (
+                                              pick.playerName
+                                            ) : isFinished && round === lastPickRound + 1 ? (
+                                              "選択終了"
+                                            ) : isCurrentRoundPicking ? (
+                                              ""
+                                            ) : (
+                                              "―"
+                                            )}
+                                          </TableCell>
+                                        );
+                                      }
+                                      else {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center border border-gray-300 bg-white text-black p-1 text-[10px]">
+                                            ―
+                                          </TableCell>
+                                        );
+                                      }
+                                    })}
+                                  </TableRow>
+                                );
+                              }
+                            }
+                          }
+                          
+                          // 育成指名のラウンド
+                          if (isDevelopmentDraft) {
+                            for (let round = 1; round <= currentRound; round++) {
+                              rows.push(
+                                <TableRow key={`dev-${round}`}>
+                                  <TableCell className="font-medium whitespace-nowrap bg-white text-black border border-gray-300 p-1 text-[10px]">
+                                    育成{round}位
+                                  </TableCell>
+                                  {displayOrder.map(teamId => {
+                                    const team = teams.find(t => t.id === teamId);
+                                    if (!team) return null;
+                                    const picks = getTeamPicks(team.id);
+                                    const devPicks = picks.filter(p => p.isDevelopment);
+                                    const isFinished = finishedTeams.has(team.id);
+                                    
+                                    const pick = devPicks.find(p => p.round === round);
+                                    const lastPickRound = devPicks.length > 0 
+                                      ? Math.max(...devPicks.map(p => p.round))
+                                      : 0;
+                                    const isCurrentRoundPicking = round === currentRound && !isFinished;
+                                    
+                                        return (
+                                          <TableCell 
+                                            key={team.id} 
+                                            className="whitespace-nowrap text-center border border-gray-300 bg-white text-black p-1 text-[10px]"
+                                          >
+                                        {pick ? (
+                                          pick.playerName
+                                        ) : isFinished && round === lastPickRound + 1 ? (
+                                          "選択終了"
+                                        ) : isCurrentRoundPicking ? (
+                                          ""
+                                        ) : (
+                                          "―"
+                                        )}
+                                      </TableCell>
+                                    );
+                                  })}
+                                </TableRow>
+                              );
+                            }
+                          }
+                          
+                          return rows;
+                        })()}
+                      </TableBody>
+                    </Table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
