@@ -1366,19 +1366,6 @@ const VirtualDraft = () => {
                         </div>
                       </CardContent>
                     </Card>
-                    {/* ヤクルトスワローズの下に抽選ボタンを中央表示 */}
-                    {team.id === 8 && canExecuteLottery() && (
-                      <div className="col-span-full flex justify-center mt-6">
-                        <Button 
-                          size="lg" 
-                          onClick={executeLottery}
-                          className="gap-2"
-                        >
-                          <Shuffle className="h-5 w-5" />
-                          第{currentRound}次選択抽選実行
-                        </Button>
-                      </div>
-                    )}
                   </>
                 );
               } else {
