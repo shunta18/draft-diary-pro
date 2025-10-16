@@ -1602,20 +1602,20 @@ const VirtualDraft = () => {
               <span className="text-black text-lg">✕</span>
             </DialogClose>
             
-            <div className="flex-1 flex flex-col items-center justify-center p-2 md:p-6 overflow-auto">
-              <div className="flex flex-col items-center w-full">
+            <div className="flex-1 flex flex-col items-start p-1 md:p-6 overflow-auto w-full">
+              <div className="flex flex-col items-start w-full">
                 {/* ロゴとブランディング */}
-                <div className="mb-2 md:mb-4 flex justify-center">
+                <div className="mb-1 md:mb-4 flex justify-start w-full pl-1">
                   <div className="flex items-center gap-1 md:gap-2">
-                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-4 md:h-6 w-auto" />
-                    <span className="font-semibold text-xs md:text-base text-black">BaaS 野球スカウトノート</span>
+                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-3 md:h-6 w-auto" />
+                    <span className="font-semibold text-[10px] md:text-base text-black">BaaS 野球スカウトノート</span>
                   </div>
                 </div>
                 
                 {/* テーブル */}
-                <div className="w-full flex justify-center">
-                  <div className="scale-[0.45] md:scale-75 lg:scale-90 origin-top">
-                  <Table className="border-collapse text-xs">
+                <div className="w-full">
+                  <div className="scale-[0.68] md:scale-90 lg:scale-100 origin-top-left">
+                  <Table className="border-collapse text-[11px]">
                     <TableHeader>
                       <TableRow>
                         <TableHead className="whitespace-nowrap bg-white text-black p-1 border border-gray-300 font-semibold w-12"></TableHead>
