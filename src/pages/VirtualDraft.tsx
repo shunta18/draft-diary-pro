@@ -858,7 +858,7 @@ const VirtualDraft = () => {
                                     {attempt === 0 ? (
                                       <TableCell 
                                         rowSpan={maxAttempts} 
-                                        className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-top"
+                                        className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r"
                                       >
                                         {round}位
                                       </TableCell>
@@ -924,7 +924,7 @@ const VirtualDraft = () => {
                                     {attempt === 0 ? (
                                       <TableCell 
                                         rowSpan={maxAttempts} 
-                                        className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-top"
+                                        className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r"
                                       >
                                         {round}位
                                       </TableCell>
