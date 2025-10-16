@@ -855,9 +855,14 @@ const VirtualDraft = () => {
                               for (let attempt = 0; attempt < maxAttempts; attempt++) {
                                 rows.push(
                                   <TableRow key={`regular-${round}-attempt-${attempt}`}>
-                                    <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs">
-                                      {round}位
-                                    </TableCell>
+                                    {attempt === 0 ? (
+                                      <TableCell 
+                                        rowSpan={maxAttempts} 
+                                        className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-top"
+                                      >
+                                        {round}位
+                                      </TableCell>
+                                    ) : null}
                                     {displayOrder.map(teamId => {
                                       const team = teams.find(t => t.id === teamId);
                                       if (!team) return null;
@@ -916,9 +921,14 @@ const VirtualDraft = () => {
                               for (let attempt = 0; attempt < maxAttempts; attempt++) {
                                 rows.push(
                                   <TableRow key={`regular-${round}-attempt-${attempt}`}>
-                                    <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs">
-                                      {round}位
-                                    </TableCell>
+                                    {attempt === 0 ? (
+                                      <TableCell 
+                                        rowSpan={maxAttempts} 
+                                        className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-top"
+                                      >
+                                        {round}位
+                                      </TableCell>
+                                    ) : null}
                                     {displayOrder.map(teamId => {
                                       const team = teams.find(t => t.id === teamId);
                                       if (!team) return null;
@@ -935,6 +945,9 @@ const VirtualDraft = () => {
                                         : 0;
                                       const isCurrentRoundPicking = round === currentRound && !isFinished;
                                       
+                                      // 現在のラウンドかつ実際の指名セルの場合のみ色付け
+                                      const shouldHighlight = isCurrentPicking && round === currentRound && attempt === lostInRound.length;
+                                      
                                       // この試行が抽選外れの場合
                                       if (attempt < lostInRound.length) {
                                         return (
@@ -948,7 +961,7 @@ const VirtualDraft = () => {
                                         return (
                                           <TableCell 
                                             key={team.id} 
-                                            className={`whitespace-nowrap text-center text-xs border-r ${isCurrentPicking && attempt === lostInRound.length ? 'bg-primary/10' : ''}`}
+                                            className={`whitespace-nowrap text-center text-xs border-r ${shouldHighlight ? 'bg-primary/10' : ''}`}
                                           >
                                             {pick ? (
                                               pick.playerName
