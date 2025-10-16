@@ -926,7 +926,7 @@ const VirtualDraft = () => {
                                       const lostPlayers = getLostPlayers(team.id);
                                       const regularPicks = picks.filter(p => !p.isDevelopment);
                                       const isFinished = finishedTeams.has(team.id);
-                                      const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
+                                      const isCurrentPicking = !isFinished && currentRound > 1 && getCurrentPickingTeam() === team.id;
                                       
                                       const pick = regularPicks.find(p => p.round === round);
                                       const lostInRound = lostPlayers.filter(lp => lp.round === round);
@@ -991,7 +991,7 @@ const VirtualDraft = () => {
                                     const picks = getTeamPicks(team.id);
                                     const devPicks = picks.filter(p => p.isDevelopment);
                                     const isFinished = finishedTeams.has(team.id);
-                                    const isCurrentPicking = getCurrentPickingTeam() === team.id;
+                                    const isCurrentPicking = !isFinished && getCurrentPickingTeam() === team.id;
                                     
                                     const pick = devPicks.find(p => p.round === round);
                                     const lastPickRound = devPicks.length > 0 
@@ -1034,31 +1034,55 @@ const VirtualDraft = () => {
                   if (!team) return null;
                   const picks = getTeamPicks(team.id);
                   const lostPlayers = getLostPlayers(team.id);
-                  const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
                   const isFinished = finishedTeams.has(team.id);
+                  const isCurrentPicking = !isFinished && currentRound > 1 && getCurrentPickingTeam() === team.id;
 
-                  // 抽選外れ選手と指名選手を時系列順にマージ
-                  const allSelections = [
-                    ...lostPlayers.map(lp => ({ ...lp, type: 'lost' as const })),
-                    ...picks.map(pick => ({ 
-                      round: pick.round, 
-                      playerName: pick.playerName, 
-                      isDevelopment: pick.isDevelopment,
-                      type: 'picked' as const 
-                    }))
-                  ].sort((a, b) => {
-                    // ラウンド順でソート（育成は通常の後）
-                    if (a.type === 'lost' && b.type === 'lost') return a.round - b.round;
-                    if (a.type === 'picked' && b.type === 'picked') {
-                      const aIsDev = 'isDevelopment' in a && a.isDevelopment;
-                      const bIsDev = 'isDevelopment' in b && b.isDevelopment;
-                      if (aIsDev !== bIsDev) return aIsDev ? 1 : -1;
-                      return a.round - b.round;
-                    }
-                    // 抽選外れは同じラウンドの指名の前
+                  // 1位指名とその抽選外れ、その後の指名を分けて整理
+                  const roundOneSelections: Array<{ playerName: string; round: number; type: 'lost' | 'picked'; isDevelopment?: boolean }> = [];
+                  const otherSelections: Array<{ playerName: string; round: number; type: 'lost' | 'picked'; isDevelopment?: boolean }> = [];
+                  
+                  // 1位の抽選外れ選手を追加
+                  lostPlayers.filter(lp => lp.round === 1).forEach(lp => {
+                    roundOneSelections.push({ ...lp, type: 'lost' as const });
+                  });
+                  
+                  // 1位の実際の指名を追加
+                  const roundOnePick = picks.find(p => p.round === 1 && !p.isDevelopment);
+                  if (roundOnePick) {
+                    roundOneSelections.push({
+                      playerName: roundOnePick.playerName,
+                      round: 1,
+                      type: 'picked' as const,
+                      isDevelopment: false
+                    });
+                  }
+                  
+                  // 2位以降の選手を追加
+                  picks.filter(p => p.round !== 1 || p.isDevelopment).forEach(pick => {
+                    otherSelections.push({
+                      playerName: pick.playerName,
+                      round: pick.round,
+                      type: 'picked' as const,
+                      isDevelopment: pick.isDevelopment
+                    });
+                  });
+                  
+                  // 2位以降の抽選外れを追加
+                  lostPlayers.filter(lp => lp.round !== 1).forEach(lp => {
+                    otherSelections.push({ ...lp, type: 'lost' as const });
+                  });
+                  
+                  // 2位以降をソート
+                  otherSelections.sort((a, b) => {
+                    const aIsDev = 'isDevelopment' in a && a.isDevelopment;
+                    const bIsDev = 'isDevelopment' in b && b.isDevelopment;
+                    if (aIsDev !== bIsDev) return aIsDev ? 1 : -1;
                     if (a.round === b.round) return a.type === 'lost' ? -1 : 1;
                     return a.round - b.round;
                   });
+                  
+                  // 1位指名を先頭に、その後に2位以降を配置
+                  const allSelections = [...roundOneSelections, ...otherSelections];
 
                   return (
                     <Card 
@@ -1075,12 +1099,12 @@ const VirtualDraft = () => {
                             </div>
                             <div class="p-4 space-y-3">
                               <div>
-                                <p class="text-sm text-muted-foreground mb-2">選択履歴（時系列順）</p>
+                                <p class="text-sm text-muted-foreground mb-2">選択履歴</p>
                                 ${allSelections.length > 0 ? allSelections.map(sel => {
                                   if (sel.type === 'lost') {
                                     return `
-                                      <p class="text-sm mb-1 text-red-600">
-                                        抽選外れ: ${sel.playerName} <span class="text-xs text-muted-foreground">(${sel.round}位)</span>
+                                      <p class="text-sm mb-1 text-muted-foreground/70">
+                                        ${sel.round}位: ${sel.playerName} <span class="text-xs">(抽選外れ)</span>
                                       </p>
                                     `;
                                   } else {
