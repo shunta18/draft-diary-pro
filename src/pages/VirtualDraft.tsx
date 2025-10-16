@@ -89,8 +89,8 @@ const getWaiverOrder = (round: number, isDev: boolean = false) => {
   return round % 2 === 1 ? oddRoundOrder : evenRoundOrder;
 };
 
-// 表示順（固定）: 阪神、DeNA、巨人、中日、広島、ヤクルト、ソフトバンク、日ハム、オリックス、楽天、西武、ロッテ
-const displayOrder = [11, 9, 7, 10, 12, 8, 6, 1, 5, 2, 3, 4];
+// 表示順（固定）: ヤクルト、ロッテ、広島、西武、中日、楽天、巨人、オリックス、DeNA、日本ハム、阪神、ソフトバンク
+const displayOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
 
 interface TeamSelection {
   teamId: number;
