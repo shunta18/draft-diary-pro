@@ -54,18 +54,18 @@ interface NormalizedPlayer {
 type PlayerData = NormalizedPlayer;
 
 const teams = [
-  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800" },
-  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900" },
-  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武", color: "from-blue-500 to-blue-700" },
-  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ", color: "from-gray-800 to-black" },
-  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス", color: "from-blue-600 to-gray-800" },
-  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク", color: "from-yellow-500 to-yellow-700" },
-  { id: 7, name: "読売ジャイアンツ", shortName: "巨人", color: "from-orange-500 to-orange-700" },
-  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト", color: "from-green-600 to-green-800" },
-  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA", color: "from-blue-500 to-blue-700" },
-  { id: 10, name: "中日ドラゴンズ", shortName: "中日", color: "from-blue-700 to-blue-900" },
-  { id: 11, name: "阪神タイガース", shortName: "阪神", color: "from-yellow-500 to-yellow-700" },
-  { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800" },
+  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800", colors: { primary: "220 100% 50%", secondary: "0 0% 100%" } },
+  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900", colors: { primary: "350 70% 35%", secondary: "0 0% 100%" } },
+  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武", color: "from-blue-500 to-blue-700", colors: { primary: "220 100% 50%", secondary: "220 100% 30%" } },
+  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ", color: "from-gray-800 to-black", colors: { primary: "0 0% 0%", secondary: "0 0% 100%" } },
+  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス", color: "from-blue-600 to-gray-800", colors: { primary: "220 100% 20%", secondary: "45 100% 50%" } },
+  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク", color: "from-yellow-500 to-yellow-700", colors: { primary: "45 100% 50%", secondary: "0 0% 0%" } },
+  { id: 7, name: "読売ジャイアンツ", shortName: "巨人", color: "from-orange-500 to-orange-700", colors: { primary: "16 85% 50%", secondary: "0 0% 0%" } },
+  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト", color: "from-green-600 to-green-800", colors: { primary: "220 100% 50%", secondary: "0 0% 10%" } },
+  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA", color: "from-blue-500 to-blue-700", colors: { primary: "220 100% 50%", secondary: "0 0% 100%" } },
+  { id: 10, name: "中日ドラゴンズ", shortName: "中日", color: "from-blue-700 to-blue-900", colors: { primary: "220 100% 50%", secondary: "220 100% 50%" } },
+  { id: 11, name: "阪神タイガース", shortName: "阪神", color: "from-yellow-500 to-yellow-700", colors: { primary: "45 100% 50%", secondary: "0 0% 0%" } },
+  { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800", colors: { primary: "0 85% 55%", secondary: "0 85% 55%" } },
 ];
 
 // ウェーバー方式の指名順（2位以降）
@@ -1141,13 +1141,16 @@ const VirtualDraft = () => {
                   return (
                     <Card 
                       key={team.id} 
-                      className={`${isCurrentPicking ? "ring-2 ring-primary" : ""} cursor-pointer hover:shadow-md transition-shadow overflow-hidden`}
+                      className={`${isCurrentPicking ? "ring-2 ring-primary" : ""} cursor-pointer hover:shadow-md transition-shadow overflow-hidden border-0`}
+                      style={{
+                        background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
+                      }}
                       onClick={() => {
                         const dialog = document.createElement('div');
                         dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
                         dialog.innerHTML = `
                           <div class="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-                            <div class="bg-gradient-to-r ${team.color} text-white p-4 rounded-t-lg sticky top-0">
+                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))">
                               <h3 class="font-bold text-lg">${team.name}</h3>
                               ${isCurrentPicking ? '<span class="inline-block mt-1 px-2 py-1 bg-white/20 rounded text-sm">指名中</span>' : ''}
                             </div>
@@ -1190,7 +1193,7 @@ const VirtualDraft = () => {
                         document.body.appendChild(dialog);
                       }}
                     >
-                      <div className={`bg-gradient-to-br ${team.color} p-4`}>
+                      <div className="p-4">
                         <div className="flex items-center justify-between text-white">
                           <div>
                             <p className="font-semibold text-lg">{team.shortName}</p>
