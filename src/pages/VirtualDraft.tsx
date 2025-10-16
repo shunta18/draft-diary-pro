@@ -109,6 +109,7 @@ interface LotteryResult {
   competingTeams: number[];
   winner: number;
   losers: number[];
+  round: number;  // 抽選が行われたラウンド
 }
 
 interface FinalSelection {
@@ -403,6 +404,7 @@ const VirtualDraft = () => {
           competingTeams,
           winner,
           losers,
+          round: currentRound,
         });
         
         newFinalSelections.push({
@@ -507,23 +509,24 @@ const VirtualDraft = () => {
   };
 
   const getLostPlayers = (teamId: number) => {
-    const lostPlayers: { playerName: string; round: number; resultIndex: number }[] = [];
-    allRoundResults.forEach((roundResults, roundIndex) => {
-      roundResults.forEach((result, resultIndex) => {
+    const lostPlayers: { playerName: string; round: number; attemptOrder: number }[] = [];
+    let globalAttemptOrder = 0;
+    
+    allRoundResults.forEach((roundResults) => {
+      roundResults.forEach((result) => {
         if (result.losers.includes(teamId)) {
           lostPlayers.push({
             playerName: result.playerName,
-            round: roundIndex + 1,
-            resultIndex: resultIndex,
+            round: result.round,  // resultに保存されているround情報を使用
+            attemptOrder: globalAttemptOrder,
           });
         }
+        globalAttemptOrder++;
       });
     });
-    // 時系列順（roundIndex → resultIndex の順）でソート
-    return lostPlayers.sort((a, b) => {
-      if (a.round !== b.round) return a.round - b.round;
-      return a.resultIndex - b.resultIndex;
-    });
+    
+    // attemptOrder（抽選実行順）でソート
+    return lostPlayers.sort((a, b) => a.attemptOrder - b.attemptOrder);
   };
 
   const canExecuteLottery = () => {
@@ -848,6 +851,7 @@ const VirtualDraft = () => {
                               const lostInRound = lostPlayers.filter(lp => lp.round === round).length;
                               maxAttempts = Math.max(maxAttempts, lostInRound + 1);
                             });
+                            console.log(`Round ${round} - maxAttempts:`, maxAttempts, 'allRoundResults:', allRoundResults);
                             return maxAttempts;
                           };
                           
