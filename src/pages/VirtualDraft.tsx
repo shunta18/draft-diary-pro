@@ -1141,7 +1141,7 @@ const VirtualDraft = () => {
                   return (
                     <Card 
                       key={team.id} 
-                      className={`${isCurrentPicking ? "bg-primary/10" : ""} cursor-pointer hover:shadow-md transition-shadow`}
+                      className={`${isCurrentPicking ? "ring-2 ring-primary" : ""} cursor-pointer hover:shadow-md transition-shadow overflow-hidden`}
                       onClick={() => {
                         const dialog = document.createElement('div');
                         dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
@@ -1190,17 +1190,17 @@ const VirtualDraft = () => {
                         document.body.appendChild(dialog);
                       }}
                     >
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
+                      <div className={`bg-gradient-to-br ${team.color} p-4`}>
+                        <div className="flex items-center justify-between text-white">
                           <div>
-                            <p className="font-semibold">{team.shortName}</p>
-                            <p className="text-sm text-muted-foreground">
+                            <p className="font-semibold text-lg">{team.shortName}</p>
+                            <p className="text-sm text-white/90">
                               {picks.length}名指名
                             </p>
                           </div>
-                          {isCurrentPicking && <Badge variant="default">指名中</Badge>}
+                          {isCurrentPicking && <Badge variant="secondary" className="bg-white/20 text-white border-white/40">指名中</Badge>}
                         </div>
-                      </CardContent>
+                      </div>
                     </Card>
                   );
                 })}
