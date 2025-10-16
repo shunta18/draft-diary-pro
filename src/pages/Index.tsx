@@ -374,7 +374,17 @@ const Index = () => {
               </div>
               
               <div>
-                <h4 className="font-medium text-primary">4. データの永続的な保存</h4>
+                <h4 className="font-medium text-primary">4. 仮想ドラフト会議</h4>
+                <p className="text-muted-foreground">
+                  実際のプロ野球ドラフト会議をシミュレーションできる機能です。
+                  抽選による指名順決定から、各球団の指名まで、本番さながらの緊張感を体験。
+                  あなたが作成したドラフト構想をもとに、どの球団がどの選手を指名するか、
+                  競合や外れ1位の流れをシミュレートできます。スクリーンショット機能で結果を保存・共有も可能です。
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-primary">5. データの永続的な保存</h4>
                 <p className="text-muted-foreground">
                   アカウント登録により、入力したすべてのデータがクラウド上に安全に保存されます。
                   複数のデバイスからアクセス可能で、パソコン、スマートフォン、タブレットなど、
