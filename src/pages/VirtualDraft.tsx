@@ -525,6 +525,8 @@ const VirtualDraft = () => {
       });
     });
     
+    console.log(`getLostPlayers for team ${teamId}:`, lostPlayers, 'allRoundResults:', allRoundResults);
+    
     // attemptOrder（抽選実行順）でソート
     return lostPlayers.sort((a, b) => a.attemptOrder - b.attemptOrder);
   };
@@ -886,6 +888,13 @@ const VirtualDraft = () => {
                                       const lastPickRound = regularPicks.length > 0 
                                         ? Math.max(...regularPicks.map(p => p.round))
                                         : 0;
+                                      
+                                      console.log(`Team ${team.id}, Round ${round}, Attempt ${attempt}:`, {
+                                        lostInRound,
+                                        pick,
+                                        attempt,
+                                        lostCount: lostInRound.length
+                                      });
                                       
                                       // この試行が抽選外れの場合
                                       if (attempt < lostInRound.length) {
