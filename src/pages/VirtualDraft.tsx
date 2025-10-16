@@ -846,7 +846,10 @@ const VirtualDraft = () => {
                             const team = teams.find(t => t.id === teamId);
                             if (!team) return null;
                             return (
-                              <TableHead key={team.id} className="whitespace-nowrap text-center text-xs font-bold border-r">
+                              <TableHead 
+                                key={team.id} 
+                                className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white`}
+                              >
                                 {team.shortName}
                               </TableHead>
                             );
@@ -1617,7 +1620,10 @@ const VirtualDraft = () => {
                             const team = teams.find(t => t.id === teamId);
                             if (!team) return null;
                             return (
-                              <TableHead key={team.id} className="whitespace-nowrap text-center text-[10px] font-bold border border-gray-300 bg-white text-black p-1">
+                              <TableHead 
+                                key={team.id} 
+                                className={`whitespace-nowrap text-center text-[10px] font-bold border border-gray-300 p-1 bg-gradient-to-br ${team.color} text-white`}
+                              >
                                 {team.shortName}
                               </TableHead>
                             );
