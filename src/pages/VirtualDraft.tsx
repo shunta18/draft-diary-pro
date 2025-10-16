@@ -1026,56 +1026,6 @@ const VirtualDraft = () => {
                       </TableBody>
                     </Table>
                   </TabsContent>
-                          
-                          // 育成指名のラウンド
-                          if (isDevelopmentDraft) {
-                            for (let round = 1; round <= currentRound; round++) {
-                              rows.push(
-                                <TableRow key={`dev-${round}`}>
-                                  <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs">
-                                    育成{round}位
-                                  </TableCell>
-                                  {displayOrder.map(teamId => {
-                                    const team = teams.find(t => t.id === teamId);
-                                    if (!team) return null;
-                                    const picks = getTeamPicks(team.id);
-                                    const devPicks = picks.filter(p => p.isDevelopment);
-                                    const isFinished = finishedTeams.has(team.id);
-                                    const isCurrentPicking = getCurrentPickingTeam() === team.id;
-                                    
-                                    const pick = devPicks.find(p => p.round === round);
-                                    const lastPickRound = devPicks.length > 0 
-                                      ? Math.max(...devPicks.map(p => p.round))
-                                      : 0;
-                                    const isCurrentRoundPicking = round === currentRound && !isFinished;
-                                    
-                                      return (
-                                        <TableCell 
-                                          key={team.id} 
-                                          className="whitespace-nowrap text-center text-xs"
-                                        >
-                                          {pick ? (
-                                            pick.playerName
-                                          ) : isFinished && round === lastPickRound + 1 ? (
-                                            "選択終了"
-                                          ) : isCurrentRoundPicking ? (
-                                            ""
-                                          ) : (
-                                            "―"
-                                          )}
-                                        </TableCell>
-                                      );
-                                    })}
-                                  </TableRow>
-                                );
-                              }
-                            }
-                            
-                            return rows;
-                          })()}
-                        </TableBody>
-                      </Table>
-                    </TabsContent>
                   
                   {/* 球団ごとタブ：カード表示 */}
                   <TabsContent value="by-team" className="space-y-3">
