@@ -392,6 +392,9 @@ const VirtualDraft = () => {
     const results: LotteryResult[] = [];
     const newFinalSelections: FinalSelection[] = [...finalSelections];
     
+    // 実際の指名巡目を計算（現在までに決定した選手数 ÷ 12 + 1）
+    const actualRound = Math.floor(finalSelections.length / 12) + 1;
+    
     playerCounts.forEach((competingTeams, playerId) => {
       const player = players.find(p => p.id === playerId);
       
@@ -404,7 +407,7 @@ const VirtualDraft = () => {
           competingTeams,
           winner,
           losers,
-          round: allRoundResults.length + 1,
+          round: actualRound,
         });
         
         newFinalSelections.push({
