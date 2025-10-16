@@ -853,6 +853,7 @@ const VirtualDraft = () => {
                           const team = teams.find(t => t.id === teamId);
                           if (!team) return null;
                           const picks = getTeamPicks(team.id);
+                          const lostPlayers = getLostPlayers(team.id);
                           const devPicks = picks.filter(p => p.isDevelopment);
                           const regularPicks = picks.filter(p => !p.isDevelopment);
                           const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
@@ -872,17 +873,22 @@ const VirtualDraft = () => {
                                 <>
                                   {Array.from({ length: maxRegularRound }, (_, i) => i + 1).map(round => {
                                     const pick = regularPicks.find(p => p.round === round);
+                                    const lostPlayer = lostPlayers.find(lp => lp.round === round);
                                     const lastPickRound = regularPicks.length > 0 
                                       ? Math.max(...regularPicks.map(p => p.round))
                                       : 0;
                                     
                                     return (
                                       <TableCell key={`regular-${round}`} className="whitespace-nowrap text-xs">
-                                        {pick 
-                                          ? pick.playerName 
-                                          : isFinished && round === lastPickRound + 1
-                                            ? "選択終了"
-                                            : "―"}
+                                        {lostPlayer ? (
+                                          <span className="text-red-600">外れ: {lostPlayer.playerName}</span>
+                                        ) : pick ? (
+                                          pick.playerName
+                                        ) : isFinished && round === lastPickRound + 1 ? (
+                                          "選択終了"
+                                        ) : (
+                                          "―"
+                                        )}
                                       </TableCell>
                                     );
                                   })}
@@ -909,6 +915,7 @@ const VirtualDraft = () => {
                               ) : (
                                 Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
                                   const pick = regularPicks.find(p => p.round === round);
+                                  const lostPlayer = lostPlayers.find(lp => lp.round === round);
                                   const lastPickRound = regularPicks.length > 0 
                                     ? Math.max(...regularPicks.map(p => p.round))
                                     : 0;
@@ -916,13 +923,17 @@ const VirtualDraft = () => {
                                   
                                   return (
                                     <TableCell key={`regular-${round}`} className="whitespace-nowrap text-xs">
-                                      {pick 
-                                        ? pick.playerName 
-                                        : isFinished && round === lastPickRound + 1
-                                          ? "選択終了"
-                                          : isCurrentRoundPicking
-                                            ? ""
-                                            : "―"}
+                                      {lostPlayer ? (
+                                        <span className="text-red-600">外れ: {lostPlayer.playerName}</span>
+                                      ) : pick ? (
+                                        pick.playerName
+                                      ) : isFinished && round === lastPickRound + 1 ? (
+                                        "選択終了"
+                                      ) : isCurrentRoundPicking ? (
+                                        ""
+                                      ) : (
+                                        "―"
+                                      )}
                                     </TableCell>
                                   );
                                 })
@@ -1080,6 +1091,7 @@ const VirtualDraft = () => {
                     const team = teams.find(t => t.id === teamId);
                     if (!team) return null;
                     const picks = getTeamPicks(team.id);
+                    const lostPlayers = getLostPlayers(team.id);
                     const devPicks = picks.filter(p => p.isDevelopment);
                     const regularPicks = picks.filter(p => !p.isDevelopment);
                     const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
@@ -1102,17 +1114,22 @@ const VirtualDraft = () => {
                             {/* 通常指名：実際に指名があったラウンドまで */}
                             {Array.from({ length: maxRegularRound }, (_, i) => i + 1).map(round => {
                               const pick = regularPicks.find(p => p.round === round);
+                              const lostPlayer = lostPlayers.find(lp => lp.round === round);
                               const lastPickRound = regularPicks.length > 0 
                                 ? Math.max(...regularPicks.map(p => p.round))
                                 : 0;
                               
                               return (
                                 <TableCell key={`regular-${round}`} className="whitespace-nowrap">
-                                  {pick 
-                                    ? pick.playerName 
-                                    : isFinished && round === lastPickRound + 1
-                                      ? "選択終了"
-                                      : "―"}
+                                  {lostPlayer ? (
+                                    <span className="text-red-600">外れ: {lostPlayer.playerName}</span>
+                                  ) : pick ? (
+                                    pick.playerName
+                                  ) : isFinished && round === lastPickRound + 1 ? (
+                                    "選択終了"
+                                  ) : (
+                                    "―"
+                                  )}
                                 </TableCell>
                               );
                             })}
@@ -1141,6 +1158,7 @@ const VirtualDraft = () => {
                           /* 通常指名のみ（現在のラウンドまで） */
                           Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
                             const pick = regularPicks.find(p => p.round === round);
+                            const lostPlayer = lostPlayers.find(lp => lp.round === round);
                             const lastPickRound = regularPicks.length > 0 
                               ? Math.max(...regularPicks.map(p => p.round))
                               : 0;
@@ -1148,13 +1166,17 @@ const VirtualDraft = () => {
                             
                             return (
                               <TableCell key={`regular-${round}`} className="whitespace-nowrap">
-                                {pick 
-                                  ? pick.playerName 
-                                  : isFinished && round === lastPickRound + 1
-                                    ? "選択終了"
-                                    : isCurrentRoundPicking
-                                      ? ""
-                                      : "―"}
+                                {lostPlayer ? (
+                                  <span className="text-red-600">外れ: {lostPlayer.playerName}</span>
+                                ) : pick ? (
+                                  pick.playerName
+                                ) : isFinished && round === lastPickRound + 1 ? (
+                                  "選択終了"
+                                ) : isCurrentRoundPicking ? (
+                                  ""
+                                ) : (
+                                  "―"
+                                )}
                               </TableCell>
                             );
                           })
