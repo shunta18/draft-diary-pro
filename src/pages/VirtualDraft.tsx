@@ -1474,6 +1474,19 @@ const VirtualDraft = () => {
           })()}
         </div>
 
+        {canExecuteLottery() && (
+          <div className="mt-8 mb-8 text-center">
+            <Button 
+              size="lg" 
+              onClick={executeLottery}
+              className="gap-2"
+            >
+              <Shuffle className="h-5 w-5" />
+              第{currentRound}次選択抽選実行
+            </Button>
+          </div>
+        )}
+
         {/* Lipovitan D Affiliate Section */}
         <Card className="mt-8 bg-gradient-to-r from-yellow-50/50 to-amber-50/50 dark:from-yellow-950/20 dark:to-amber-950/20 border-yellow-200 dark:border-yellow-800">
           <CardHeader>
