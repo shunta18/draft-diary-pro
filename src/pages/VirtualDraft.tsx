@@ -1157,7 +1157,7 @@ const VirtualDraft = () => {
                             </div>
                             <div class="p-4 border-t flex flex-col items-center gap-3">
                               <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                                <span style="font-size: 1.25rem;">🧔</span>
+                                <img src="/mustache-logo.png" alt="BaaS Logo" class="h-6 w-auto" />
                                 <span>BaaS 野球スカウトノート</span>
                               </div>
                               <button class="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md" onclick="this.closest('.fixed').remove()">
