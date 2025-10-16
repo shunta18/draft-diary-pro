@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
@@ -14,7 +14,6 @@ import { Shuffle, Trophy, AlertCircle, CheckCircle2, Clock, Download } from "luc
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Footer } from "@/components/Footer";
-import html2canvas from "html2canvas";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -157,7 +156,6 @@ const VirtualDraft = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const overallTableRef = useRef<HTMLDivElement>(null);
   const [players, setPlayers] = useState<NormalizedPlayer[]>([]);
   const [selections, setSelections] = useState<TeamSelection[]>(
     teams.map(team => ({ 
@@ -513,49 +511,6 @@ const VirtualDraft = () => {
     }
   };
 
-  const captureOverallTable = async () => {
-    if (!overallTableRef.current) return;
-    
-    try {
-      toast({
-        title: "スクリーンショットを作成中...",
-        description: "少々お待ちください",
-      });
-
-      const canvas = await html2canvas(overallTableRef.current, {
-        backgroundColor: '#ffffff',
-        scale: 2,
-        logging: false,
-        useCORS: true,
-      });
-
-      canvas.toBlob((blob) => {
-        if (blob) {
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement('a');
-          link.href = url;
-          link.download = `draft-status-${new Date().getTime()}.png`;
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-          URL.revokeObjectURL(url);
-
-          toast({
-            title: "保存完了",
-            description: "スクリーンショットを保存しました",
-          });
-        }
-      });
-    } catch (error) {
-      console.error('Screenshot error:', error);
-      toast({
-        title: "エラー",
-        description: "スクリーンショットの作成に失敗しました",
-        variant: "destructive",
-      });
-    }
-  };
-
   const getLostPlayers = (teamId: number) => {
     const lostPlayers: { playerName: string; round: number; attemptOrder: number }[] = [];
     let globalAttemptOrder = 0;
@@ -868,26 +823,8 @@ const VirtualDraft = () => {
                   </TabsList>
                   
                   {/* 全体タブ：テーブル表示（縦横反転、抽選は複数行） */}
-                  <TabsContent value="overall" className="space-y-4">
-                    <div className="flex justify-end">
-                      <Button
-                        onClick={captureOverallTable}
-                        variant="outline"
-                        size="sm"
-                        className="gap-2"
-                      >
-                        <Download className="h-4 w-4" />
-                        全体をスクリーンショット
-                      </Button>
-                    </div>
-                    <div ref={overallTableRef} className="overflow-x-auto bg-background p-4 rounded-lg">
-                      <div className="mb-4 flex justify-center">
-                        <div className="flex items-center gap-2">
-                          <img src="/mustache-logo.png" alt="BaaS Logo" className="h-8 w-auto" />
-                          <span className="font-semibold text-lg">BaaS 野球スカウトノート</span>
-                        </div>
-                      </div>
-                      <Table>
+                  <TabsContent value="overall" className="overflow-x-auto">
+                    <Table>
                       <TableHeader>
                         <TableRow>
                           <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10"></TableHead>
@@ -1124,7 +1061,6 @@ const VirtualDraft = () => {
                         })()}
                       </TableBody>
                     </Table>
-                    </div>
                   </TabsContent>
                   
                   {/* 球団ごとタブ：カード表示 */}
