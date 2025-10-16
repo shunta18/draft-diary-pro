@@ -801,15 +801,15 @@ const VirtualDraft = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-              {/* モバイル用：タブ切り替え */}
-              <div className="md:hidden">
+              {/* タブ切り替え（全デバイス対応） */}
+              <div>
                 <Tabs defaultValue="overall" className="w-full">
                   <TabsList className="grid w-full grid-cols-2 mb-4">
                     <TabsTrigger value="overall">全体</TabsTrigger>
                     <TabsTrigger value="by-team">球団ごと</TabsTrigger>
                   </TabsList>
                   
-                  {/* 全体タブ：テーブル表示（縦横反転） */}
+                  {/* 全体タブ：テーブル表示（縦横反転、抽選は複数行） */}
                   <TabsContent value="overall" className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -818,23 +818,8 @@ const VirtualDraft = () => {
                           {displayOrder.map(teamId => {
                             const team = teams.find(t => t.id === teamId);
                             if (!team) return null;
-                            
-                            // 各チームの抽選回数を計算
-                            const lostPlayers = getLostPlayers(team.id);
-                            const maxLotteryAttempts = Math.max(
-                              1,
-                              ...Array.from({length: currentRound}, (_, i) => i + 1).map(round => {
-                                const lostInRound = lostPlayers.filter(lp => lp.round === round).length;
-                                return lostInRound + 1; // lost players + actual pick
-                              })
-                            );
-                            
                             return (
-                              <TableHead 
-                                key={team.id} 
-                                colSpan={maxLotteryAttempts}
-                                className="whitespace-nowrap text-center text-xs font-bold border-r-2"
-                              >
+                              <TableHead key={team.id} className="whitespace-nowrap text-center text-xs font-bold border-r">
                                 {team.shortName}
                               </TableHead>
                             );
@@ -850,127 +835,174 @@ const VirtualDraft = () => {
                           
                           const rows = [];
                           
+                          // 各ラウンドごとに最大抽選回数を計算
+                          const getMaxLotteryAttemptsForRound = (round: number) => {
+                            let maxAttempts = 1;
+                            displayOrder.forEach(teamId => {
+                              const lostPlayers = getLostPlayers(teamId);
+                              const lostInRound = lostPlayers.filter(lp => lp.round === round).length;
+                              maxAttempts = Math.max(maxAttempts, lostInRound + 1);
+                            });
+                            return maxAttempts;
+                          };
+                          
                           // 通常指名のラウンド
                           if (isDevelopmentDraft) {
                             for (let round = 1; round <= maxRegularRound; round++) {
-                              rows.push(
-                                <TableRow key={`regular-${round}`}>
-                                  <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs">
-                                    {round}位
-                                  </TableCell>
-                                  {displayOrder.map(teamId => {
-                                    const team = teams.find(t => t.id === teamId);
-                                    if (!team) return null;
-                                    const picks = getTeamPicks(team.id);
-                                    const lostPlayers = getLostPlayers(team.id);
-                                    const regularPicks = picks.filter(p => !p.isDevelopment);
-                                    const isFinished = finishedTeams.has(team.id);
-                                    
-                                    const pick = regularPicks.find(p => p.round === round);
-                                    const lostInRound = lostPlayers.filter(lp => lp.round === round);
-                                    const lastPickRound = regularPicks.length > 0 
-                                      ? Math.max(...regularPicks.map(p => p.round))
-                                      : 0;
-                                    
-                                    const maxLotteryAttempts = Math.max(
-                                      1,
-                                      ...Array.from({length: maxRegularRound}, (_, i) => i + 1).map(r => {
-                                        const lost = lostPlayers.filter(lp => lp.round === r).length;
-                                        return lost + 1;
-                                      })
-                                    );
-                                    
-                                    const cells = [];
-                                    // 抽選外れ選手を表示
-                                    for (let i = 0; i < lostInRound.length; i++) {
-                                      cells.push(
-                                        <TableCell key={`${team.id}-lost-${i}`} className="whitespace-nowrap text-center text-xs text-muted-foreground/50">
-                                          {lostInRound[i].playerName}
-                                        </TableCell>
-                                      );
-                                    }
-                                    // 実際の指名選手を表示
-                                    cells.push(
-                                      <TableCell key={`${team.id}-pick`} className="whitespace-nowrap text-center text-xs">
-                                        {pick ? (
-                                          pick.playerName
-                                        ) : isFinished && round === lastPickRound + 1 ? (
-                                          "選択終了"
-                                        ) : (
-                                          "―"
-                                        )}
-                                      </TableCell>
-                                    );
-                                    // 残りの列を"―"で埋める
-                                    for (let i = cells.length; i < maxLotteryAttempts; i++) {
-                                      cells.push(
-                                        <TableCell key={`${team.id}-empty-${i}`} className="whitespace-nowrap text-center text-xs border-r-2">
-                                          ―
-                                        </TableCell>
-                                      );
-                                    }
-                                    // 最後のセルにborder-r-2を追加
-                                    if (cells.length > 0) {
-                                      const lastCell = cells[cells.length - 1];
-                                      cells[cells.length - 1] = {
-                                        ...lastCell,
-                                        props: {
-                                          ...lastCell.props,
-                                          className: `${lastCell.props.className} border-r-2`
-                                        }
-                                      };
-                                    }
-                                    return cells;
-                                  })}
-                                </TableRow>
-                              );
+                              const maxAttempts = getMaxLotteryAttemptsForRound(round);
+                              
+                              // 各抽選試行ごとに行を作成
+                              for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                                rows.push(
+                                  <TableRow key={`regular-${round}-attempt-${attempt}`}>
+                                    <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs">
+                                      {round}位
+                                    </TableCell>
+                                    {displayOrder.map(teamId => {
+                                      const team = teams.find(t => t.id === teamId);
+                                      if (!team) return null;
+                                      const picks = getTeamPicks(team.id);
+                                      const lostPlayers = getLostPlayers(team.id);
+                                      const regularPicks = picks.filter(p => !p.isDevelopment);
+                                      const isFinished = finishedTeams.has(team.id);
+                                      
+                                      const pick = regularPicks.find(p => p.round === round);
+                                      const lostInRound = lostPlayers.filter(lp => lp.round === round);
+                                      const lastPickRound = regularPicks.length > 0 
+                                        ? Math.max(...regularPicks.map(p => p.round))
+                                        : 0;
+                                      
+                                      // この試行が抽選外れの場合
+                                      if (attempt < lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r">
+                                            {lostInRound[attempt].playerName}
+                                          </TableCell>
+                                        );
+                                      }
+                                      // 最後の試行（実際の指名）
+                                      else if (attempt === lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r">
+                                            {pick ? (
+                                              pick.playerName
+                                            ) : isFinished && round === lastPickRound + 1 ? (
+                                              "選択終了"
+                                            ) : (
+                                              "―"
+                                            )}
+                                          </TableCell>
+                                        );
+                                      }
+                                      // 抽選がなかった球団
+                                      else {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r">
+                                            ―
+                                          </TableCell>
+                                        );
+                                      }
+                                    })}
+                                  </TableRow>
+                                );
+                              }
                             }
                           } else {
                             // 通常ドラフト中
                             for (let round = 1; round <= currentRound; round++) {
+                              const maxAttempts = getMaxLotteryAttemptsForRound(round);
+                              
+                              // 各抽選試行ごとに行を作成
+                              for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                                rows.push(
+                                  <TableRow key={`regular-${round}-attempt-${attempt}`}>
+                                    <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs">
+                                      {round}位
+                                    </TableCell>
+                                    {displayOrder.map(teamId => {
+                                      const team = teams.find(t => t.id === teamId);
+                                      if (!team) return null;
+                                      const picks = getTeamPicks(team.id);
+                                      const lostPlayers = getLostPlayers(team.id);
+                                      const regularPicks = picks.filter(p => !p.isDevelopment);
+                                      const isFinished = finishedTeams.has(team.id);
+                                      const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
+                                      
+                                      const pick = regularPicks.find(p => p.round === round);
+                                      const lostInRound = lostPlayers.filter(lp => lp.round === round);
+                                      const lastPickRound = regularPicks.length > 0 
+                                        ? Math.max(...regularPicks.map(p => p.round))
+                                        : 0;
+                                      const isCurrentRoundPicking = round === currentRound && !isFinished;
+                                      
+                                      // この試行が抽選外れの場合
+                                      if (attempt < lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r">
+                                            {lostInRound[attempt].playerName}
+                                          </TableCell>
+                                        );
+                                      }
+                                      // 最後の試行（実際の指名）
+                                      else if (attempt === lostInRound.length) {
+                                        return (
+                                          <TableCell 
+                                            key={team.id} 
+                                            className={`whitespace-nowrap text-center text-xs border-r ${isCurrentPicking && attempt === lostInRound.length ? 'bg-primary/10' : ''}`}
+                                          >
+                                            {pick ? (
+                                              pick.playerName
+                                            ) : isFinished && round === lastPickRound + 1 ? (
+                                              "選択終了"
+                                            ) : isCurrentRoundPicking ? (
+                                              ""
+                                            ) : (
+                                              "―"
+                                            )}
+                                          </TableCell>
+                                        );
+                                      }
+                                      // 抽選がなかった球団
+                                      else {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r">
+                                            ―
+                                          </TableCell>
+                                        );
+                                      }
+                                    })}
+                                  </TableRow>
+                                );
+                              }
+                            }
+                          }
+                          
+                          // 育成指名のラウンド
+                          if (isDevelopmentDraft) {
+                            for (let round = 1; round <= currentRound; round++) {
                               rows.push(
-                                <TableRow key={`regular-${round}`}>
+                                <TableRow key={`dev-${round}`}>
                                   <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs">
-                                    {round}位
+                                    育成{round}位
                                   </TableCell>
                                   {displayOrder.map(teamId => {
                                     const team = teams.find(t => t.id === teamId);
                                     if (!team) return null;
                                     const picks = getTeamPicks(team.id);
-                                    const lostPlayers = getLostPlayers(team.id);
-                                    const regularPicks = picks.filter(p => !p.isDevelopment);
+                                    const devPicks = picks.filter(p => p.isDevelopment);
                                     const isFinished = finishedTeams.has(team.id);
-                                    const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
+                                    const isCurrentPicking = getCurrentPickingTeam() === team.id;
                                     
-                                    const pick = regularPicks.find(p => p.round === round);
-                                    const lostInRound = lostPlayers.filter(lp => lp.round === round);
-                                    const lastPickRound = regularPicks.length > 0 
-                                      ? Math.max(...regularPicks.map(p => p.round))
+                                    const pick = devPicks.find(p => p.round === round);
+                                    const lastPickRound = devPicks.length > 0 
+                                      ? Math.max(...devPicks.map(p => p.round))
                                       : 0;
                                     const isCurrentRoundPicking = round === currentRound && !isFinished;
                                     
-                                    const maxLotteryAttempts = Math.max(
-                                      1,
-                                      ...Array.from({length: currentRound}, (_, i) => i + 1).map(r => {
-                                        const lost = lostPlayers.filter(lp => lp.round === r).length;
-                                        return lost + 1;
-                                      })
-                                    );
-                                    
-                                    const cells = [];
-                                    // 抽選外れ選手を表示
-                                    for (let i = 0; i < lostInRound.length; i++) {
-                                      cells.push(
-                                        <TableCell key={`${team.id}-lost-${i}`} className="whitespace-nowrap text-center text-xs text-muted-foreground/50">
-                                          {lostInRound[i].playerName}
-                                        </TableCell>
-                                      );
-                                    }
-                                    // 実際の指名選手を表示
-                                    cells.push(
+                                    return (
                                       <TableCell 
-                                        key={`${team.id}-pick`} 
-                                        className={`whitespace-nowrap text-center text-xs ${isCurrentPicking ? 'bg-primary/10' : ''}`}
+                                        key={team.id} 
+                                        className="whitespace-nowrap text-center text-xs border-r"
                                       >
                                         {pick ? (
                                           pick.playerName
@@ -983,31 +1015,17 @@ const VirtualDraft = () => {
                                         )}
                                       </TableCell>
                                     );
-                                    // 残りの列を"―"で埋める
-                                    for (let i = cells.length; i < maxLotteryAttempts; i++) {
-                                      cells.push(
-                                        <TableCell key={`${team.id}-empty-${i}`} className="whitespace-nowrap text-center text-xs border-r-2">
-                                          ―
-                                        </TableCell>
-                                      );
-                                    }
-                                    // 最後のセルにborder-r-2を追加
-                                    if (cells.length > 0) {
-                                      const lastCell = cells[cells.length - 1];
-                                      cells[cells.length - 1] = {
-                                        ...lastCell,
-                                        props: {
-                                          ...lastCell.props,
-                                          className: `${lastCell.props.className} border-r-2`
-                                        }
-                                      };
-                                    }
-                                    return cells;
                                   })}
                                 </TableRow>
                               );
                             }
                           }
+                          
+                          return rows;
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </TabsContent>
                           
                           // 育成指名のラウンド
                           if (isDevelopmentDraft) {
@@ -1157,149 +1175,6 @@ const VirtualDraft = () => {
                   </TabsContent>
                 </Tabs>
               </div>
-
-              {/* デスクトップ用：テーブル表示 */}
-              <Table className="hidden md:table">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10">球団</TableHead>
-                    {(() => {
-                      // 実際に指名があった最大ラウンドを計算
-                      const allRegularPicks = allDraftPicks.filter(p => !p.isDevelopment);
-                      const maxRegularRound = allRegularPicks.length > 0 
-                        ? Math.max(...allRegularPicks.map(p => p.round))
-                        : isDevelopmentDraft ? 7 : currentRound;
-                      
-                      return (
-                        <>
-                          {isDevelopmentDraft ? (
-                            <>
-                              {/* 通常指名：実際に指名があったラウンドまで */}
-                              {Array.from({ length: maxRegularRound }, (_, i) => i + 1).map(round => (
-                                <TableHead key={`regular-${round}`} className="whitespace-nowrap">
-                                  {round}位
-                                </TableHead>
-                              ))}
-                              {/* 育成指名：現在のラウンドまで */}
-                              {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
-                                <TableHead key={`dev-${round}`} className="whitespace-nowrap">
-                                  育成{round}位
-                                </TableHead>
-                              ))}
-                            </>
-                          ) : (
-                            /* 通常ドラフト：現在のラウンドまで */
-                            Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
-                              <TableHead key={`regular-${round}`} className="whitespace-nowrap">
-                                {round}位
-                              </TableHead>
-                            ))
-                          )}
-                        </>
-                      );
-                    })()}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {displayOrder.map(teamId => {
-                    const team = teams.find(t => t.id === teamId);
-                    if (!team) return null;
-                    const picks = getTeamPicks(team.id);
-                    const lostPlayers = getLostPlayers(team.id);
-                    const devPicks = picks.filter(p => p.isDevelopment);
-                    const regularPicks = picks.filter(p => !p.isDevelopment);
-                    const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
-                    const isFinished = finishedTeams.has(team.id);
-                    
-                    // 実際に指名があった最大ラウンドを計算
-                    const allRegularPicks = allDraftPicks.filter(p => !p.isDevelopment);
-                    const maxRegularRound = allRegularPicks.length > 0 
-                      ? Math.max(...allRegularPicks.map(p => p.round))
-                      : isDevelopmentDraft ? 7 : currentRound;
-                    
-                    return (
-                      <TableRow key={team.id} className={isCurrentPicking ? "bg-primary/10" : ""}>
-                        <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10">
-                          {team.shortName}
-                          {isCurrentPicking && <Badge className="ml-2" variant="default">指名中</Badge>}
-                        </TableCell>
-                        {isDevelopmentDraft ? (
-                          <>
-                            {/* 通常指名：実際に指名があったラウンドまで */}
-                            {Array.from({ length: maxRegularRound }, (_, i) => i + 1).map(round => {
-                              const pick = regularPicks.find(p => p.round === round);
-                              const lostPlayer = lostPlayers.find(lp => lp.round === round);
-                              const lastPickRound = regularPicks.length > 0 
-                                ? Math.max(...regularPicks.map(p => p.round))
-                                : 0;
-                              
-                              return (
-                                <TableCell key={`regular-${round}`} className="whitespace-nowrap">
-                                  {lostPlayer ? (
-                                    <span className="text-red-600">外れ: {lostPlayer.playerName}</span>
-                                  ) : pick ? (
-                                    pick.playerName
-                                  ) : isFinished && round === lastPickRound + 1 ? (
-                                    "選択終了"
-                                  ) : (
-                                    "―"
-                                  )}
-                                </TableCell>
-                              );
-                            })}
-                            {/* 育成指名：現在のラウンドまで */}
-                            {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
-                              const pick = devPicks.find(p => p.round === round);
-                              const lastPickRound = devPicks.length > 0 
-                                ? Math.max(...devPicks.map(p => p.round))
-                                : 0;
-                              const isCurrentRoundPicking = round === currentRound && !isFinished;
-                              
-                              return (
-                                <TableCell key={`dev-${round}`} className="whitespace-nowrap">
-                                  {pick 
-                                    ? pick.playerName 
-                                    : isFinished && round === lastPickRound + 1
-                                      ? "選択終了"
-                                      : isCurrentRoundPicking
-                                        ? ""
-                                        : "―"}
-                                </TableCell>
-                              );
-                            })}
-                          </>
-                        ) : (
-                          /* 通常指名のみ（現在のラウンドまで） */
-                          Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
-                            const pick = regularPicks.find(p => p.round === round);
-                            const lostPlayer = lostPlayers.find(lp => lp.round === round);
-                            const lastPickRound = regularPicks.length > 0 
-                              ? Math.max(...regularPicks.map(p => p.round))
-                              : 0;
-                            const isCurrentRoundPicking = round === currentRound && !isFinished;
-                            
-                            return (
-                              <TableCell key={`regular-${round}`} className="whitespace-nowrap">
-                                {lostPlayer ? (
-                                  <span className="text-red-600">外れ: {lostPlayer.playerName}</span>
-                                ) : pick ? (
-                                  pick.playerName
-                                ) : isFinished && round === lastPickRound + 1 ? (
-                                  "選択終了"
-                                ) : isCurrentRoundPicking ? (
-                                  ""
-                                ) : (
-                                  "―"
-                                )}
-                              </TableCell>
-                            );
-                          })
-                        )}
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
             </CardContent>
           </Card>
         )}
