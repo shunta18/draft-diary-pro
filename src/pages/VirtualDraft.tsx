@@ -404,7 +404,7 @@ const VirtualDraft = () => {
           competingTeams,
           winner,
           losers,
-          round: currentRound,
+          round: allRoundResults.length + 1,
         });
         
         newFinalSelections.push({
