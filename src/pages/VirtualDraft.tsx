@@ -1151,11 +1151,15 @@ const VirtualDraft = () => {
                                       </p>
                                     `;
                                   }
-                                }).join('') : '<p class="text-sm text-muted-foreground">まだ選択していません</p>'}
+                                 }).join('') : '<p class="text-sm text-muted-foreground">まだ選択していません</p>'}
                                 ${isFinished ? '<p class="text-sm mt-2 font-semibold">選択終了</p>' : ''}
                               </div>
                             </div>
-                            <div class="p-4 border-t">
+                            <div class="p-4 border-t flex flex-col items-center gap-3">
+                              <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                                <img src="/mustache-logo.png" alt="BaaS Logo" class="h-6 w-auto" />
+                                <span>BaaS 野球スカウトノート</span>
+                              </div>
                               <button class="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md" onclick="this.closest('.fixed').remove()">
                                 閉じる
                               </button>
@@ -1231,7 +1235,7 @@ const VirtualDraft = () => {
           </Card>
         )}
 
-        {canExecuteLottery() && (
+        {canExecuteLottery() && finalSelections.length < teams.length && (
           <div className="mb-8 text-center">
             <Button 
               size="lg" 
@@ -1362,19 +1366,6 @@ const VirtualDraft = () => {
                         </div>
                       </CardContent>
                     </Card>
-                    {/* ヤクルトスワローズの下に抽選ボタンを中央表示 */}
-                    {team.id === 8 && canExecuteLottery() && (
-                      <div className="col-span-full flex justify-center mt-6">
-                        <Button 
-                          size="lg" 
-                          onClick={executeLottery}
-                          className="gap-2"
-                        >
-                          <Shuffle className="h-5 w-5" />
-                          第{currentRound}次選択抽選実行
-                        </Button>
-                      </div>
-                    )}
                   </>
                 );
               } else {
@@ -1474,7 +1465,7 @@ const VirtualDraft = () => {
           })()}
         </div>
 
-        {canExecuteLottery() && (
+        {canExecuteLottery() && finalSelections.length < teams.length && (
           <div className="mt-8 mb-8 text-center">
             <Button 
               size="lg" 
