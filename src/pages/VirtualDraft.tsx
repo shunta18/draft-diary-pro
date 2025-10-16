@@ -804,26 +804,41 @@ const VirtualDraft = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10">球団</TableHead>
-                    {isDevelopmentDraft ? (
-                      <>
-                        {Array.from({ length: 7 }, (_, i) => i + 1).map(round => (
-                          <TableHead key={`regular-${round}`} className="whitespace-nowrap">
-                            {round}位
-                          </TableHead>
-                        ))}
-                        {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
-                          <TableHead key={`dev-${round}`} className="whitespace-nowrap">
-                            育成{round}位
-                          </TableHead>
-                        ))}
-                      </>
-                    ) : (
-                      Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
-                        <TableHead key={`regular-${round}`} className="whitespace-nowrap">
-                          {round}位
-                        </TableHead>
-                      ))
-                    )}
+                    {(() => {
+                      // 実際に指名があった最大ラウンドを計算
+                      const allRegularPicks = allDraftPicks.filter(p => !p.isDevelopment);
+                      const maxRegularRound = allRegularPicks.length > 0 
+                        ? Math.max(...allRegularPicks.map(p => p.round))
+                        : isDevelopmentDraft ? 7 : currentRound;
+                      
+                      return (
+                        <>
+                          {isDevelopmentDraft ? (
+                            <>
+                              {/* 通常指名：実際に指名があったラウンドまで */}
+                              {Array.from({ length: maxRegularRound }, (_, i) => i + 1).map(round => (
+                                <TableHead key={`regular-${round}`} className="whitespace-nowrap">
+                                  {round}位
+                                </TableHead>
+                              ))}
+                              {/* 育成指名：現在のラウンドまで */}
+                              {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
+                                <TableHead key={`dev-${round}`} className="whitespace-nowrap">
+                                  育成{round}位
+                                </TableHead>
+                              ))}
+                            </>
+                          ) : (
+                            /* 通常ドラフト：現在のラウンドまで */
+                            Array.from({ length: currentRound }, (_, i) => i + 1).map(round => (
+                              <TableHead key={`regular-${round}`} className="whitespace-nowrap">
+                                {round}位
+                              </TableHead>
+                            ))
+                          )}
+                        </>
+                      );
+                    })()}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -836,6 +851,12 @@ const VirtualDraft = () => {
                     const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
                     const isFinished = finishedTeams.has(team.id);
                     
+                    // 実際に指名があった最大ラウンドを計算
+                    const allRegularPicks = allDraftPicks.filter(p => !p.isDevelopment);
+                    const maxRegularRound = allRegularPicks.length > 0 
+                      ? Math.max(...allRegularPicks.map(p => p.round))
+                      : isDevelopmentDraft ? 7 : currentRound;
+                    
                     return (
                       <TableRow key={team.id} className={isCurrentPicking ? "bg-primary/10" : ""}>
                         <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10">
@@ -844,8 +865,8 @@ const VirtualDraft = () => {
                         </TableCell>
                         {isDevelopmentDraft ? (
                           <>
-                            {/* 通常指名の7位まで */}
-                            {Array.from({ length: 7 }, (_, i) => i + 1).map(round => {
+                            {/* 通常指名：実際に指名があったラウンドまで */}
+                            {Array.from({ length: maxRegularRound }, (_, i) => i + 1).map(round => {
                               const pick = regularPicks.find(p => p.round === round);
                               const lastPickRound = regularPicks.length > 0 
                                 ? Math.max(...regularPicks.map(p => p.round))
@@ -861,7 +882,7 @@ const VirtualDraft = () => {
                                 </TableCell>
                               );
                             })}
-                            {/* 育成指名 */}
+                            {/* 育成指名：現在のラウンドまで */}
                             {Array.from({ length: currentRound }, (_, i) => i + 1).map(round => {
                               const pick = devPicks.find(p => p.round === round);
                               const lastPickRound = devPicks.length > 0 
