@@ -10,10 +10,11 @@ import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getDefaultPlayers, Player as LocalPlayer } from "@/lib/playerStorage";
-import { Shuffle, Trophy, AlertCircle, CheckCircle2, Clock, Download } from "lucide-react";
+import { Shuffle, Trophy, AlertCircle, CheckCircle2, Clock, Download, Maximize2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Footer } from "@/components/Footer";
+import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -176,6 +177,7 @@ const VirtualDraft = () => {
   const [finishedTeams, setFinishedTeams] = useState<Set<number>>(new Set()); // 選択終了した球団
   const MAX_TOTAL_PICKS = 120; // 全体の上限
   const [showSignupDialog, setShowSignupDialog] = useState(false);
+  const [isFullscreenView, setIsFullscreenView] = useState(false); // 全画面表示用
 
   useEffect(() => {
     loadPlayers();
@@ -823,7 +825,19 @@ const VirtualDraft = () => {
                   </TabsList>
                   
                   {/* 全体タブ：テーブル表示（縦横反転、抽選は複数行） */}
-                  <TabsContent value="overall" className="overflow-x-auto">
+                  <TabsContent value="overall" className="space-y-4">
+                    <div className="flex justify-end">
+                      <Button
+                        onClick={() => setIsFullscreenView(true)}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2"
+                      >
+                        <Maximize2 className="h-4 w-4" />
+                        📸 全画面で表示（スクショ用）
+                      </Button>
+                    </div>
+                    <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow>
@@ -1061,6 +1075,7 @@ const VirtualDraft = () => {
                         })()}
                       </TableBody>
                     </Table>
+                    </div>
                   </TabsContent>
                   
                   {/* 球団ごとタブ：カード表示 */}
@@ -1572,6 +1587,247 @@ const VirtualDraft = () => {
       </main>
       
       <Footer />
+
+      {/* 全画面表示ダイアログ */}
+      <Dialog open={isFullscreenView} onOpenChange={setIsFullscreenView}>
+        <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white">
+          <div className="h-full w-full flex flex-col overflow-hidden">
+            <DialogClose className="absolute right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-white p-2 shadow-md">
+              <span className="text-black text-xl">✕</span>
+            </DialogClose>
+            
+            <div className="flex-1 overflow-auto p-2">
+              <div className="flex flex-col items-center justify-start min-h-full">
+                {/* ロゴとブランディング */}
+                <div className="mb-2 flex justify-center shrink-0">
+                  <div className="flex items-center gap-2">
+                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-6 w-auto" />
+                    <span className="font-semibold text-sm text-black">BaaS 野球スカウトノート</span>
+                  </div>
+                </div>
+                
+                {/* スケーリングされたテーブル */}
+                <div className="w-full flex justify-center shrink-0" style={{ transformOrigin: 'top center' }}>
+                  <div className="inline-block" style={{ transform: 'scale(0.65)' }}>
+                    <Table className="border-collapse">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="whitespace-nowrap bg-white text-black text-[10px] p-1 border border-gray-300"></TableHead>
+                          {displayOrder.map(teamId => {
+                            const team = teams.find(t => t.id === teamId);
+                            if (!team) return null;
+                            return (
+                              <TableHead key={team.id} className="whitespace-nowrap text-center text-[10px] font-bold border border-gray-300 bg-white text-black p-1">
+                                {team.shortName}
+                              </TableHead>
+                            );
+                          })}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(() => {
+                          const allRegularPicks = allDraftPicks.filter(p => !p.isDevelopment);
+                          const maxRegularRound = allRegularPicks.length > 0 
+                            ? Math.max(...allRegularPicks.map(p => p.round))
+                            : isDevelopmentDraft ? 7 : currentRound;
+                          
+                          const rows = [];
+                          
+                          const getMaxLotteryAttemptsForRound = (round: number) => {
+                            let maxAttempts = 1;
+                            displayOrder.forEach(teamId => {
+                              const lostPlayers = getLostPlayers(teamId);
+                              const lostInRound = lostPlayers.filter(lp => lp.round === round).length;
+                              maxAttempts = Math.max(maxAttempts, lostInRound + 1);
+                            });
+                            return maxAttempts;
+                          };
+                          
+                          // 通常指名のラウンド
+                          if (isDevelopmentDraft) {
+                            for (let round = 1; round <= maxRegularRound; round++) {
+                              const maxAttempts = getMaxLotteryAttemptsForRound(round);
+                              
+                              for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                                rows.push(
+                                  <TableRow key={`regular-${round}-attempt-${attempt}`}>
+                                    {attempt === 0 ? (
+                                      <TableCell 
+                                        rowSpan={maxAttempts} 
+                                        className="font-medium whitespace-nowrap bg-white text-black text-[10px] align-middle border border-gray-300 p-1"
+                                      >
+                                        {round}位
+                                      </TableCell>
+                                    ) : null}
+                                    {displayOrder.map(teamId => {
+                                      const team = teams.find(t => t.id === teamId);
+                                      if (!team) return null;
+                                      const picks = getTeamPicks(team.id);
+                                      const lostPlayers = getLostPlayers(team.id);
+                                      const regularPicks = picks.filter(p => !p.isDevelopment);
+                                      const isFinished = finishedTeams.has(team.id);
+                                      
+                                      const pick = regularPicks.find(p => p.round === round);
+                                      const lostInRound = lostPlayers.filter(lp => lp.round === round);
+                                      const lastPickRound = regularPicks.length > 0 
+                                        ? Math.max(...regularPicks.map(p => p.round))
+                                        : 0;
+                                      
+                                      if (attempt < lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-[10px] text-gray-400 border border-gray-300 bg-white p-1">
+                                            {lostInRound[attempt].playerName}
+                                          </TableCell>
+                                        );
+                                      }
+                                      else if (attempt === lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-[10px] border border-gray-300 bg-white text-black p-1">
+                                            {pick ? (
+                                              pick.playerName
+                                            ) : isFinished && round === lastPickRound + 1 ? (
+                                              "選択終了"
+                                            ) : (
+                                              "―"
+                                            )}
+                                          </TableCell>
+                                        );
+                                      }
+                                      else {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-[10px] border border-gray-300 bg-white text-black p-1">
+                                            ―
+                                          </TableCell>
+                                        );
+                                      }
+                                    })}
+                                  </TableRow>
+                                );
+                              }
+                            }
+                          } else {
+                            for (let round = 1; round <= currentRound; round++) {
+                              const maxAttempts = getMaxLotteryAttemptsForRound(round);
+                              
+                              for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                                rows.push(
+                                  <TableRow key={`regular-${round}-attempt-${attempt}`}>
+                                    {attempt === 0 ? (
+                                      <TableCell 
+                                        rowSpan={maxAttempts} 
+                                        className="font-medium whitespace-nowrap bg-white text-black text-[10px] align-middle border border-gray-300 p-1"
+                                      >
+                                        {round}位
+                                      </TableCell>
+                                    ) : null}
+                                    {displayOrder.map(teamId => {
+                                      const team = teams.find(t => t.id === teamId);
+                                      if (!team) return null;
+                                      const picks = getTeamPicks(team.id);
+                                      const lostPlayers = getLostPlayers(team.id);
+                                      const regularPicks = picks.filter(p => !p.isDevelopment);
+                                      const isFinished = finishedTeams.has(team.id);
+                                      
+                                      const pick = regularPicks.find(p => p.round === round);
+                                      const lostInRound = lostPlayers.filter(lp => lp.round === round);
+                                      const lastPickRound = regularPicks.length > 0 
+                                        ? Math.max(...regularPicks.map(p => p.round))
+                                        : 0;
+                                      const isCurrentRoundPicking = round === currentRound && !isFinished;
+                                      
+                                      if (attempt < lostInRound.length) {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-[10px] text-gray-400 border border-gray-300 bg-white p-1">
+                                            {lostInRound[attempt].playerName}
+                                          </TableCell>
+                                        );
+                                      }
+                                      else if (attempt === lostInRound.length) {
+                                        return (
+                                          <TableCell 
+                                            key={team.id} 
+                                            className="whitespace-nowrap text-center text-[10px] border border-gray-300 bg-white text-black p-1"
+                                          >
+                                            {pick ? (
+                                              pick.playerName
+                                            ) : isFinished && round === lastPickRound + 1 ? (
+                                              "選択終了"
+                                            ) : isCurrentRoundPicking ? (
+                                              ""
+                                            ) : (
+                                              "―"
+                                            )}
+                                          </TableCell>
+                                        );
+                                      }
+                                      else {
+                                        return (
+                                          <TableCell key={team.id} className="whitespace-nowrap text-center text-[10px] border border-gray-300 bg-white text-black p-1">
+                                            ―
+                                          </TableCell>
+                                        );
+                                      }
+                                    })}
+                                  </TableRow>
+                                );
+                              }
+                            }
+                          }
+                          
+                          // 育成指名のラウンド
+                          if (isDevelopmentDraft) {
+                            for (let round = 1; round <= currentRound; round++) {
+                              rows.push(
+                                <TableRow key={`dev-${round}`}>
+                                  <TableCell className="font-medium whitespace-nowrap bg-white text-black text-[10px] border border-gray-300 p-1">
+                                    育成{round}位
+                                  </TableCell>
+                                  {displayOrder.map(teamId => {
+                                    const team = teams.find(t => t.id === teamId);
+                                    if (!team) return null;
+                                    const picks = getTeamPicks(team.id);
+                                    const devPicks = picks.filter(p => p.isDevelopment);
+                                    const isFinished = finishedTeams.has(team.id);
+                                    
+                                    const pick = devPicks.find(p => p.round === round);
+                                    const lastPickRound = devPicks.length > 0 
+                                      ? Math.max(...devPicks.map(p => p.round))
+                                      : 0;
+                                    const isCurrentRoundPicking = round === currentRound && !isFinished;
+                                    
+                                    return (
+                                      <TableCell 
+                                        key={team.id} 
+                                        className="whitespace-nowrap text-center text-[10px] border border-gray-300 bg-white text-black p-1"
+                                      >
+                                        {pick ? (
+                                          pick.playerName
+                                        ) : isFinished && round === lastPickRound + 1 ? (
+                                          "選択終了"
+                                        ) : isCurrentRoundPicking ? (
+                                          ""
+                                        ) : (
+                                          "―"
+                                        )}
+                                      </TableCell>
+                                    );
+                                  })}
+                                </TableRow>
+                              );
+                            }
+                          }
+                          
+                          return rows;
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
