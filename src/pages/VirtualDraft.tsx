@@ -800,7 +800,82 @@ const VirtualDraft = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="overflow-x-auto">
-              <Table>
+              {/* モバイル用：タップ可能な球団カード */}
+              <div className="md:hidden space-y-3">
+                {displayOrder.map(teamId => {
+                  const team = teams.find(t => t.id === teamId);
+                  if (!team) return null;
+                  const picks = getTeamPicks(team.id);
+                  const lostPlayers = getLostPlayers(team.id);
+                  const isCurrentPicking = currentRound > 1 && getCurrentPickingTeam() === team.id;
+                  const isFinished = finishedTeams.has(team.id);
+
+                  return (
+                    <Card 
+                      key={team.id} 
+                      className={`${isCurrentPicking ? "bg-primary/10" : ""} cursor-pointer hover:shadow-md transition-shadow`}
+                      onClick={() => {
+                        // ダイアログで拡大表示
+                        const dialog = document.createElement('div');
+                        dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
+                        dialog.innerHTML = `
+                          <div class="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+                            <div class="bg-gradient-to-r ${team.color} text-white p-4 rounded-t-lg sticky top-0">
+                              <h3 class="font-bold text-lg">${team.name}</h3>
+                              ${isCurrentPicking ? '<span class="inline-block mt-1 px-2 py-1 bg-white/20 rounded text-sm">指名中</span>' : ''}
+                            </div>
+                            <div class="p-4 space-y-3">
+                              <div>
+                                <p class="text-sm text-muted-foreground mb-2">指名選手</p>
+                                ${picks.length > 0 ? picks.map(pick => `
+                                  <p class="text-sm mb-1">
+                                    ${pick.isDevelopment ? `育成${pick.round}位` : `${pick.round}位`}: ${pick.playerName}
+                                  </p>
+                                `).join('') : '<p class="text-sm text-muted-foreground">まだ指名していません</p>'}
+                                ${isFinished ? '<p class="text-sm mt-2 font-semibold">選択終了</p>' : ''}
+                              </div>
+                              ${lostPlayers.length > 0 ? `
+                                <div class="bg-muted/50 p-3 rounded-lg">
+                                  <p class="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
+                                  ${lostPlayers.map(lp => `
+                                    <p class="text-sm mb-1">
+                                      ${lp.playerName} <span class="text-xs text-muted-foreground">(${lp.round}位)</span>
+                                    </p>
+                                  `).join('')}
+                                </div>
+                              ` : ''}
+                            </div>
+                            <div class="p-4 border-t">
+                              <button class="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md" onclick="this.closest('.fixed').remove()">
+                                閉じる
+                              </button>
+                            </div>
+                          </div>
+                        `;
+                        dialog.addEventListener('click', (e) => {
+                          if (e.target === dialog) dialog.remove();
+                        });
+                        document.body.appendChild(dialog);
+                      }}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold">{team.shortName}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {picks.length}名指名
+                            </p>
+                          </div>
+                          {isCurrentPicking && <Badge variant="default">指名中</Badge>}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+
+              {/* デスクトップ用：テーブル表示 */}
+              <Table className="hidden md:table">
                 <TableHeader>
                   <TableRow>
                     <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10">球団</TableHead>
@@ -1088,7 +1163,7 @@ const VirtualDraft = () => {
                               <div className="space-y-1">
                                 {lostPlayers.map((lostPlayer, idx) => (
                                   <p key={idx} className="text-sm">
-                                    {lostPlayer.playerName} <span className="text-xs text-muted-foreground">(第{lostPlayer.round}次)</span>
+                                    {lostPlayer.playerName} <span className="text-xs text-muted-foreground">({lostPlayer.round}位)</span>
                                   </p>
                                 ))}
                               </div>
@@ -1143,6 +1218,19 @@ const VirtualDraft = () => {
                             </p>
                           ))}
                         </div>
+
+                        {lostPlayers.length > 0 && (
+                          <div className="bg-muted/50 p-3 rounded-lg">
+                            <p className="text-xs font-medium text-muted-foreground mb-2">抽選外れ選手</p>
+                            <div className="space-y-1">
+                              {lostPlayers.map((lostPlayer, idx) => (
+                                <p key={idx} className="text-sm">
+                                  {lostPlayer.playerName} <span className="text-xs text-muted-foreground">({lostPlayer.round}位)</span>
+                                </p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                         
                         {isCurrentPickingTeam && !finishedTeams.has(team.id) && (
                           <div className="space-y-2">
