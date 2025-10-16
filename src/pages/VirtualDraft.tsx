@@ -179,6 +179,25 @@ const VirtualDraft = () => {
   const [showSignupDialog, setShowSignupDialog] = useState(false);
   const [isFullscreenView, setIsFullscreenView] = useState(false); // 全画面表示用
 
+  // 全画面表示時に横向きをリクエスト
+  useEffect(() => {
+    if (isFullscreenView) {
+      // 横向きモードをリクエスト（可能な場合）
+      const orientation = (screen as any).orientation;
+      if (orientation && typeof orientation.lock === 'function') {
+        orientation.lock('landscape').catch((err: any) => {
+          console.log('画面の向きをロックできませんでした:', err);
+        });
+      }
+    } else {
+      // ダイアログを閉じたら向きのロックを解除
+      const orientation = (screen as any).orientation;
+      if (orientation && typeof orientation.unlock === 'function') {
+        orientation.unlock();
+      }
+    }
+  }, [isFullscreenView]);
+
   useEffect(() => {
     loadPlayers();
   }, [user]);
