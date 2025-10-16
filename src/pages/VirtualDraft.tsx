@@ -1614,7 +1614,7 @@ const VirtualDraft = () => {
                 
                 {/* テーブル */}
                 <div className="w-full">
-                  <div className="scale-[0.68] md:scale-90 lg:scale-100 origin-top-left">
+                  <div className="scale-[0.52] md:scale-90 lg:scale-100 origin-top-left">
                   <Table className="border-collapse text-[11px]">
                     <TableHeader>
                       <TableRow>
@@ -1625,7 +1625,7 @@ const VirtualDraft = () => {
                           return (
                             <TableHead 
                               key={team.id} 
-                              className="whitespace-nowrap text-center font-bold border border-gray-300 p-1 text-white min-w-[70px]"
+                              className="whitespace-nowrap text-center font-bold border border-gray-300 p-1 text-white w-[70px]"
                               style={{
                                 background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
                               }}
