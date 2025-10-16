@@ -507,18 +507,23 @@ const VirtualDraft = () => {
   };
 
   const getLostPlayers = (teamId: number) => {
-    const lostPlayers: { playerName: string; round: number }[] = [];
+    const lostPlayers: { playerName: string; round: number; resultIndex: number }[] = [];
     allRoundResults.forEach((roundResults, roundIndex) => {
-      roundResults.forEach(result => {
+      roundResults.forEach((result, resultIndex) => {
         if (result.losers.includes(teamId)) {
           lostPlayers.push({
             playerName: result.playerName,
             round: roundIndex + 1,
+            resultIndex: resultIndex,
           });
         }
       });
     });
-    return lostPlayers;
+    // 時系列順（roundIndex → resultIndex の順）でソート
+    return lostPlayers.sort((a, b) => {
+      if (a.round !== b.round) return a.round - b.round;
+      return a.resultIndex - b.resultIndex;
+    });
   };
 
   const canExecuteLottery = () => {
@@ -872,6 +877,7 @@ const VirtualDraft = () => {
                                       const isFinished = finishedTeams.has(team.id);
                                       
                                       const pick = regularPicks.find(p => p.round === round);
+                                      // 該当ラウンドの抽選外れ選手を取得（既にソート済み）
                                       const lostInRound = lostPlayers.filter(lp => lp.round === round);
                                       const lastPickRound = regularPicks.length > 0 
                                         ? Math.max(...regularPicks.map(p => p.round))
@@ -939,6 +945,7 @@ const VirtualDraft = () => {
                                       const isCurrentPicking = !isFinished && currentRound > 1 && getCurrentPickingTeam() === team.id;
                                       
                                       const pick = regularPicks.find(p => p.round === round);
+                                      // 該当ラウンドの抽選外れ選手を取得（既にソート済み）
                                       const lostInRound = lostPlayers.filter(lp => lp.round === round);
                                       const lastPickRound = regularPicks.length > 0 
                                         ? Math.max(...regularPicks.map(p => p.round))
