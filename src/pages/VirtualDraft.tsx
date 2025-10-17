@@ -1621,30 +1621,30 @@ const VirtualDraft = () => {
               <span className="text-black text-lg">✕</span>
             </DialogClose>
             
-            <div className="flex-1 flex flex-col items-start p-1 md:p-4 overflow-auto w-full">
+            <div className="flex-1 flex flex-col items-start p-0.5 md:p-4 overflow-auto w-full">
               <div className="flex flex-col items-start w-full">
                 {/* ロゴとブランディング */}
-                <div className="mb-1 md:mb-3 flex justify-start w-full pl-0.5">
-                  <div className="flex items-center gap-1 md:gap-2">
-                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-2.5 md:h-6 w-auto" />
-                    <span className="font-semibold text-[9px] md:text-base text-black">BaaS 野球スカウトノート</span>
+                <div className="mb-0.5 md:mb-3 flex justify-start w-full">
+                  <div className="flex items-center gap-0.5 md:gap-2">
+                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-2 md:h-6 w-auto" />
+                    <span className="font-semibold text-[8px] md:text-base text-black">BaaS 野球スカウトノート</span>
                   </div>
                 </div>
                 
                 {/* テーブル */}
                 <div className="w-full overflow-hidden">
-                  <div className="scale-[0.58] md:scale-90 lg:scale-100 origin-top-left">
-                  <Table className="border-collapse text-[10px]">
+                  <div className="scale-[0.48] md:scale-90 lg:scale-100 origin-top-left">
+                  <Table className="border-collapse text-[9px]">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="whitespace-nowrap bg-white text-black px-1 py-0.5 border border-gray-300 font-semibold w-10 text-center"></TableHead>
+                        <TableHead className="whitespace-nowrap bg-white text-black px-0.5 py-0.5 border border-gray-300 font-semibold w-8 text-center text-[9px]"></TableHead>
                         {displayOrder.map(teamId => {
                           const team = teams.find(t => t.id === teamId);
                           if (!team) return null;
                           return (
                             <TableHead 
                               key={team.id} 
-                              className="whitespace-nowrap text-center font-bold border border-gray-300 px-1 py-0.5 text-white min-w-[65px] w-[65px]"
+                              className="whitespace-nowrap text-center font-bold border border-gray-300 px-0.5 py-0.5 text-white min-w-[60px] w-[60px] text-[9px]"
                               style={{
                                 background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
                               }}
@@ -1685,7 +1685,7 @@ const VirtualDraft = () => {
                                     {attempt === 0 ? (
                                       <TableCell 
                                         rowSpan={maxAttempts} 
-                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-1 py-0.5 text-center"
+                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]"
                                       >
                                         {round}位
                                       </TableCell>
@@ -1706,14 +1706,14 @@ const VirtualDraft = () => {
                                       
                                       if (attempt < lostInRound.length) {
                                         return (
-                                          <TableCell key={team.id} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                                          <TableCell key={team.id} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                             {lostInRound[attempt].playerName}
                                           </TableCell>
                                         );
                                       }
                                       else if (attempt === lostInRound.length) {
                                         return (
-                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                             {pick ? (
                                               pick.playerName
                                             ) : isFinished && round === lastPickRound + 1 ? (
@@ -1726,7 +1726,7 @@ const VirtualDraft = () => {
                                       }
                                       else {
                                         return (
-                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap">
+                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
                                             ―
                                           </TableCell>
                                         );
@@ -1746,7 +1746,7 @@ const VirtualDraft = () => {
                                     {attempt === 0 ? (
                                       <TableCell 
                                         rowSpan={maxAttempts} 
-                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-1 py-0.5 text-center"
+                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]"
                                       >
                                         {round}位
                                       </TableCell>
@@ -1768,7 +1768,7 @@ const VirtualDraft = () => {
                                       
                                       if (attempt < lostInRound.length) {
                                         return (
-                                          <TableCell key={team.id} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis">
+                                          <TableCell key={team.id} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                             {lostInRound[attempt].playerName}
                                           </TableCell>
                                         );
@@ -1777,7 +1777,7 @@ const VirtualDraft = () => {
                                         return (
                                           <TableCell 
                                             key={team.id} 
-                                            className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis"
+                                            className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]"
                                           >
                                             {pick ? (
                                               pick.playerName
@@ -1793,7 +1793,7 @@ const VirtualDraft = () => {
                                       }
                                       else {
                                         return (
-                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap">
+                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
                                             ―
                                           </TableCell>
                                         );
@@ -1810,7 +1810,7 @@ const VirtualDraft = () => {
                             for (let round = 1; round <= currentRound; round++) {
                               rows.push(
                               <TableRow key={`dev-${round}`}>
-                                  <TableCell className="font-semibold whitespace-nowrap bg-white text-black border border-gray-300 px-1 py-0.5 text-center">
+                                  <TableCell className="font-semibold whitespace-nowrap bg-white text-black border border-gray-300 px-0.5 py-0.5 text-center text-[9px]">
                                     育成{round}位
                                   </TableCell>
                                   {displayOrder.map(teamId => {
@@ -1829,7 +1829,7 @@ const VirtualDraft = () => {
                                         return (
                                           <TableCell 
                                             key={team.id} 
-                                            className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis"
+                                            className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]"
                                           >
                                         {pick ? (
                                           pick.playerName
