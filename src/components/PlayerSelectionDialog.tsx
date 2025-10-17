@@ -90,19 +90,6 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
         </DialogHeader>
         
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-          {/* 選手を追加ボタン */}
-          <div className="flex justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                window.open('/players/new', '_blank');
-              }}
-            >
-              選手を追加する
-            </Button>
-          </div>
-          
           {/* Filters */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2">
@@ -247,13 +234,23 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
 
           {/* Player List */}
           <div className="flex-1 overflow-y-auto space-y-2">
-            <div className="mb-2">
+            <div className="mb-2 space-y-2">
               <Button 
                 variant={selectedPlayerId === undefined ? "default" : "outline"}
                 className="w-full justify-start"
                 onClick={() => handleSelect(undefined)}
               >
                 選択なし
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  window.open('/players/new', '_blank');
+                }}
+              >
+                選手を追加する
               </Button>
             </div>
             
