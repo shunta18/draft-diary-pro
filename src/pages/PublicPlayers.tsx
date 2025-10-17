@@ -80,7 +80,7 @@ export default function PublicPlayers() {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("2025");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
