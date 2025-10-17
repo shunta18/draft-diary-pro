@@ -178,25 +178,27 @@ const VirtualDraft = () => {
   const MAX_TOTAL_PICKS = 120; // 全体の上限
   const [showSignupDialog, setShowSignupDialog] = useState(false);
   const [isFullscreenView, setIsFullscreenView] = useState(false); // 全画面表示用
+  const [zoomLevel, setZoomLevel] = useState(() => {
+    const saved = localStorage.getItem('draftTableZoom');
+    return saved ? parseFloat(saved) : 0.48;
+  });
 
-  // 全画面表示時に横向きをリクエスト
+  // ズームレベルをlocalStorageに保存
   useEffect(() => {
-    if (isFullscreenView) {
-      // 横向きモードをリクエスト（可能な場合）
-      const orientation = (screen as any).orientation;
-      if (orientation && typeof orientation.lock === 'function') {
-        orientation.lock('landscape').catch((err: any) => {
-          console.log('画面の向きをロックできませんでした:', err);
-        });
-      }
-    } else {
-      // ダイアログを閉じたら向きのロックを解除
-      const orientation = (screen as any).orientation;
-      if (orientation && typeof orientation.unlock === 'function') {
-        orientation.unlock();
-      }
-    }
-  }, [isFullscreenView]);
+    localStorage.setItem('draftTableZoom', zoomLevel.toString());
+  }, [zoomLevel]);
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.05, 1.0));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.05, 0.3));
+  };
+
+  const handleZoomReset = () => {
+    setZoomLevel(0.48);
+  };
 
   useEffect(() => {
     loadPlayers();
@@ -1621,6 +1623,33 @@ const VirtualDraft = () => {
               <span className="text-black text-lg">✕</span>
             </DialogClose>
             
+            {/* ズームコントロールボタン */}
+            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+              <Button
+                onClick={handleZoomIn}
+                size="icon"
+                className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
+                disabled={zoomLevel >= 1.0}
+              >
+                <span className="text-xl font-bold">＋</span>
+              </Button>
+              <Button
+                onClick={handleZoomOut}
+                size="icon"
+                className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
+                disabled={zoomLevel <= 0.3}
+              >
+                <span className="text-xl font-bold">−</span>
+              </Button>
+              <Button
+                onClick={handleZoomReset}
+                size="sm"
+                className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
+              >
+                リセット
+              </Button>
+            </div>
+            
             <div className="flex-1 flex flex-col items-center p-0.5 md:p-4 overflow-auto w-full">
               <div className="flex flex-col items-center w-full mt-10 md:mt-0">
                 {/* ロゴとブランディング */}
@@ -1633,7 +1662,7 @@ const VirtualDraft = () => {
                 
                 {/* テーブル */}
                 <div className="w-full overflow-hidden flex justify-center">
-                  <div className="scale-[0.48] md:scale-90 lg:scale-100 origin-top">
+                  <div style={{ transform: `scale(${zoomLevel})` }} className="origin-top transition-transform duration-200">
                   <Table className="border-collapse text-[9px]">
                     <TableHeader>
                       <TableRow>
