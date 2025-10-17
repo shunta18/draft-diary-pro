@@ -686,14 +686,10 @@ export default function PublicPlayers() {
                 </div>
               </Link>
 
-              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+              <div className="p-4 bg-muted rounded-lg">
                 <div className="flex items-center gap-2">
                   <Eye className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm">閲覧数: {selectedDiary.view_count}</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Download className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">インポート数: {selectedDiary.import_count}</span>
                 </div>
               </div>
 
@@ -711,8 +707,10 @@ export default function PublicPlayers() {
                   <p>{selectedDiary.score}</p>
                 </div>
                 <div>
-                  <Label>カテゴリ</Label>
-                  <Badge>{selectedDiary.category}</Badge>
+                  <Label className="mb-2 block">カテゴリ</Label>
+                  <div>
+                    <Badge>{selectedDiary.category}</Badge>
+                  </div>
                 </div>
                 {selectedDiary.player_comments && (
                   <div>
