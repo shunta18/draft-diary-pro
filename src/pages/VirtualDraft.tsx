@@ -1654,7 +1654,7 @@ const VirtualDraft = () => {
               </DialogClose>
             </div>
             
-            <div className="flex-1 flex items-start justify-start p-0.5 md:p-4 overflow-auto w-full">
+            <div className="flex-1 flex items-start justify-start py-16 px-0.5 md:p-4 overflow-auto w-full">
               <div className="flex flex-col items-start w-full">
                 {/* ロゴとブランディング */}
                 <div className="mb-2 md:mb-3 w-full flex justify-start">
