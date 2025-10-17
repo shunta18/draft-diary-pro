@@ -90,6 +90,19 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
         </DialogHeader>
         
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+          {/* 選手を追加ボタン */}
+          <div className="flex justify-end">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                window.open('/players/new', '_blank');
+              }}
+            >
+              選手を追加する
+            </Button>
+          </div>
+          
           {/* Filters */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2">
