@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Player as LocalPlayer } from "@/lib/playerStorage";
 import { Player as SupabasePlayer } from "@/lib/supabase-storage";
 import { Search, ChevronDown } from "lucide-react";
+import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 
 // Union type to handle both data formats
 type PlayerData = LocalPlayer | SupabasePlayer;
@@ -32,6 +33,7 @@ const evaluationOrder = [
 
 export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, children }: PlayerSelectionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [filterPositions, setFilterPositions] = useState<string[]>([]);
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
@@ -246,9 +248,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => {
-                  window.open('/players/new', '_blank');
-                }}
+                onClick={() => setIsPlayerFormOpen(true)}
               >
                 選手を追加する
               </Button>
@@ -287,6 +287,14 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
           </div>
         </div>
       </DialogContent>
+      
+      <PlayerFormDialog 
+        isOpen={isPlayerFormOpen}
+        onOpenChange={setIsPlayerFormOpen}
+        onSuccess={() => {
+          window.location.reload();
+        }}
+      />
     </Dialog>
   );
 }
