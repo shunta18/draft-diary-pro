@@ -1621,10 +1621,10 @@ const VirtualDraft = () => {
               <span className="text-black text-lg">✕</span>
             </DialogClose>
             
-            <div className="flex-1 flex flex-col items-start p-0.5 md:p-4 overflow-auto w-full">
-              <div className="flex flex-col items-start w-full">
+            <div className="flex-1 flex flex-col items-center p-0.5 md:p-4 overflow-auto w-full">
+              <div className="flex flex-col items-center w-full mt-10 md:mt-0">
                 {/* ロゴとブランディング */}
-                <div className="mb-2 md:mb-3 flex justify-center w-full mt-6 md:mt-0">
+                <div className="mb-3 md:mb-3 flex justify-center w-full">
                   <div className="flex items-center gap-0.5 md:gap-2">
                     <img src="/mustache-logo.png" alt="BaaS Logo" className="h-2 md:h-6 w-auto" />
                     <span className="font-semibold text-[8px] md:text-base text-black">BaaS 野球スカウトノート</span>
@@ -1632,8 +1632,8 @@ const VirtualDraft = () => {
                 </div>
                 
                 {/* テーブル */}
-                <div className="w-full overflow-hidden">
-                  <div className="scale-[0.48] md:scale-90 lg:scale-100 origin-top-left">
+                <div className="w-full overflow-hidden flex justify-center">
+                  <div className="scale-[0.48] md:scale-90 lg:scale-100 origin-top">
                   <Table className="border-collapse text-[9px]">
                     <TableHeader>
                       <TableRow>
