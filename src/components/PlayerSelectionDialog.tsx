@@ -234,13 +234,23 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
 
           {/* Player List */}
           <div className="flex-1 overflow-y-auto space-y-2">
-            <div className="mb-2">
+            <div className="mb-2 space-y-2">
               <Button 
                 variant={selectedPlayerId === undefined ? "default" : "outline"}
                 className="w-full justify-start"
                 onClick={() => handleSelect(undefined)}
               >
                 選択なし
+              </Button>
+              
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  window.open('/players/new', '_blank');
+                }}
+              >
+                選手を追加する
               </Button>
             </div>
             
