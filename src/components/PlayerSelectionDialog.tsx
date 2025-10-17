@@ -53,6 +53,22 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onP
   // カテゴリの選択肢（固定）
   const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
 
+  // Helper function to get the highest evaluation rank
+  const getHighestEvaluationRank = (evaluations: string[] | undefined): number => {
+    if (!evaluations || evaluations.length === 0) return 999; // 評価なしは最後
+    
+    // 選手の評価の中で最も高い順位（evaluationOrderで最も早く出現する）を見つける
+    let highestRank = 999;
+    evaluations.forEach(evaluation => {
+      const rank = evaluationOrder.indexOf(evaluation);
+      if (rank !== -1 && rank < highestRank) {
+        highestRank = rank;
+      }
+    });
+    
+    return highestRank;
+  };
+
   // Filter players based on search criteria
   const filteredPlayers = players.filter(player => {
     const matchesSearch = player.name.toLowerCase().includes(searchName.toLowerCase());
@@ -68,6 +84,17 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onP
       (player.evaluations && player.evaluations.some(evaluation => filterEvaluations.includes(evaluation)));
     
     return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation;
+  }).sort((a, b) => {
+    // 評価が高い順に並び替え（評価が同じ場合は名前順）
+    const rankA = getHighestEvaluationRank(a.evaluations);
+    const rankB = getHighestEvaluationRank(b.evaluations);
+    
+    if (rankA !== rankB) {
+      return rankA - rankB;
+    }
+    
+    // 評価が同じ場合は名前順
+    return a.name.localeCompare(b.name, 'ja');
   });
 
   const handleSelect = (playerId?: number) => {
