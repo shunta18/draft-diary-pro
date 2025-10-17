@@ -1400,6 +1400,7 @@ const VirtualDraft = () => {
                             players={availablePlayers}
                             selectedPlayerId={currentSelection?.playerId || null}
                             onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                            onPlayerAdded={loadPlayers}
                           >
                             <Button variant="outline" className="w-full">
                               選手を選択
@@ -1482,6 +1483,7 @@ const VirtualDraft = () => {
                               players={availablePlayers}
                               selectedPlayerId={null}
                               onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                              onPlayerAdded={loadPlayers}
                             >
                               <Button variant="default" className="w-full">
                                 {isDevelopmentDraft ? `育成${currentRound}位` : `${currentRound}位`}指名する

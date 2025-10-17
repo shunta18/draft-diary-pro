@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Player as LocalPlayer } from "@/lib/playerStorage";
 import { Player as SupabasePlayer } from "@/lib/supabase-storage";
 import { Search, ChevronDown } from "lucide-react";
+import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 
 // Union type to handle both data formats
 type PlayerData = LocalPlayer | SupabasePlayer;
@@ -16,6 +17,7 @@ interface PlayerSelectionDialogProps {
   players: PlayerData[];
   selectedPlayerId?: number;
   onSelect: (playerId: number | undefined) => void;
+  onPlayerAdded?: () => void;
   children: React.ReactNode;
 }
 
@@ -30,8 +32,9 @@ const evaluationOrder = [
   "4位", "5位", "6位以下", "育成"
 ];
 
-export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, children }: PlayerSelectionDialogProps) {
+export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onPlayerAdded, children }: PlayerSelectionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [filterPositions, setFilterPositions] = useState<string[]>([]);
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
@@ -246,9 +249,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
               <Button
                 variant="outline"
                 className="w-full justify-start"
-                onClick={() => {
-                  window.open('/players/new', '_blank');
-                }}
+                onClick={() => setIsPlayerFormOpen(true)}
               >
                 選手を追加する
               </Button>
@@ -287,6 +288,14 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
           </div>
         </div>
       </DialogContent>
+      
+      <PlayerFormDialog 
+        isOpen={isPlayerFormOpen}
+        onOpenChange={setIsPlayerFormOpen}
+        onSuccess={() => {
+          onPlayerAdded?.();
+        }}
+      />
     </Dialog>
   );
 }
