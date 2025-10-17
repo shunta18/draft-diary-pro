@@ -720,85 +720,55 @@ export default function Players() {
                     className="flex-1 cursor-pointer" 
                     onClick={() => setSelectedPlayer(player)}
                   >
-                    <div className="flex items-center space-x-2 mb-2 flex-wrap gap-2">
-                      <h3 className="font-bold text-lg text-primary">{player.name}</h3>
-                      {player.is_favorite && (
-                        <Badge className="bg-yellow-500 text-white text-xs">
-                          <ThumbsUp className="h-3 w-3 mr-1 fill-current" />
-                          イチオシ
+                   <div className="flex items-start justify-between gap-2 mb-2">
+                      <div className="flex items-center flex-wrap gap-2 min-w-0">
+                        <h3 className="font-bold text-base sm:text-lg text-primary break-words">{player.name}</h3>
+                        {player.is_favorite && (
+                          <Badge className="bg-yellow-500 text-white text-xs flex-shrink-0">
+                            <ThumbsUp className="h-3 w-3 mr-1 fill-current" />
+                            イチオシ
+                          </Badge>
+                        )}
+                        <Badge variant="secondary" className="text-xs flex-shrink-0">
+                          {player.category}
                         </Badge>
-                      )}
-                      <Badge variant="secondary" className="text-xs">
-                        {player.category}
-                      </Badge>
-                      {(player as any).is_public && (
-                        <Badge className="bg-green-500 text-white text-xs">
-                          <CheckCircle2 className="h-3 w-3 mr-1" />
-                          公開中
-                        </Badge>
-                      )}
-                      {player.id === 1 && (
-                        <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
-                          サンプル
-                        </Badge>
+                        {(player as any).is_public && (
+                          <Badge className="bg-green-500 text-white text-xs flex-shrink-0">
+                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                            公開中
+                          </Badge>
+                        )}
+                        {player.id === 1 && (
+                          <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300 flex-shrink-0">
+                            サンプル
+                          </Badge>
+                        )}
+                      </div>
+                      {user && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(player);
+                          }}
+                        >
+                          <ThumbsUp 
+                            className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
+                          />
+                        </Button>
                       )}
                     </div>
                   
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <span>{player.team}</span>
-                      <span>•</span>
-                      <span>{(player as any).main_position || (player as any).mainPosition || sortPositions(player.position).split('、')[0]}</span>
-                      <span>•</span>
-                      <span>{player.year || 2025}年</span>
+                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
+                      <span className="break-all">{player.team}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="break-all">{(player as any).main_position || (player as any).mainPosition || sortPositions(player.position).split('、')[0]}</span>
+                      <span className="hidden sm:inline">•</span>
+                      <span className="whitespace-nowrap">{player.year || 2025}年</span>
                     </div>
                   </div>
-                  {user && (
-                    <div className="flex gap-2 flex-shrink-0">
-                      {!(player as any).is_public && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={uploadingPlayerId === player.id}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <Upload className="h-4 w-4 mr-1" />
-                              {uploadingPlayerId === player.id ? "アップロード中..." : "共有"}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>共通DBにアップロード</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                「{player.name}」を共通データベースに公開しますか？
-                                <br />
-                                公開後は他のユーザーが閲覧・インポートできるようになります。
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleUploadToPublic(player)}>
-                                アップロード
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleFavorite(player);
-                        }}
-                      >
-                        <ThumbsUp 
-                          className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
-                        />
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </CardContent>
             </Card>
