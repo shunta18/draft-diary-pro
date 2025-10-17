@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer } from "@/lib/supabase-storage";
+import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, getPublicDiaryEntries, importDiaryFromPublic, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry } from "@/lib/supabase-storage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -86,12 +86,19 @@ export default function PublicPlayers() {
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<PublicPlayer | null>(null);
   const [players, setPlayers] = useState<PublicPlayer[]>([]);
+  const [diaries, setDiaries] = useState<PublicDiaryEntry[]>([]);
+  const [selectedDiary, setSelectedDiary] = useState<PublicDiaryEntry | null>(null);
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"latest" | "views" | "imports">("latest");
+  const [activeTab, setActiveTab] = useState("players");
 
   useEffect(() => {
-    loadPlayers();
-  }, []);
+    if (activeTab === "players") {
+      loadPlayers();
+    } else if (activeTab === "diaries") {
+      loadDiaries();
+    }
+  }, [activeTab]);
 
   const loadPlayers = async () => {
     setLoading(true);
@@ -99,8 +106,19 @@ export default function PublicPlayers() {
       const data = await getPublicPlayers();
       setPlayers(data);
     } catch (error) {
-      console.error('Failed to load public players:', error);
-      setPlayers([]);
+      console.error('Failed to load players:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadDiaries = async () => {
+    setLoading(true);
+    try {
+      const data = await getPublicDiaryEntries();
+      setDiaries(data);
+    } catch (error) {
+      console.error('Failed to load diaries:', error);
     } finally {
       setLoading(false);
     }
@@ -195,6 +213,65 @@ export default function PublicPlayers() {
     }
   };
 
+  const handleDiaryClick = async (diary: PublicDiaryEntry) => {
+    setSelectedDiary(diary);
+    try {
+      await incrementPublicDiaryViewCount(diary.id);
+    } catch (error) {
+      console.error('Failed to increment view count:', error);
+    }
+  };
+
+  const handleImportDiary = async (diary: PublicDiaryEntry) => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "ログインが必要です",
+        description: "観戦日記をインポートするにはログインしてください",
+      });
+      navigate('/auth');
+      return;
+    }
+
+    try {
+      await importDiaryFromPublic(diary.id);
+      toast({
+        title: "インポートしました",
+        description: "観戦日記をあなたのリストに追加しました",
+      });
+      setSelectedDiary(null);
+      loadDiaries();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "エラー",
+        description: error.message || "インポートに失敗しました",
+      });
+    }
+  };
+
+  const handleDeleteDiary = async (diary: PublicDiaryEntry) => {
+    if (!confirm('この観戦日記を削除してもよろしいですか?')) {
+      return;
+    }
+
+    try {
+      await deletePublicDiaryEntry(diary.id);
+      toast({
+        title: "削除しました",
+        description: "観戦日記を削除しました",
+      });
+      setSelectedDiary(null);
+      loadDiaries();
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "エラー",
+        description: "削除に失敗しました",
+      });
+    }
+  };
+
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedYear("all");
@@ -219,9 +296,10 @@ export default function PublicPlayers() {
         </div>
       </div>
 
-      <Tabs defaultValue="players" className="p-4">
-        <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
+        <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
           <TabsTrigger value="players">選手を探す</TabsTrigger>
+          <TabsTrigger value="diaries">観戦日記</TabsTrigger>
           <TabsTrigger value="users" onClick={() => navigate('/public-players/users')}>投稿者から探す</TabsTrigger>
         </TabsList>
 
@@ -358,6 +436,53 @@ export default function PublicPlayers() {
                             <AvatarFallback><User className="h-3 w-3" /></AvatarFallback>
                           </Avatar>
                           <span>{player.profiles?.display_name || "名無し"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="diaries" className="space-y-4">
+          {/* Diary Cards */}
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">読み込み中...</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {diaries.map((diary) => (
+                <Card key={diary.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardContent className="p-4" onClick={() => handleDiaryClick(diary)}>
+                    <div className="space-y-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-lg">{diary.match_card}</h3>
+                          <p className="text-sm text-muted-foreground">{diary.date}</p>
+                        </div>
+                        <Badge variant="outline">{diary.category}</Badge>
+                      </div>
+
+                      <div className="space-y-1">
+                        <p className="text-sm text-muted-foreground">{diary.venue}</p>
+                        <p className="text-sm font-medium">{diary.score}</p>
+                      </div>
+
+                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
+                        <div className="flex items-center gap-1">
+                          <Eye className="h-3 w-3" />
+                          <span>{diary.view_count}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Download className="h-3 w-3" />
+                          <span>{diary.import_count}</span>
+                        </div>
+                        <div className="flex items-center gap-1 ml-auto">
+                          <User className="h-3 w-3" />
+                          <span>{diary.profile?.display_name || "名無し"}</span>
                         </div>
                       </div>
                     </div>
@@ -558,6 +683,113 @@ export default function PublicPlayers() {
                   </Button>
                 )}
                 <Button variant="outline" onClick={() => setSelectedPlayer(null)}>
+                  閉じる
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Diary Detail Dialog */}
+      <Dialog open={!!selectedDiary} onOpenChange={() => setSelectedDiary(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedDiary?.match_card}</DialogTitle>
+          </DialogHeader>
+          {selectedDiary && (
+            <div className="space-y-4">
+              <Link 
+                to={`/public-players/users/${selectedDiary.user_id}`}
+                className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
+                onClick={() => setSelectedDiary(null)}
+              >
+                <Avatar className="h-12 w-12">
+                  <AvatarImage src={selectedDiary.profile?.avatar_url} />
+                  <AvatarFallback><User /></AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="font-medium">{selectedDiary.profile?.display_name || "名無し"}</p>
+                  <p className="text-sm text-muted-foreground">投稿者</p>
+                </div>
+              </Link>
+
+              <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+                <div className="flex items-center gap-2">
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">閲覧数: {selectedDiary.view_count}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Download className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">インポート数: {selectedDiary.import_count}</span>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <Label>日付</Label>
+                  <p>{selectedDiary.date}</p>
+                </div>
+                <div>
+                  <Label>会場</Label>
+                  <p>{selectedDiary.venue}</p>
+                </div>
+                <div>
+                  <Label>スコア</Label>
+                  <p>{selectedDiary.score}</p>
+                </div>
+                <div>
+                  <Label>カテゴリ</Label>
+                  <Badge>{selectedDiary.category}</Badge>
+                </div>
+                {selectedDiary.player_comments && (
+                  <div>
+                    <Label>選手コメント</Label>
+                    <p className="text-sm whitespace-pre-wrap">{selectedDiary.player_comments}</p>
+                  </div>
+                )}
+                {selectedDiary.overall_impression && (
+                  <div>
+                    <Label>全体の感想</Label>
+                    <p className="text-sm whitespace-pre-wrap">{selectedDiary.overall_impression}</p>
+                  </div>
+                )}
+                {selectedDiary.videos && selectedDiary.videos.length > 0 && (
+                  <div>
+                    <Label>動画</Label>
+                    <div className="space-y-1">
+                      {selectedDiary.videos.map((video, index) => (
+                        <a
+                          key={index}
+                          href={video}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline block"
+                        >
+                          {video}
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-2 pt-4">
+                {user && (user.id === selectedDiary.user_id || isAdmin) ? (
+                  <Button 
+                    variant="destructive" 
+                    onClick={() => handleDeleteDiary(selectedDiary)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    削除
+                  </Button>
+                ) : (
+                  <Button onClick={() => handleImportDiary(selectedDiary)} className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />
+                    インポート
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => setSelectedDiary(null)}>
                   閉じる
                 </Button>
               </div>

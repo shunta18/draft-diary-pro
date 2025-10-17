@@ -993,3 +993,241 @@ export const isFollowing = async (followingId: string): Promise<boolean> => {
 
   return !!data;
 };
+
+// ============= Public Diary Entries =============
+
+export interface PublicDiaryEntry {
+  id: string;
+  user_id: string;
+  original_diary_id?: number;
+  match_card: string;
+  date: string;
+  venue: string;
+  score: string;
+  category: string;
+  player_comments?: string;
+  overall_impression?: string;
+  videos?: string[];
+  view_count: number;
+  import_count: number;
+  created_at: string;
+  updated_at: string;
+  profile?: Profile;
+}
+
+export const getPublicDiaryEntries = async (): Promise<PublicDiaryEntry[]> => {
+  try {
+    const { data: entries, error } = await supabase
+      .from('public_diary_entries' as any)
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Fetch profiles separately
+    const userIds = [...new Set(((entries as any) || []).map((e: any) => e.user_id).filter(Boolean) as string[])];
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .in('user_id', userIds);
+
+    const profileMap = new Map(profiles?.map(p => [
+      p.user_id,
+      {
+        user_id: p.user_id,
+        display_name: p.display_name,
+        avatar_url: p.avatar_url,
+        bio: p.bio,
+        social_links: (p.social_links as any as SocialLink[]) || []
+      }
+    ]));
+
+    return ((entries as any) || []).map((entry: any) => ({
+      ...entry,
+      profile: profileMap.get(entry.user_id)
+    })) as PublicDiaryEntry[];
+  } catch (error) {
+    console.error('Failed to load public diary entries:', error);
+    return [];
+  }
+};
+
+export const uploadDiaryToPublic = async (diaryId: number): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('User must be logged in to upload diary');
+  }
+
+  // Get the diary entry
+  const diary = await getDiaryEntryById(diaryId);
+  if (!diary) {
+    throw new Error('Diary entry not found');
+  }
+
+  // Check if already uploaded
+  const { data: existing } = await supabase
+    .from('public_diary_entries' as any)
+    .select('id')
+    .eq('original_diary_id', diaryId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (existing) {
+    throw new Error('この観戦日記は既に公開されています');
+  }
+
+  // Upload to public
+  const { error } = await supabase
+    .from('public_diary_entries' as any)
+    .insert({
+      user_id: user.id,
+      original_diary_id: diaryId,
+      match_card: diary.match_card,
+      date: diary.date,
+      venue: diary.venue,
+      score: diary.score,
+      category: diary.category,
+      player_comments: diary.player_comments,
+      overall_impression: diary.overall_impression,
+      videos: diary.videos
+    });
+
+  if (error) {
+    console.error('Failed to upload diary to public:', error);
+    throw error;
+  }
+};
+
+export const deletePublicDiaryEntry = async (id: string): Promise<void> => {
+  const { error } = await supabase
+    .from('public_diary_entries' as any)
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Failed to delete public diary entry:', error);
+    throw error;
+  }
+};
+
+export const incrementPublicDiaryViewCount = async (diaryId: string): Promise<void> => {
+  const sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID();
+  sessionStorage.setItem('session_id', sessionId);
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Check if already viewed
+  let query = supabase
+    .from('public_diary_views' as any)
+    .select('id')
+    .eq('public_diary_id', diaryId);
+
+  if (user) {
+    query = query.eq('user_id', user.id);
+  } else {
+    query = query.eq('session_id', sessionId);
+  }
+
+  const { data: existingView } = await query.maybeSingle();
+
+  if (existingView) {
+    return;
+  }
+
+  // Record view
+  await supabase
+    .from('public_diary_views' as any)
+    .insert({
+      public_diary_id: diaryId,
+      user_id: user?.id,
+      session_id: user ? null : sessionId
+    });
+
+  // Get current count and increment
+  const { data: currentEntry } = await supabase
+    .from('public_diary_entries' as any)
+    .select('view_count')
+    .eq('id', diaryId)
+    .single();
+  
+  if (currentEntry) {
+    await supabase
+      .from('public_diary_entries' as any)
+      .update({ view_count: ((currentEntry as any).view_count || 0) + 1 })
+      .eq('id', diaryId);
+  }
+};
+
+export const importDiaryFromPublic = async (publicDiaryId: string): Promise<void> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('ログインが必要です');
+  }
+
+  // Get the public diary entry
+  const { data: publicDiary, error: fetchError } = await supabase
+    .from('public_diary_entries' as any)
+    .select('*')
+    .eq('id', publicDiaryId)
+    .single();
+
+  if (fetchError || !publicDiary) {
+    throw new Error('観戦日記が見つかりません');
+  }
+
+  // Check if already imported
+  const { data: existingImport } = await supabase
+    .from('public_diary_imports' as any)
+    .select('id')
+    .eq('public_diary_id', publicDiaryId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+
+  if (existingImport) {
+    throw new Error('この観戦日記は既にインポート済みです');
+  }
+
+  // Add to user's diary
+  const { error: insertError } = await supabase
+    .from('diary_entries')
+    .insert({
+      user_id: user.id,
+      match_card: (publicDiary as any).match_card,
+      date: (publicDiary as any).date,
+      venue: (publicDiary as any).venue,
+      score: (publicDiary as any).score,
+      category: (publicDiary as any).category,
+      player_comments: (publicDiary as any).player_comments,
+      overall_impression: (publicDiary as any).overall_impression,
+      videos: (publicDiary as any).videos
+    });
+
+  if (insertError) {
+    console.error('Failed to import diary:', insertError);
+    throw insertError;
+  }
+
+  // Record import
+  await supabase
+    .from('public_diary_imports' as any)
+    .insert({
+      public_diary_id: publicDiaryId,
+      user_id: user.id
+    });
+
+  // Get current count and increment
+  const { data: currentEntry } = await supabase
+    .from('public_diary_entries' as any)
+    .select('import_count')
+    .eq('id', publicDiaryId)
+    .single();
+  
+  if (currentEntry) {
+    await supabase
+      .from('public_diary_entries' as any)
+      .update({ import_count: ((currentEntry as any).import_count || 0) + 1 })
+      .eq('id', publicDiaryId);
+  }
+};
