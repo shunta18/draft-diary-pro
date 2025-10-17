@@ -1617,8 +1617,9 @@ const VirtualDraft = () => {
 
       {/* 全画面表示ダイアログ */}
       <Dialog open={isFullscreenView} onOpenChange={setIsFullscreenView}>
-        <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white">
-          <div className="h-full w-full flex flex-col">
+        <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white" hideCloseButton>
+          <div className="h-full w-full flex flex-col relative">
+            {/* 閉じるボタン */}
             <DialogClose className="absolute right-2 top-2 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-white p-1 shadow-md">
               <span className="text-black text-lg">✕</span>
             </DialogClose>
@@ -1650,10 +1651,10 @@ const VirtualDraft = () => {
               </Button>
             </div>
             
-            <div className="flex-1 flex flex-col items-center p-0.5 md:p-4 overflow-auto w-full">
-              <div className="flex flex-col items-center w-full mt-10 md:mt-0">
+            <div className="flex-1 flex items-start justify-center p-0.5 md:p-4 overflow-auto w-full">
+              <div className="flex flex-col items-center mt-10 md:mt-6">
                 {/* ロゴとブランディング */}
-                <div className="mb-3 md:mb-3 flex justify-center w-full">
+                <div className="mb-2 md:mb-3 flex justify-center">
                   <div className="flex items-center gap-0.5 md:gap-2">
                     <img src="/mustache-logo.png" alt="BaaS Logo" className="h-2 md:h-6 w-auto" />
                     <span className="font-semibold text-[8px] md:text-base text-black">BaaS 野球スカウトノート</span>
@@ -1661,7 +1662,7 @@ const VirtualDraft = () => {
                 </div>
                 
                 {/* テーブル */}
-                <div className="w-full overflow-hidden flex justify-center">
+                <div className="overflow-hidden">
                   <div style={{ transform: `scale(${zoomLevel})` }} className="origin-top transition-transform duration-200">
                   <Table className="border-collapse text-[9px]">
                     <TableHeader>
