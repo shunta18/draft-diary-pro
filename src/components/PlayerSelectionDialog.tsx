@@ -17,6 +17,7 @@ interface PlayerSelectionDialogProps {
   players: PlayerData[];
   selectedPlayerId?: number;
   onSelect: (playerId: number | undefined) => void;
+  onPlayerAdded?: () => void;
   children: React.ReactNode;
 }
 
@@ -31,7 +32,7 @@ const evaluationOrder = [
   "4位", "5位", "6位以下", "育成"
 ];
 
-export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, children }: PlayerSelectionDialogProps) {
+export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onPlayerAdded, children }: PlayerSelectionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
   const [searchName, setSearchName] = useState("");
@@ -292,7 +293,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, chi
         isOpen={isPlayerFormOpen}
         onOpenChange={setIsPlayerFormOpen}
         onSuccess={() => {
-          window.location.reload();
+          onPlayerAdded?.();
         }}
       />
     </Dialog>
