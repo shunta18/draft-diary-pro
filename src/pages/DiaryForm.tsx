@@ -410,19 +410,7 @@ export default function DiaryForm() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
-                  <Label htmlFor="playerComments">注目選手・コメント（任意）</Label>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={() => setIsPlayerDialogOpen(true)}
-                    className="flex items-center gap-2 w-full sm:w-auto"
-                  >
-                    <Plus className="h-4 w-4" />
-                    ドラフト候補選手を追加
-                  </Button>
-                </div>
+                <Label htmlFor="playerComments">注目選手・コメント（任意）</Label>
                 <Textarea
                   id="playerComments"
                   placeholder="田中太郎の投球が素晴らしかった。球速150km/h台を連発し..."
@@ -473,7 +461,7 @@ export default function DiaryForm() {
                 </div>
               </div>
 
-              <div className="flex space-x-2 pt-4">
+              <div className="flex flex-col sm:flex-row gap-2 pt-4">
                 <Button 
                   type="submit" 
                   variant="secondary"
@@ -481,8 +469,17 @@ export default function DiaryForm() {
                 >
                   {isEditing ? "更新" : "保存"}
                 </Button>
-                <Link to="/diary">
-                  <Button type="button" variant="outline" className="px-6">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsPlayerDialogOpen(true)}
+                  className="flex-1 flex items-center justify-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  選手追加
+                </Button>
+                <Link to="/diary" className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
                     キャンセル
                   </Button>
                 </Link>
