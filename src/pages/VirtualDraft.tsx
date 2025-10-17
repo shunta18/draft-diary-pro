@@ -180,7 +180,7 @@ const VirtualDraft = () => {
   const [isFullscreenView, setIsFullscreenView] = useState(false); // 全画面表示用
   const [zoomLevel, setZoomLevel] = useState(() => {
     const saved = localStorage.getItem('draftTableZoom');
-    return saved ? parseFloat(saved) : 0.35;
+    return saved ? parseFloat(saved) : 0.55;
   });
 
   // ズームレベルをlocalStorageに保存
@@ -197,7 +197,7 @@ const VirtualDraft = () => {
   };
 
   const handleZoomReset = () => {
-    setZoomLevel(0.35);
+    setZoomLevel(0.55);
   };
 
   useEffect(() => {
@@ -1651,19 +1651,19 @@ const VirtualDraft = () => {
               </Button>
             </div>
             
-            <div className="flex-1 flex items-center justify-center p-0.5 md:p-4 overflow-auto w-full">
-              <div className="flex flex-col items-center">
+            <div className="flex-1 flex items-start justify-start p-0.5 md:p-4 overflow-auto w-full">
+              <div className="flex flex-col items-start w-full">
                 {/* ロゴとブランディング */}
-                <div className="mb-2 md:mb-3 flex justify-center">
-                  <div className="flex items-center gap-0.5 md:gap-2">
+                <div className="mb-2 md:mb-3 w-full flex justify-start">
+                  <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
                     <img src="/mustache-logo.png" alt="BaaS Logo" className="h-2 md:h-6 w-auto" />
                     <span className="font-semibold text-[8px] md:text-base text-black">BaaS 野球スカウトノート</span>
                   </div>
                 </div>
                 
                 {/* テーブル */}
-                <div className="overflow-hidden">
-                  <div style={{ transform: `scale(${zoomLevel})` }} className="origin-center transition-transform duration-200">
+                <div className="overflow-visible w-full">
+                  <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }} className="transition-transform duration-200">
                   <Table className="border-collapse text-[9px]">
                     <TableHeader>
                       <TableRow>
