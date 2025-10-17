@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Upload, X, Save } from "lucide-react";
+import { ArrowLeft, Upload, X, Save, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { addDiaryEntry, updateDiaryEntry, getDiaryEntryById, DiaryEntry as Supab
 import { useAuth } from "@/hooks/useAuth";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 
 const DRAFT_KEY = 'diary_form_draft';
 
@@ -39,6 +40,7 @@ export default function DiaryForm() {
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout>();
   const initialDataRef = useRef<string>("");
 
@@ -291,6 +293,14 @@ export default function DiaryForm() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handlePlayerAdded = () => {
+    setIsPlayerDialogOpen(false);
+    toast({
+      title: "選手を追加しました",
+      description: "選手の追加が完了しました。",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <Navigation />
@@ -400,7 +410,19 @@ export default function DiaryForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="playerComments">注目選手・コメント（任意）</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="playerComments">注目選手・コメント（任意）</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsPlayerDialogOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    選手追加
+                  </Button>
+                </div>
                 <Textarea
                   id="playerComments"
                   placeholder="田中太郎の投球が素晴らしかった。球速150km/h台を連発し..."
@@ -469,7 +491,13 @@ export default function DiaryForm() {
           </CardContent>
         </Card>
       </div>
-      
+
+      <PlayerFormDialog
+        isOpen={isPlayerDialogOpen}
+        onOpenChange={setIsPlayerDialogOpen}
+        onSuccess={handlePlayerAdded}
+      />
+
       <Footer />
     </div>
   );
