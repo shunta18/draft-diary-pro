@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Calendar, MapPin } from "lucide-react";
+import { ArrowLeft, Plus, Search, Calendar, MapPin, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import DiaryDetailDialog from "@/components/DiaryDetailDialog";
 import { DiaryEntry, getDiaryEntries as getLocalDiaryEntries } from "@/lib/diaryStorage";
-import { getDiaryEntries, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
+import { getDiaryEntries, uploadDiaryToPublic, DiaryEntry as SupabaseDiaryEntry } from "@/lib/supabase-storage";
 import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 import { SEO } from "@/components/SEO";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
@@ -25,6 +27,7 @@ const categoryColors = {
 export default function Diary() {
   const navigate = useNavigate();
   const { user, loading } = useAuth();
+  const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("all");
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -32,6 +35,8 @@ export default function Diary() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [diaryEntries, setDiaryEntries] = useState<(DiaryEntry | SupabaseDiaryEntry)[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [selectedDiaries, setSelectedDiaries] = useState<number[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     const loadDiaryEntries = async () => {
@@ -92,6 +97,73 @@ export default function Diary() {
       console.error('Failed to reload diary entries:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSelectDiary = (diaryId: number) => {
+    setSelectedDiaries(prev => 
+      prev.includes(diaryId) 
+        ? prev.filter(id => id !== diaryId)
+        : [...prev, diaryId]
+    );
+  };
+
+  const handleSelectAll = () => {
+    if (selectedDiaries.length === filteredEntries.length) {
+      setSelectedDiaries([]);
+    } else {
+      setSelectedDiaries(filteredEntries.map(entry => entry.id as number));
+    }
+  };
+
+  const handleUploadToPublic = async () => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: "ログインが必要です",
+        description: "データベースに共有するにはログインしてください",
+      });
+      navigate('/auth');
+      return;
+    }
+
+    if (selectedDiaries.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "観戦日記が選択されていません",
+        description: "共有する観戦日記を選択してください",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const diaryId of selectedDiaries) {
+      try {
+        await uploadDiaryToPublic(diaryId);
+        successCount++;
+      } catch (error: any) {
+        console.error(`Failed to upload diary ${diaryId}:`, error);
+        errorCount++;
+      }
+    }
+
+    setIsUploading(false);
+    setSelectedDiaries([]);
+
+    if (successCount > 0) {
+      toast({
+        title: "アップロード完了",
+        description: `${successCount}件の観戦日記をデータベースに共有しました${errorCount > 0 ? `（${errorCount}件は既に共有済みまたはエラー）` : ''}`,
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "アップロード失敗",
+        description: "選択した観戦日記は既に共有されているか、エラーが発生しました",
+      });
     }
   };
 
@@ -156,14 +228,31 @@ export default function Diary() {
               <h1 className="text-lg md:text-xl font-bold text-primary">観戦日記</h1>
             </div>
             
-            <Button 
-              onClick={handleNewRecord}
-              variant="secondary"
-              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
-            >
-              <Plus className="h-4 w-4 md:mr-2" />
-              <span className="hidden md:inline">新規記録</span>
-            </Button>
+            <div className="flex gap-2">
+              {user && selectedDiaries.length > 0 && (
+                <Button 
+                  onClick={handleUploadToPublic}
+                  disabled={isUploading}
+                  variant="outline"
+                  size="sm"
+                >
+                  <Upload className="h-4 w-4 md:mr-2" />
+                  <span className="hidden md:inline">
+                    {isUploading ? 'アップロード中...' : `データベースに共有 (${selectedDiaries.length})`}
+                  </span>
+                  <span className="md:hidden">{selectedDiaries.length}</span>
+                </Button>
+              )}
+              <Button 
+                onClick={handleNewRecord}
+                variant="secondary"
+                size="sm"
+                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+              >
+                <Plus className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">新規記録</span>
+              </Button>
+            </div>
           </div>
         </div>
         
@@ -236,6 +325,22 @@ export default function Diary() {
 
         {/* Diary Entries */}
         <div className="space-y-3">
+          {user && filteredEntries.length > 0 && (
+            <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+              <Checkbox
+                id="select-all"
+                checked={selectedDiaries.length === filteredEntries.length && filteredEntries.length > 0}
+                onCheckedChange={handleSelectAll}
+              />
+              <label
+                htmlFor="select-all"
+                className="text-sm font-medium cursor-pointer"
+              >
+                すべて選択
+              </label>
+            </div>
+          )}
+          
           {isLoading ? (
             <Card className="gradient-card border-0 shadow-soft">
               <CardContent className="p-8 text-center">
@@ -245,48 +350,62 @@ export default function Diary() {
           ) : filteredEntries.map((entry) => (
             <Card 
               key={entry.id} 
-              className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer"
-              onClick={() => {
-                setSelectedEntry(entry);
-                setIsDetailOpen(true);
-              }}
+              className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth"
             >
               <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-base text-primary truncate mb-2">
-                      {'match_card' in entry ? entry.match_card : entry.matchCard}
-                    </h3>
-                    <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                      <div className="flex items-center space-x-1">
-                        <Calendar className="h-3 w-3" />
-                        <span>{entry.date}</span>
+                <div className="flex items-start gap-3">
+                  {user && (
+                    <Checkbox
+                      checked={selectedDiaries.includes(entry.id as number)}
+                      onCheckedChange={() => handleSelectDiary(entry.id as number)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="mt-1"
+                    />
+                  )}
+                  <div 
+                    className="flex-1 cursor-pointer"
+                    onClick={() => {
+                      setSelectedEntry(entry);
+                      setIsDetailOpen(true);
+                    }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-base text-primary truncate mb-2">
+                          {'match_card' in entry ? entry.match_card : entry.matchCard}
+                        </h3>
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-3 w-3" />
+                            <span>{entry.date}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="h-3 w-3" />
+                            <span className="truncate">{entry.venue}</span>
+                          </div>
+                          {entry.score && (
+                            <span className="font-medium text-primary">{entry.score}</span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-1">
-                        <MapPin className="h-3 w-3" />
-                        <span className="truncate">{entry.venue}</span>
+                      
+                      <div className="flex items-center space-x-2">
+                        <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium shrink-0`}>
+                          {entry.category}
+                        </Badge>
+                        {entry.id === 1 && (
+                          <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300 shrink-0">
+                            サンプル
+                          </Badge>
+                        )}
                       </div>
-                      {entry.score && (
-                        <span className="font-medium text-primary">{entry.score}</span>
-                      )}
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2">
-                    <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium shrink-0`}>
-                      {entry.category}
-                    </Badge>
-                    {entry.id === 1 && (
-                      <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300 shrink-0">
-                        サンプル
-                      </Badge>
-                    )}
+                    
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {'player_comments' in entry ? entry.player_comments : (entry as any).playerComments}
+                    </p>
                   </div>
                 </div>
-                
-                <p className="text-sm text-muted-foreground line-clamp-2">
-                  {'player_comments' in entry ? entry.player_comments : (entry as any).playerComments}
-                </p>
               </CardContent>
             </Card>
           ))}
