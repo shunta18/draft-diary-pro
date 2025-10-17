@@ -1620,8 +1620,12 @@ const VirtualDraft = () => {
         <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white" hideCloseButton>
           <div className="h-full w-full flex flex-col relative">
             {/* 閉じるボタン */}
-            <DialogClose className="absolute right-2 top-2 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-white p-1 shadow-md">
-              <span className="text-black text-lg">✕</span>
+            <DialogClose asChild>
+              <Button 
+                className="absolute right-2 top-2 z-50 h-8 w-8 rounded-full bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg p-0 flex items-center justify-center"
+              >
+                <span className="text-xl font-bold">✕</span>
+              </Button>
             </DialogClose>
             
             {/* ズームコントロールボタン */}
