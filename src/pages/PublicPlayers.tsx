@@ -426,13 +426,6 @@ export default function PublicPlayers() {
                       <Download className="h-4 w-4 mr-2" />
                       一括インポート
                     </Button>
-                    <Button 
-                      onClick={() => setSelectedPlayerIds(new Set())} 
-                      variant="outline" 
-                      size="sm"
-                    >
-                      選択解除
-                    </Button>
                   </div>
                 )}
               </div>
