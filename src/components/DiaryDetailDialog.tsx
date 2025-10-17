@@ -86,11 +86,11 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
         <DialogHeader className="space-y-3">
-          <div className="flex items-start justify-between gap-3">
-            <DialogTitle className="text-base sm:text-lg font-semibold flex-1 leading-tight">
+          <div className="flex flex-col gap-2 pr-8">
+            <DialogTitle className="text-lg sm:text-xl font-semibold leading-tight">
               {'match_card' in entry ? entry.match_card : (entry as any).matchCard}
             </DialogTitle>
-            <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} text-xs font-medium flex-shrink-0`}>
+            <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} text-xs font-medium self-start`}>
               {entry.category}
             </Badge>
           </div>
