@@ -462,13 +462,6 @@ export default function DiaryForm() {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-2 pt-4">
-                <Button 
-                  type="submit" 
-                  variant="secondary"
-                  className="flex-1 gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
-                >
-                  {isEditing ? "更新" : "保存"}
-                </Button>
                 <Button
                   type="button"
                   variant="secondary"
@@ -477,6 +470,13 @@ export default function DiaryForm() {
                 >
                   <Plus className="h-4 w-4" />
                   選手追加
+                </Button>
+                <Button 
+                  type="submit" 
+                  variant="secondary"
+                  className="flex-1 gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
+                >
+                  {isEditing ? "更新" : "保存"}
                 </Button>
                 <Link to="/diary" className="flex-1">
                   <Button type="button" variant="outline" className="w-full">
