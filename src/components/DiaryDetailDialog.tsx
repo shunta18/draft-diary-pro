@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Edit, Share2, Copy, ExternalLink, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Edit, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,31 +32,6 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
   const navigate = useNavigate();
   
   if (!entry) return null;
-
-  const handleShare = (platform: 'twitter' | 'line' | 'copy') => {
-    const matchCard = 'match_card' in entry ? entry.match_card : (entry as any).matchCard;
-    const playerComments = 'player_comments' in entry ? entry.player_comments : (entry as any).playerComments;
-    const text = `観戦記録: ${matchCard}\n会場: ${entry.venue}\n日付: ${entry.date}\n${entry.score ? `スコア: ${entry.score}\n` : ''}${playerComments}`;
-    
-    switch (platform) {
-      case 'twitter':
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-        window.open(twitterUrl, '_blank');
-        break;
-      case 'line':
-        const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`;
-        window.open(lineUrl, '_blank');
-        break;
-      case 'copy':
-        navigator.clipboard.writeText(text).then(() => {
-          toast({
-            title: "コピーしました",
-            description: "観戦記録をクリップボードにコピーしました。",
-          });
-        });
-        break;
-    }
-  };
 
   const handleDelete = async () => {
     if (!user) {
@@ -230,37 +205,6 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
               </div>
             </div>
           )}
-
-          {/* SNS Share Section */}
-          <div className="space-y-2 pt-4 border-t">
-            <h3 className="text-lg font-semibold">共有</h3>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                onClick={() => handleShare('twitter')}
-                className="flex-1"
-              >
-                <Share2 className="h-4 w-4 mr-2" />
-                Twitter
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleShare('line')}
-                className="flex-1"
-              >
-                <Share2 className="h-4 w-4 mr-2" />
-                LINE
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleShare('copy')}
-                className="flex-1"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                コピー
-              </Button>
-            </div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>
