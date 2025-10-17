@@ -1454,7 +1454,7 @@ const VirtualDraft = () => {
                               {allSelections.map((sel, idx) => {
                                 if (sel.type === 'lost') {
                                   return (
-                                    <p key={`lost-${idx}`} className="text-sm mb-1 text-red-600">
+                                    <p key={`lost-${idx}`} className="text-sm mb-1">
                                       抽選外れ: {sel.playerName} <span className="text-xs text-muted-foreground">({sel.round}位)</span>
                                     </p>
                                   );
