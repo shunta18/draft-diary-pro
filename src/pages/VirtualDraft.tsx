@@ -1651,8 +1651,8 @@ const VirtualDraft = () => {
               </Button>
             </div>
             
-            <div className="flex-1 flex items-start justify-center p-0.5 md:p-4 overflow-auto w-full">
-              <div className="flex flex-col items-center mt-10 md:mt-6">
+            <div className="flex-1 flex items-center justify-center p-0.5 md:p-4 overflow-auto w-full">
+              <div className="flex flex-col items-center">
                 {/* ロゴとブランディング */}
                 <div className="mb-2 md:mb-3 flex justify-center">
                   <div className="flex items-center gap-0.5 md:gap-2">
@@ -1663,7 +1663,7 @@ const VirtualDraft = () => {
                 
                 {/* テーブル */}
                 <div className="overflow-hidden">
-                  <div style={{ transform: `scale(${zoomLevel})` }} className="origin-top transition-transform duration-200">
+                  <div style={{ transform: `scale(${zoomLevel})` }} className="origin-center transition-transform duration-200">
                   <Table className="border-collapse text-[9px]">
                     <TableHeader>
                       <TableRow>
