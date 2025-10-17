@@ -299,8 +299,8 @@ export default function PublicPlayers() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
         <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
           <TabsTrigger value="players">選手を探す</TabsTrigger>
-          <TabsTrigger value="diaries">観戦日記</TabsTrigger>
           <TabsTrigger value="users" onClick={() => navigate('/public-players/users')}>投稿者から探す</TabsTrigger>
+          <TabsTrigger value="diaries">観戦日記</TabsTrigger>
         </TabsList>
 
         <TabsContent value="players" className="space-y-4">
