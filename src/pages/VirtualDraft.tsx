@@ -1619,15 +1619,6 @@ const VirtualDraft = () => {
       <Dialog open={isFullscreenView} onOpenChange={setIsFullscreenView}>
         <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white" hideCloseButton>
           <div className="h-full w-full flex flex-col relative">
-            {/* 閉じるボタン */}
-            <DialogClose asChild>
-              <Button 
-                className="absolute right-2 top-2 z-50 h-8 w-8 rounded-full bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg p-0 flex items-center justify-center"
-              >
-                <span className="text-xl font-bold">✕</span>
-              </Button>
-            </DialogClose>
-            
             {/* ズームコントロールボタン */}
             <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
               <Button
@@ -1653,6 +1644,14 @@ const VirtualDraft = () => {
               >
                 リセット
               </Button>
+              <DialogClose asChild>
+                <Button
+                  size="sm"
+                  className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
+                >
+                  閉じる
+                </Button>
+              </DialogClose>
             </div>
             
             <div className="flex-1 flex items-start justify-start p-0.5 md:p-4 overflow-auto w-full">
