@@ -1437,15 +1437,20 @@ const VirtualDraft = () => {
                               type: 'picked' as const 
                             }))
                           ].sort((a, b) => {
-                            if (a.type === 'lost' && b.type === 'lost') return a.round - b.round;
+                            // まずroundで昇順ソート
+                            if (a.round !== b.round) return a.round - b.round;
+                            
+                            // 同じroundの場合、lostを先に表示
+                            if (a.type !== b.type) return a.type === 'lost' ? -1 : 1;
+                            
+                            // 同じtype、同じroundの場合
                             if (a.type === 'picked' && b.type === 'picked') {
                               const aIsDev = 'isDevelopment' in a && a.isDevelopment;
                               const bIsDev = 'isDevelopment' in b && b.isDevelopment;
                               if (aIsDev !== bIsDev) return aIsDev ? 1 : -1;
-                              return a.round - b.round;
                             }
-                            if (a.round === b.round) return a.type === 'lost' ? -1 : 1;
-                            return a.round - b.round;
+                            
+                            return 0;
                           });
 
                           return (
@@ -1454,7 +1459,7 @@ const VirtualDraft = () => {
                               {allSelections.map((sel, idx) => {
                                 if (sel.type === 'lost') {
                                   return (
-                                    <p key={`lost-${idx}`} className="text-sm mb-1 text-red-600">
+                                    <p key={`lost-${idx}`} className="text-sm mb-1">
                                       抽選外れ: {sel.playerName} <span className="text-xs text-muted-foreground">({sel.round}位)</span>
                                     </p>
                                   );
