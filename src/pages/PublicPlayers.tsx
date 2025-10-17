@@ -403,7 +403,7 @@ export default function PublicPlayers() {
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full">
                   <Label className="text-sm">並び替え:</Label>
                   <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                     <SelectTrigger className="w-auto">
@@ -418,11 +418,11 @@ export default function PublicPlayers() {
                 </div>
                 
                 {selectedPlayerIds.size > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2 flex-wrap w-full">
                     <span className="text-sm text-muted-foreground">
                       {selectedPlayerIds.size}名選択中
                     </span>
-                    <Button onClick={handleBulkImport} size="sm">
+                    <Button onClick={handleBulkImport} size="sm" className="flex-1">
                       <Download className="h-4 w-4 mr-2" />
                       一括インポート
                     </Button>
