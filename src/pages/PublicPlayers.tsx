@@ -404,9 +404,9 @@ export default function PublicPlayers() {
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2 w-full">
-                  <Label className="text-sm">並び替え:</Label>
+                  <Label className="text-sm whitespace-nowrap">並び替え:</Label>
                   <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                    <SelectTrigger className="w-auto">
+                    <SelectTrigger className="flex-1">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
