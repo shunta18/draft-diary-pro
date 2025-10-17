@@ -9,7 +9,6 @@ import Index from "./pages/Index";
 import Players from "./pages/Players";
 import PlayerForm from "./pages/PlayerForm";
 import PublicPlayers from "./pages/PublicPlayers";
-import PublicPlayersUsers from "./pages/PublicPlayersUsers";
 import UserPublicPlayers from "./pages/UserPublicPlayers";
 import Draft from "./pages/Draft";
 import VirtualDraft from "./pages/VirtualDraft";
@@ -42,7 +41,6 @@ const AppContent = () => {
           <Route path="/players/:id/edit" element={<PlayerForm />} />
           <Route path="/public-players" element={<PublicPlayers />} />
           <Route path="/public-players/:id/edit" element={<PlayerForm />} />
-          <Route path="/public-players/users" element={<PublicPlayersUsers />} />
           <Route path="/public-players/users/:userId" element={<UserPublicPlayers />} />
           <Route path="/draft" element={<Draft />} />
           <Route path="/virtual-draft" element={<VirtualDraft />} />

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Search, Filter, Eye, Download, User, Calendar, ChevronDown, Pencil, Trash2 } from "lucide-react";
+import { Search, Filter, Eye, Download, User, Calendar, ChevronDown, Pencil, Trash2, Upload, UserPlus, UserMinus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, getPublicDiaryEntries, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry } from "@/lib/supabase-storage";
+import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, getPublicDiaryEntries, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry, getUserProfiles, followUser, unfollowUser, getFollowedUsers, type UserProfileWithStats } from "@/lib/supabase-storage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -80,7 +80,7 @@ export default function PublicPlayers() {
   const { user, isAdmin } = useAuth();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedYear, setSelectedYear] = useState("all");
+  const [selectedYear, setSelectedYear] = useState("2025");
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
@@ -92,14 +92,21 @@ export default function PublicPlayers() {
   const [sortBy, setSortBy] = useState<"latest" | "views" | "imports">("latest");
   const [activeTab, setActiveTab] = useState("players");
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
+  const [users, setUsers] = useState<UserProfileWithStats[]>([]);
+  const [usersSortBy, setUsersSortBy] = useState<"uploads" | "views" | "imports">("uploads");
+  const [followedUsers, setFollowedUsers] = useState<string[]>([]);
+  const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
+  const [showFollowedOnly, setShowFollowedOnly] = useState(false);
 
   useEffect(() => {
     if (activeTab === "players") {
       loadPlayers();
     } else if (activeTab === "diaries") {
       loadDiaries();
+    } else if (activeTab === "users") {
+      loadUsers();
     }
-  }, [activeTab]);
+  }, [activeTab, user]);
 
   const loadPlayers = async () => {
     setLoading(true);
@@ -120,6 +127,30 @@ export default function PublicPlayers() {
       setDiaries(data);
     } catch (error) {
       console.error('Failed to load diaries:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadUsers = async () => {
+    setLoading(true);
+    try {
+      const data = await getUserProfiles();
+      setUsers(data);
+      
+      if (user) {
+        const followed = await getFollowedUsers();
+        setFollowedUsers(followed);
+        
+        const states: Record<string, boolean> = {};
+        for (const profile of data) {
+          states[profile.user_id] = followed.includes(profile.user_id);
+        }
+        setFollowingStates(states);
+      }
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -303,6 +334,60 @@ export default function PublicPlayers() {
     }
   };
 
+  const handleFollow = async (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "フォローするにはログインしてください",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const isCurrentlyFollowing = followingStates[userId];
+      
+      if (isCurrentlyFollowing) {
+        await unfollowUser(userId);
+        setFollowingStates(prev => ({ ...prev, [userId]: false }));
+        setFollowedUsers(prev => prev.filter(id => id !== userId));
+        toast({
+          title: "フォロー解除しました",
+        });
+      } else {
+        await followUser(userId);
+        setFollowingStates(prev => ({ ...prev, [userId]: true }));
+        setFollowedUsers(prev => [...prev, userId]);
+        toast({
+          title: "フォローしました",
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      toast({
+        title: "エラーが発生しました",
+        description: "もう一度お試しください",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const filteredUsers = showFollowedOnly 
+    ? users.filter(u => followedUsers.includes(u.user_id))
+    : users;
+
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (usersSortBy === "uploads") {
+      return b.upload_count - a.upload_count;
+    } else if (usersSortBy === "views") {
+      return b.total_views - a.total_views;
+    } else {
+      return b.total_imports - a.total_imports;
+    }
+  });
+
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedYear("all");
@@ -330,7 +415,7 @@ export default function PublicPlayers() {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
         <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
           <TabsTrigger value="players">選手を探す</TabsTrigger>
-          <TabsTrigger value="users" onClick={() => navigate('/public-players/users')}>投稿者から探す</TabsTrigger>
+          <TabsTrigger value="users">投稿者から探す</TabsTrigger>
           <TabsTrigger value="diaries">観戦日記</TabsTrigger>
         </TabsList>
 
@@ -537,6 +622,109 @@ export default function PublicPlayers() {
                         <div className="flex items-center gap-1 ml-auto">
                           <User className="h-3 w-3" />
                           <span>{diary.profile?.display_name || "名無し"}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="users" className="space-y-4">
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant={showFollowedOnly ? "default" : "outline"}
+                    onClick={() => setShowFollowedOnly(!showFollowedOnly)}
+                    disabled={!user}
+                  >
+                    フォロー中のみ表示
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">並び替え:</Label>
+                  <Select value={usersSortBy} onValueChange={(value: any) => setUsersSortBy(value)}>
+                    <SelectTrigger className="w-auto">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="uploads">アップロード数順</SelectItem>
+                      <SelectItem value="views">総閲覧数順</SelectItem>
+                      <SelectItem value="imports">総インポート数順</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {loading ? (
+            <div className="text-center py-8">
+              <p className="text-muted-foreground">読み込み中...</p>
+            </div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {sortedUsers.map((userProfile) => (
+                <Card 
+                  key={userProfile.user_id} 
+                  className="hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/public-players/users/${userProfile.user_id}`)}
+                >
+                  <CardContent className="p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={userProfile.avatar_url} />
+                          <AvatarFallback><User className="h-8 w-8" /></AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between gap-2">
+                            <h3 className="font-bold text-lg">{userProfile.display_name || "名無し"}</h3>
+                            {user && user.id !== userProfile.user_id && (
+                              <Button
+                                variant={followingStates[userProfile.user_id] ? "secondary" : "outline"}
+                                size="sm"
+                                onClick={(e) => handleFollow(userProfile.user_id, e)}
+                              >
+                                {followingStates[userProfile.user_id] ? (
+                                  <UserMinus className="w-4 h-4" />
+                                ) : (
+                                  <UserPlus className="w-4 h-4" />
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                          {userProfile.bio && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">{userProfile.bio}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-1 text-muted-foreground">
+                            <Upload className="h-3 w-3" />
+                          </div>
+                          <p className="text-lg font-bold">{userProfile.upload_count}</p>
+                          <p className="text-xs text-muted-foreground">アップロード</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-1 text-muted-foreground">
+                            <Eye className="h-3 w-3" />
+                          </div>
+                          <p className="text-lg font-bold">{userProfile.total_views}</p>
+                          <p className="text-xs text-muted-foreground">総閲覧数</p>
+                        </div>
+                        <div className="text-center">
+                          <div className="flex items-center justify-center gap-1 text-muted-foreground">
+                            <Download className="h-3 w-3" />
+                          </div>
+                          <p className="text-lg font-bold">{userProfile.total_imports}</p>
+                          <p className="text-xs text-muted-foreground">総インポート</p>
                         </div>
                       </div>
                     </div>
