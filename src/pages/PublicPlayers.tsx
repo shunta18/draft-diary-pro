@@ -91,6 +91,7 @@ export default function PublicPlayers() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"latest" | "views" | "imports">("latest");
   const [activeTab, setActiveTab] = useState("players");
+  const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (activeTab === "players") {
@@ -180,6 +181,64 @@ export default function PublicPlayers() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleBulkImport = async () => {
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "選手をインポートするにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedPlayerIds.size === 0) {
+      toast({
+        title: "選手が選択されていません",
+        description: "インポートする選手を選択してください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const playerId of Array.from(selectedPlayerIds)) {
+      const result = await importPlayerFromPublic(playerId);
+      if (result) {
+        successCount++;
+      } else {
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      toast({
+        title: "インポート完了",
+        description: `${successCount}名の選手をインポートしました${failCount > 0 ? `（${failCount}名失敗）` : ''}。`,
+      });
+    } else {
+      toast({
+        title: "エラー",
+        description: "選手のインポートに失敗しました。",
+        variant: "destructive",
+      });
+    }
+
+    setSelectedPlayerIds(new Set());
+    loadPlayers();
+  };
+
+  const togglePlayerSelection = (playerId: string) => {
+    const newSelection = new Set(selectedPlayerIds);
+    if (newSelection.has(playerId)) {
+      newSelection.delete(playerId);
+    } else {
+      newSelection.add(playerId);
+    }
+    setSelectedPlayerIds(newSelection);
   };
 
   const handleDelete = async (player: PublicPlayer) => {
@@ -343,18 +402,39 @@ export default function PublicPlayers() {
                 </Popover>
               </div>
 
-              <div className="flex items-center gap-2">
-                <Label className="text-sm">並び替え:</Label>
-                <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                  <SelectTrigger className="w-auto">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="latest">投稿日順</SelectItem>
-                    <SelectItem value="views">閲覧数順</SelectItem>
-                    <SelectItem value="imports">インポート数順</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm">並び替え:</Label>
+                  <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
+                    <SelectTrigger className="w-auto">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="latest">投稿日順</SelectItem>
+                      <SelectItem value="views">閲覧数順</SelectItem>
+                      <SelectItem value="imports">インポート数順</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                {selectedPlayerIds.size > 0 && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      {selectedPlayerIds.size}名選択中
+                    </span>
+                    <Button onClick={handleBulkImport} size="sm">
+                      <Download className="h-4 w-4 mr-2" />
+                      一括インポート
+                    </Button>
+                    <Button 
+                      onClick={() => setSelectedPlayerIds(new Set())} 
+                      variant="outline" 
+                      size="sm"
+                    >
+                      選択解除
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -367,8 +447,17 @@ export default function PublicPlayers() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {sortedPlayers.map((player) => (
-                <Card key={player.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardContent className="p-4" onClick={() => handlePlayerClick(player)}>
+                <Card key={player.id} className="hover:shadow-lg transition-shadow cursor-pointer relative">
+                  <div 
+                    className="absolute top-3 left-3 z-10"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Checkbox
+                      checked={selectedPlayerIds.has(player.id)}
+                      onCheckedChange={() => togglePlayerSelection(player.id)}
+                    />
+                  </div>
+                  <CardContent className="p-4 pl-12" onClick={() => handlePlayerClick(player)}>
                     <div className="space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
