@@ -1659,8 +1659,8 @@ const VirtualDraft = () => {
                 {/* ロゴとブランディング */}
                 <div className="mb-2 md:mb-3 w-full flex justify-start">
                   <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
-                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-2 md:h-6 w-auto" />
-                    <span className="font-semibold text-[8px] md:text-base text-black">BaaS 野球スカウトノート</span>
+                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-4 md:h-8 w-auto" />
+                    <span className="font-semibold text-sm md:text-lg text-black">BaaS 野球スカウトノート</span>
                   </div>
                 </div>
                 
