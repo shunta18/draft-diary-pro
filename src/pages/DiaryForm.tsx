@@ -410,17 +410,17 @@ export default function DiaryForm() {
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-2">
                   <Label htmlFor="playerComments">注目選手・コメント（任意）</Label>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="sm"
                     onClick={() => setIsPlayerDialogOpen(true)}
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 w-full sm:w-auto"
                   >
                     <Plus className="h-4 w-4" />
-                    選手追加
+                    ドラフト候補選手を追加
                   </Button>
                 </div>
                 <Textarea
