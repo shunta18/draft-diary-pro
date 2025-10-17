@@ -88,7 +88,7 @@ export const Footer = () => {
         {/* Copyright */}
         <div className="border-t border-border/30 mt-8 pt-6 text-center">
           <p className="text-sm text-muted-foreground">
-            © 2025 BaaS Baseball. All rights reserved.
+            © 2025 BaaS Baseball As A Service. All rights reserved.
           </p>
         </div>
       </div>
