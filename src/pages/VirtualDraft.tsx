@@ -178,6 +178,27 @@ const VirtualDraft = () => {
   const MAX_TOTAL_PICKS = 120; // 全体の上限
   const [showSignupDialog, setShowSignupDialog] = useState(false);
   const [isFullscreenView, setIsFullscreenView] = useState(false); // 全画面表示用
+  const [zoomLevel, setZoomLevel] = useState(() => {
+    const saved = localStorage.getItem('draftTableZoom');
+    return saved ? parseFloat(saved) : 0.55;
+  });
+
+  // ズームレベルをlocalStorageに保存
+  useEffect(() => {
+    localStorage.setItem('draftTableZoom', zoomLevel.toString());
+  }, [zoomLevel]);
+
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.05, 1.0));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.05, 0.3));
+  };
+
+  const handleZoomReset = () => {
+    setZoomLevel(0.55);
+  };
 
   useEffect(() => {
     loadPlayers();
@@ -1596,35 +1617,67 @@ const VirtualDraft = () => {
 
       {/* 全画面表示ダイアログ */}
       <Dialog open={isFullscreenView} onOpenChange={setIsFullscreenView}>
-        <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-auto bg-white">
-          <div className="h-full w-full flex flex-col">
-            <DialogClose className="absolute right-4 top-4 z-50 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none bg-white p-2 shadow-md">
-              <span className="text-black text-xl">✕</span>
-            </DialogClose>
+        <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white" hideCloseButton>
+          <div className="h-full w-full flex flex-col relative">
+            {/* ズームコントロールボタン */}
+            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+              <Button
+                onClick={handleZoomIn}
+                size="icon"
+                className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
+                disabled={zoomLevel >= 1.0}
+              >
+                <span className="text-xl font-bold">＋</span>
+              </Button>
+              <Button
+                onClick={handleZoomOut}
+                size="icon"
+                className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
+                disabled={zoomLevel <= 0.3}
+              >
+                <span className="text-xl font-bold">−</span>
+              </Button>
+              <Button
+                onClick={handleZoomReset}
+                size="sm"
+                className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
+              >
+                リセット
+              </Button>
+              <DialogClose asChild>
+                <Button
+                  size="sm"
+                  className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
+                >
+                  閉じる
+                </Button>
+              </DialogClose>
+            </div>
             
-            <div className="flex-1 flex flex-col items-center p-6">
-              <div className="flex flex-col items-center w-full max-w-7xl">
+            <div className="flex-1 flex items-start justify-start p-0.5 md:p-4 overflow-auto w-full">
+              <div className="flex flex-col items-start w-full">
                 {/* ロゴとブランディング */}
-                <div className="mb-4 flex justify-center">
-                  <div className="flex items-center gap-2">
-                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-6 w-auto" />
-                    <span className="font-semibold text-base text-black">BaaS 野球スカウトノート</span>
+                <div className="mb-2 md:mb-3 w-full flex justify-start">
+                  <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
+                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-2 md:h-6 w-auto" />
+                    <span className="font-semibold text-[8px] md:text-base text-black">BaaS 野球スカウトノート</span>
                   </div>
                 </div>
                 
                 {/* テーブル */}
-                <div className="w-full overflow-x-auto">
-                  <Table className="border-collapse w-full text-xs">
+                <div className="overflow-visible w-full">
+                  <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }} className="transition-transform duration-200">
+                  <Table className="border-collapse text-[9px]">
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="whitespace-nowrap bg-white text-black p-2 border border-gray-300 font-semibold w-16"></TableHead>
+                        <TableHead className="whitespace-nowrap bg-white text-black px-0.5 py-0.5 border border-gray-300 font-semibold w-8 text-center text-[9px]"></TableHead>
                         {displayOrder.map(teamId => {
                           const team = teams.find(t => t.id === teamId);
                           if (!team) return null;
                           return (
                             <TableHead 
                               key={team.id} 
-                              className="whitespace-nowrap text-center font-bold border border-gray-300 p-2 text-white min-w-[80px]"
+                              className="whitespace-nowrap text-center font-bold border border-gray-300 px-0.5 py-[3px] text-white min-w-[60px] w-[60px] text-[9px]"
                               style={{
                                 background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
                               }}
@@ -1665,7 +1718,7 @@ const VirtualDraft = () => {
                                     {attempt === 0 ? (
                                       <TableCell 
                                         rowSpan={maxAttempts} 
-                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 p-2 text-center"
+                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]"
                                       >
                                         {round}位
                                       </TableCell>
@@ -1686,14 +1739,14 @@ const VirtualDraft = () => {
                                       
                                       if (attempt < lostInRound.length) {
                                         return (
-                                          <TableCell key={team.id} className="text-center text-gray-400 border border-gray-300 bg-white p-2">
+                                          <TableCell key={team.id} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                             {lostInRound[attempt].playerName}
                                           </TableCell>
                                         );
                                       }
                                       else if (attempt === lostInRound.length) {
                                         return (
-                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black p-2">
+                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                             {pick ? (
                                               pick.playerName
                                             ) : isFinished && round === lastPickRound + 1 ? (
@@ -1706,7 +1759,7 @@ const VirtualDraft = () => {
                                       }
                                       else {
                                         return (
-                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black p-2">
+                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
                                             ―
                                           </TableCell>
                                         );
@@ -1726,7 +1779,7 @@ const VirtualDraft = () => {
                                     {attempt === 0 ? (
                                       <TableCell 
                                         rowSpan={maxAttempts} 
-                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 p-2 text-center"
+                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]"
                                       >
                                         {round}位
                                       </TableCell>
@@ -1748,7 +1801,7 @@ const VirtualDraft = () => {
                                       
                                       if (attempt < lostInRound.length) {
                                         return (
-                                          <TableCell key={team.id} className="text-center text-gray-400 border border-gray-300 bg-white p-2">
+                                          <TableCell key={team.id} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                             {lostInRound[attempt].playerName}
                                           </TableCell>
                                         );
@@ -1757,7 +1810,7 @@ const VirtualDraft = () => {
                                         return (
                                           <TableCell 
                                             key={team.id} 
-                                            className="text-center border border-gray-300 bg-white text-black p-2"
+                                            className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]"
                                           >
                                             {pick ? (
                                               pick.playerName
@@ -1773,7 +1826,7 @@ const VirtualDraft = () => {
                                       }
                                       else {
                                         return (
-                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black p-2">
+                                          <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
                                             ―
                                           </TableCell>
                                         );
@@ -1789,8 +1842,8 @@ const VirtualDraft = () => {
                           if (isDevelopmentDraft) {
                             for (let round = 1; round <= currentRound; round++) {
                               rows.push(
-                                <TableRow key={`dev-${round}`}>
-                                  <TableCell className="font-semibold whitespace-nowrap bg-white text-black border border-gray-300 p-2 text-center">
+                              <TableRow key={`dev-${round}`}>
+                                  <TableCell className="font-semibold whitespace-nowrap bg-white text-black border border-gray-300 px-0.5 py-0.5 text-center text-[9px]">
                                     育成{round}位
                                   </TableCell>
                                   {displayOrder.map(teamId => {
@@ -1809,7 +1862,7 @@ const VirtualDraft = () => {
                                         return (
                                           <TableCell 
                                             key={team.id} 
-                                            className="text-center border border-gray-300 bg-white text-black p-2"
+                                            className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]"
                                           >
                                         {pick ? (
                                           pick.playerName
@@ -1832,6 +1885,7 @@ const VirtualDraft = () => {
                         })()}
                       </TableBody>
                     </Table>
+                  </div>
                 </div>
               </div>
             </div>
