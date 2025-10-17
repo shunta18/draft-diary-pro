@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, getPublicDiaryEntries, importDiaryFromPublic, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry } from "@/lib/supabase-storage";
+import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, getPublicDiaryEntries, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry } from "@/lib/supabase-storage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -219,34 +219,6 @@ export default function PublicPlayers() {
       await incrementPublicDiaryViewCount(diary.id);
     } catch (error) {
       console.error('Failed to increment view count:', error);
-    }
-  };
-
-  const handleImportDiary = async (diary: PublicDiaryEntry) => {
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "ログインが必要です",
-        description: "観戦日記をインポートするにはログインしてください",
-      });
-      navigate('/auth');
-      return;
-    }
-
-    try {
-      await importDiaryFromPublic(diary.id);
-      toast({
-        title: "インポートしました",
-        description: "観戦日記をあなたのリストに追加しました",
-      });
-      setSelectedDiary(null);
-      loadDiaries();
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "エラー",
-        description: error.message || "インポートに失敗しました",
-      });
     }
   };
 
@@ -775,7 +747,7 @@ export default function PublicPlayers() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                {user && (user.id === selectedDiary.user_id || isAdmin) ? (
+                {user && (user.id === selectedDiary.user_id || isAdmin) && (
                   <Button 
                     variant="destructive" 
                     onClick={() => handleDeleteDiary(selectedDiary)}
@@ -783,13 +755,8 @@ export default function PublicPlayers() {
                     <Trash2 className="h-4 w-4 mr-2" />
                     削除
                   </Button>
-                ) : (
-                  <Button onClick={() => handleImportDiary(selectedDiary)} className="flex-1">
-                    <Download className="h-4 w-4 mr-2" />
-                    インポート
-                  </Button>
                 )}
-                <Button variant="outline" onClick={() => setSelectedDiary(null)}>
+                <Button variant="outline" onClick={() => setSelectedDiary(null)} className="flex-1">
                   閉じる
                 </Button>
               </div>
