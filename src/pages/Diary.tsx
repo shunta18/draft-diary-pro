@@ -218,41 +218,13 @@ export default function Diary() {
       {/* Header */}
       <div className="bg-card border-b shadow-soft">
         <div className="p-4">
-          <div className="flex items-center justify-between mb-3 md:mb-0">
-            <div className="flex items-center space-x-2 md:space-x-4">
-              <Link to="/">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </Link>
-              <h1 className="text-lg md:text-xl font-bold text-primary">観戦日記</h1>
-            </div>
-            
-            <div className="flex gap-2">
-              {user && selectedDiaries.length > 0 && (
-                <Button 
-                  onClick={handleUploadToPublic}
-                  disabled={isUploading}
-                  variant="outline"
-                  size="sm"
-                >
-                  <Upload className="h-4 w-4 md:mr-2" />
-                  <span className="hidden md:inline">
-                    {isUploading ? 'アップロード中...' : `データベースに共有 (${selectedDiaries.length})`}
-                  </span>
-                  <span className="md:hidden">{selectedDiaries.length}</span>
-                </Button>
-              )}
-              <Button 
-                onClick={handleNewRecord}
-                variant="secondary"
-                size="sm"
-                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth"
-              >
-                <Plus className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">新規記録</span>
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <Link to="/">
+              <Button variant="ghost" size="icon">
+                <ArrowLeft className="h-5 w-5" />
               </Button>
-            </div>
+            </Link>
+            <h1 className="text-lg md:text-xl font-bold text-primary">観戦日記</h1>
           </div>
         </div>
         
@@ -271,6 +243,15 @@ export default function Diary() {
       </div>
 
       <div className="p-4 space-y-4">
+        {/* New Record Button */}
+        <Button 
+          onClick={handleNewRecord}
+          className="w-full bg-[#E8A35D] hover:bg-[#D89550] text-white font-medium py-6"
+        >
+          <Plus className="h-5 w-5 mr-2" />
+          新規
+        </Button>
+
         {/* Search and Filters */}
         <div className="space-y-3">
           <div className="relative">
@@ -326,18 +307,31 @@ export default function Diary() {
         {/* Diary Entries */}
         <div className="space-y-3">
           {user && filteredEntries.length > 0 && (
-            <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-              <Checkbox
-                id="select-all"
-                checked={selectedDiaries.length === filteredEntries.length && filteredEntries.length > 0}
-                onCheckedChange={handleSelectAll}
-              />
-              <label
-                htmlFor="select-all"
-                className="text-sm font-medium cursor-pointer"
-              >
-                すべて選択
-              </label>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                <Checkbox
+                  id="select-all"
+                  checked={selectedDiaries.length === filteredEntries.length && filteredEntries.length > 0}
+                  onCheckedChange={handleSelectAll}
+                />
+                <label
+                  htmlFor="select-all"
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  すべて選択 ({selectedDiaries.length}/{filteredEntries.length})
+                </label>
+              </div>
+              
+              {selectedDiaries.length > 0 && (
+                <Button 
+                  onClick={handleUploadToPublic}
+                  disabled={isUploading}
+                  className="w-full bg-[#2D5F3F] hover:bg-[#234A32] text-white font-medium py-6"
+                >
+                  <Upload className="h-5 w-5 mr-2" />
+                  {isUploading ? 'アップロード中...' : 'すべてアップロード'}
+                </Button>
+              )}
             </div>
           )}
           
