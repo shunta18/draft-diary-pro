@@ -1624,7 +1624,7 @@ const VirtualDraft = () => {
             <div className="flex-1 flex flex-col items-start p-0.5 md:p-4 overflow-auto w-full">
               <div className="flex flex-col items-start w-full">
                 {/* ロゴとブランディング */}
-                <div className="mb-0.5 md:mb-3 flex justify-start w-full">
+                <div className="mb-2 md:mb-3 flex justify-center w-full mt-6 md:mt-0">
                   <div className="flex items-center gap-0.5 md:gap-2">
                     <img src="/mustache-logo.png" alt="BaaS Logo" className="h-2 md:h-6 w-auto" />
                     <span className="font-semibold text-[8px] md:text-base text-black">BaaS 野球スカウトノート</span>
