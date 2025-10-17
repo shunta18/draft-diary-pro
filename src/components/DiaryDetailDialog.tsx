@@ -1,4 +1,4 @@
-import { Calendar, MapPin, Edit, Share2, Copy, ExternalLink, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Edit, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -32,31 +32,6 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
   const navigate = useNavigate();
   
   if (!entry) return null;
-
-  const handleShare = (platform: 'twitter' | 'line' | 'copy') => {
-    const matchCard = 'match_card' in entry ? entry.match_card : (entry as any).matchCard;
-    const playerComments = 'player_comments' in entry ? entry.player_comments : (entry as any).playerComments;
-    const text = `観戦記録: ${matchCard}\n会場: ${entry.venue}\n日付: ${entry.date}\n${entry.score ? `スコア: ${entry.score}\n` : ''}${playerComments}`;
-    
-    switch (platform) {
-      case 'twitter':
-        const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`;
-        window.open(twitterUrl, '_blank');
-        break;
-      case 'line':
-        const lineUrl = `https://social-plugins.line.me/lineit/share?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(text)}`;
-        window.open(lineUrl, '_blank');
-        break;
-      case 'copy':
-        navigator.clipboard.writeText(text).then(() => {
-          toast({
-            title: "コピーしました",
-            description: "観戦記録をクリップボードにコピーしました。",
-          });
-        });
-        break;
-    }
-  };
 
   const handleDelete = async () => {
     if (!user) {
@@ -109,28 +84,26 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-start justify-between gap-4">
-            <DialogTitle className="text-xl flex-1 pr-2">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto p-4 sm:p-6">
+        <DialogHeader className="space-y-3">
+          <div className="flex flex-col gap-2 pr-8">
+            <DialogTitle className="text-lg sm:text-xl font-semibold leading-tight">
               {'match_card' in entry ? entry.match_card : (entry as any).matchCard}
             </DialogTitle>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} font-medium`}>
-                {entry.category}
-              </Badge>
-            </div>
+            <Badge className={`${categoryColors[entry.category as keyof typeof categoryColors]} text-xs font-medium self-start`}>
+              {entry.category}
+            </Badge>
           </div>
           {(onEdit || onDelete) && (
-            <div className="flex justify-end gap-2 mt-3">
+            <div className="flex justify-end gap-2">
               {onEdit && (
                 <Button 
                   variant="outline" 
                   size="sm"
                   onClick={handleEdit}
-                  className="h-8 px-3"
+                  className="h-8 px-3 text-xs"
                 >
-                  <Edit className="h-4 w-4 mr-1" />
+                  <Edit className="h-3.5 w-3.5 mr-1" />
                   編集
                 </Button>
               )}
@@ -140,9 +113,9 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
                     <Button 
                       variant="destructive" 
                       size="sm"
-                      className="h-8 px-3"
+                      className="h-8 px-3 text-xs"
                     >
-                      <Trash2 className="h-4 w-4 mr-1" />
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
                       削除
                     </Button>
                   </AlertDialogTrigger>
@@ -169,31 +142,33 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
           )}
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="space-y-4 mt-4">
           {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-center space-x-2 text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span className="font-medium">{entry.date}</span>
+          <div className="grid grid-cols-1 gap-2.5">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Calendar className="h-4 w-4 flex-shrink-0" />
+              <span>{entry.date}</span>
             </div>
-            <div className="flex items-center space-x-2 text-muted-foreground">
-              <MapPin className="h-4 w-4" />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <MapPin className="h-4 w-4 flex-shrink-0" />
               <span>{entry.venue}</span>
             </div>
           </div>
 
           {entry.score && (
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <h3 className="text-lg font-semibold mb-2">スコア</h3>
-              <p className="text-2xl font-bold text-primary">{entry.score}</p>
+            <div>
+              <h3 className="text-sm font-semibold mb-2">スコア</h3>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-xl font-bold text-primary">{entry.score}</p>
+              </div>
             </div>
           )}
 
           {/* Player Comments */}
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold">注目選手・コメント</h3>
-            <div className="p-4 bg-muted/50 rounded-lg">
-              <p className="text-foreground whitespace-pre-wrap">
+          <div>
+            <h3 className="text-sm font-semibold mb-2">注目選手・コメント</h3>
+            <div className="p-3 bg-muted/50 rounded-lg min-h-[80px]">
+              <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                 {'player_comments' in entry ? entry.player_comments : (entry as any).playerComments}
               </p>
             </div>
@@ -201,10 +176,10 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
 
           {/* Overall Impression */}
           {('overall_impression' in entry ? entry.overall_impression : (entry as any).overallImpression) && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">全体的な感想</h3>
-              <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="text-foreground whitespace-pre-wrap">
+            <div>
+              <h3 className="text-sm font-semibold mb-2">全体的な感想</h3>
+              <div className="p-3 bg-muted/50 rounded-lg min-h-[80px]">
+                <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
                   {'overall_impression' in entry ? entry.overall_impression : (entry as any).overallImpression}
                 </p>
               </div>
@@ -213,11 +188,11 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
 
           {/* Videos */}
           {entry.videos && entry.videos.length > 0 && (
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">動画</h3>
-              <div className="space-y-2">
+            <div>
+              <h3 className="text-sm font-semibold mb-2">動画</h3>
+              <div className="space-y-3">
                 {entry.videos.map((video, index) => (
-                  <div key={index} className="p-3 bg-muted/50 rounded-lg">
+                  <div key={index} className="bg-muted/50 rounded-lg p-2">
                     <video 
                       controls 
                       className="w-full max-h-64 rounded"
@@ -230,37 +205,6 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
               </div>
             </div>
           )}
-
-          {/* SNS Share Section */}
-          <div className="space-y-2 pt-4 border-t">
-            <h3 className="text-lg font-semibold">共有</h3>
-            <div className="flex space-x-2">
-              <Button 
-                variant="outline" 
-                onClick={() => handleShare('twitter')}
-                className="flex-1"
-              >
-                <Share2 className="h-4 w-4 mr-2" />
-                Twitter
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleShare('line')}
-                className="flex-1"
-              >
-                <Share2 className="h-4 w-4 mr-2" />
-                LINE
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={() => handleShare('copy')}
-                className="flex-1"
-              >
-                <Copy className="h-4 w-4 mr-2" />
-                コピー
-              </Button>
-            </div>
-          </div>
         </div>
       </DialogContent>
     </Dialog>

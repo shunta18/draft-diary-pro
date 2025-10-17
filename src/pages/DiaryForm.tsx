@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Upload, X, Save } from "lucide-react";
+import { ArrowLeft, Upload, X, Save, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { addDiaryEntry, updateDiaryEntry, getDiaryEntryById, DiaryEntry as Supab
 import { useAuth } from "@/hooks/useAuth";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 
 const DRAFT_KEY = 'diary_form_draft';
 
@@ -39,6 +40,7 @@ export default function DiaryForm() {
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
   const [isDraftSaved, setIsDraftSaved] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isPlayerDialogOpen, setIsPlayerDialogOpen] = useState(false);
   const saveTimerRef = useRef<NodeJS.Timeout>();
   const initialDataRef = useRef<string>("");
 
@@ -291,6 +293,14 @@ export default function DiaryForm() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handlePlayerAdded = () => {
+    setIsPlayerDialogOpen(false);
+    toast({
+      title: "選手を追加しました",
+      description: "選手の追加が完了しました。",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <Navigation />
@@ -451,7 +461,16 @@ export default function DiaryForm() {
                 </div>
               </div>
 
-              <div className="flex space-x-2 pt-4">
+              <div className="flex flex-col sm:flex-row gap-2 pt-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => setIsPlayerDialogOpen(true)}
+                  className="flex-1 flex items-center justify-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  選手追加
+                </Button>
                 <Button 
                   type="submit" 
                   variant="secondary"
@@ -459,8 +478,8 @@ export default function DiaryForm() {
                 >
                   {isEditing ? "更新" : "保存"}
                 </Button>
-                <Link to="/diary">
-                  <Button type="button" variant="outline" className="px-6">
+                <Link to="/diary" className="flex-1">
+                  <Button type="button" variant="outline" className="w-full">
                     キャンセル
                   </Button>
                 </Link>
@@ -469,7 +488,13 @@ export default function DiaryForm() {
           </CardContent>
         </Card>
       </div>
-      
+
+      <PlayerFormDialog
+        isOpen={isPlayerDialogOpen}
+        onOpenChange={setIsPlayerDialogOpen}
+        onSuccess={handlePlayerAdded}
+      />
+
       <Footer />
     </div>
   );
