@@ -402,7 +402,7 @@ export default function PublicPlayers() {
                 </Popover>
               </div>
 
-              <div className="flex items-center justify-between gap-2">
+              <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <Label className="text-sm">並び替え:</Label>
                   <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
@@ -418,7 +418,7 @@ export default function PublicPlayers() {
                 </div>
                 
                 {selectedPlayerIds.size > 0 && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm text-muted-foreground">
                       {selectedPlayerIds.size}名選択中
                     </span>
