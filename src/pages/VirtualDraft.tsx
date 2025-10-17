@@ -180,7 +180,7 @@ const VirtualDraft = () => {
   const [isFullscreenView, setIsFullscreenView] = useState(false); // 全画面表示用
   const [zoomLevel, setZoomLevel] = useState(() => {
     const saved = localStorage.getItem('draftTableZoom');
-    return saved ? parseFloat(saved) : 0.48;
+    return saved ? parseFloat(saved) : 0.35;
   });
 
   // ズームレベルをlocalStorageに保存
@@ -197,7 +197,7 @@ const VirtualDraft = () => {
   };
 
   const handleZoomReset = () => {
-    setZoomLevel(0.48);
+    setZoomLevel(0.35);
   };
 
   useEffect(() => {
@@ -1673,7 +1673,7 @@ const VirtualDraft = () => {
                           return (
                             <TableHead 
                               key={team.id} 
-                              className="whitespace-nowrap text-center font-bold border border-gray-300 px-0.5 py-0.5 text-white min-w-[60px] w-[60px] text-[9px]"
+                              className="whitespace-nowrap text-center font-bold border border-gray-300 px-0.5 py-[3px] text-white min-w-[60px] w-[60px] text-[9px]"
                               style={{
                                 background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
                               }}
