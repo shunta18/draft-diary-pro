@@ -99,6 +99,7 @@ export type Database = {
           overall_impression: string | null
           player_comments: string | null
           score: string
+          tournament_name: string | null
           updated_at: string
           user_id: string
           venue: string
@@ -113,6 +114,7 @@ export type Database = {
           overall_impression?: string | null
           player_comments?: string | null
           score: string
+          tournament_name?: string | null
           updated_at?: string
           user_id: string
           venue: string
@@ -127,6 +129,7 @@ export type Database = {
           overall_impression?: string | null
           player_comments?: string | null
           score?: string
+          tournament_name?: string | null
           updated_at?: string
           user_id?: string
           venue?: string
@@ -280,6 +283,108 @@ export type Database = {
           social_links?: Json | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      public_diary_entries: {
+        Row: {
+          category: string
+          created_at: string
+          date: string
+          id: string
+          import_count: number
+          match_card: string
+          original_diary_id: number | null
+          overall_impression: string | null
+          player_comments: string | null
+          score: string
+          tournament_name: string | null
+          updated_at: string
+          user_id: string
+          venue: string
+          videos: string[] | null
+          view_count: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          date: string
+          id?: string
+          import_count?: number
+          match_card: string
+          original_diary_id?: number | null
+          overall_impression?: string | null
+          player_comments?: string | null
+          score: string
+          tournament_name?: string | null
+          updated_at?: string
+          user_id: string
+          venue: string
+          videos?: string[] | null
+          view_count?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          date?: string
+          id?: string
+          import_count?: number
+          match_card?: string
+          original_diary_id?: number | null
+          overall_impression?: string | null
+          player_comments?: string | null
+          score?: string
+          tournament_name?: string | null
+          updated_at?: string
+          user_id?: string
+          venue?: string
+          videos?: string[] | null
+          view_count?: number
+        }
+        Relationships: []
+      }
+      public_diary_imports: {
+        Row: {
+          created_at: string
+          id: string
+          public_diary_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          public_diary_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          public_diary_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      public_diary_views: {
+        Row: {
+          created_at: string
+          id: string
+          public_diary_id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          public_diary_id: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          public_diary_id?: string
+          session_id?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

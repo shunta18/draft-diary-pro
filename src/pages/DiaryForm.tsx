@@ -30,6 +30,7 @@ export default function DiaryForm() {
     date: "",
     venue: "",
     category: "",
+    tournamentName: "",
     matchCard: "",
     score: "",
     playerComments: "",
@@ -61,11 +62,13 @@ export default function DiaryForm() {
             const matchCard = 'match_card' in entry ? entry.match_card : entry.matchCard;
             const playerComments = 'player_comments' in entry ? entry.player_comments : (entry as any).playerComments;
             const overallImpression = 'overall_impression' in entry ? entry.overall_impression : (entry as any).overallImpression;
+            const tournamentName = 'tournament_name' in entry ? entry.tournament_name : (entry as any).tournamentName;
             
             const loadedData = {
               date: entry.date.replace(/\//g, '-'),
               venue: entry.venue,
               category: entry.category,
+              tournamentName: tournamentName || "",
               matchCard: matchCard,
               score: entry.score,
               playerComments: playerComments || "",
@@ -215,6 +218,7 @@ export default function DiaryForm() {
       date: formData.date.replace(/-/g, '/'),
       venue: formData.venue,
       category: formData.category,
+      tournament_name: formData.tournamentName,
       match_card: formData.matchCard,
       score: formData.score,
       player_comments: formData.playerComments,
@@ -242,6 +246,7 @@ export default function DiaryForm() {
         // 未ログインユーザーはローカルストレージに保存
         const localEntryData = {
           ...entryData,
+          tournamentName: formData.tournamentName,
           matchCard: formData.matchCard,
           playerComments: formData.playerComments,
           overallImpression: formData.overallImpression,
@@ -396,6 +401,16 @@ export default function DiaryForm() {
                     onChange={(e) => updateFormData("score", e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tournamentName">大会名（任意）</Label>
+                <Input
+                  id="tournamentName"
+                  placeholder="第94回全国高等学校野球選手権大会"
+                  value={formData.tournamentName}
+                  onChange={(e) => updateFormData("tournamentName", e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">

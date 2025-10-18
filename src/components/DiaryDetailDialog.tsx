@@ -155,6 +155,17 @@ export default function DiaryDetailDialog({ entry, isOpen, onClose, onEdit, onDe
             </div>
           </div>
 
+          {('tournament_name' in entry ? entry.tournament_name : (entry as any).tournamentName) && (
+            <div>
+              <h3 className="text-sm font-semibold mb-2">大会名</h3>
+              <div className="p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-foreground">
+                  {'tournament_name' in entry ? entry.tournament_name : (entry as any).tournamentName}
+                </p>
+              </div>
+            </div>
+          )}
+
           {entry.score && (
             <div>
               <h3 className="text-sm font-semibold mb-2">スコア</h3>
