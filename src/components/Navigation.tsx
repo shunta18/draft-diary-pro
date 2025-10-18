@@ -16,8 +16,8 @@ const navItems: NavItem[] = [
   { icon: Users, label: "選手リスト", path: "/players" },
   { icon: Database, label: "候補DB", path: "/public-players" },
   { icon: Trophy, label: "ドラフト構想", path: "/draft" },
+  { icon: Vote, label: "ドラフトアンケート", path: "/draft-predictions" },
   { icon: Shuffle, label: "仮想ドラフト", path: "/virtual-draft" },
-  { icon: Vote, label: "ドラフト予測", path: "/draft-predictions" },
   { icon: Calendar, label: "観戦日記", path: "/diary" },
   { icon: Settings, label: "設定", path: "/settings" },
 ];

@@ -1,4 +1,4 @@
-import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight, Heart, Database } from "lucide-react";
+import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight, Heart, Database, Vote } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
 import { SEO } from "@/components/SEO";
@@ -236,6 +236,23 @@ const Index = () => {
                     <h3 className="text-lg font-semibold text-primary">ドラフト構想</h3>
                     <p className="text-sm text-muted-foreground">各球団のドラフト戦略を練る</p>
                     <p className="text-xs text-accent mt-1 font-medium">{completedDrafts}球団構想済み →</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </Link>
+
+          <Link to="/draft-predictions">
+            <Card className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth cursor-pointer group">
+              <CardContent className="p-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-green-500/10 rounded-full flex items-center justify-center group-hover:bg-green-500/20 transition-smooth">
+                    <Vote className="h-6 w-6 text-green-600" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-primary">ドラフトアンケート</h3>
+                    <p className="text-sm text-muted-foreground">各球団の注目選手を予測</p>
+                    <p className="text-xs text-green-600 mt-1 font-medium">みんなの予想を見る →</p>
                   </div>
                 </div>
               </CardContent>

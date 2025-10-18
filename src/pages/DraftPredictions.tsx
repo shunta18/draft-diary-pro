@@ -247,9 +247,9 @@ export default function DraftPredictions() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-muted/20">
       <SEO
-        title="ドラフト予測投票 - みんなで予想する2025年プロ野球ドラフト"
+        title="ドラフトアンケート - みんなで予想する2025年プロ野球ドラフト"
         description="各球団が注目する選手や補強ポジションに投票して、2025年プロ野球ドラフトの行方を予測しましょう。投票結果はAI仮想ドラフトに反映されます。"
-        keywords={["プロ野球ドラフト", "ドラフト予測", "投票", "2025年ドラフト", "注目選手", "補強ポジション"]}
+        keywords={["プロ野球ドラフト", "ドラフトアンケート", "投票", "2025年ドラフト", "注目選手", "補強ポジション"]}
       />
       <Navigation />
 
@@ -259,7 +259,7 @@ export default function DraftPredictions() {
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-3">
               <Vote className="h-8 w-8 text-primary" />
-              <h1 className="text-4xl font-bold">2025年ドラフト予測投票</h1>
+              <h1 className="text-4xl font-bold">2025年ドラフトアンケート</h1>
             </div>
             <p className="text-muted-foreground text-lg">
               各球団が注目する選手や補強ポジションを予測して投票しよう！<br />
