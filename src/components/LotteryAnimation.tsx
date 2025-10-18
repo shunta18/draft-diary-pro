@@ -170,7 +170,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                       >
                         {/* 球団名 - 紙が閉じている時は上、開いた時は中央 */}
                         {!showOpen && (
-                          <div className="text-white text-xs md:text-xl font-bold mb-1 md:mb-3 text-center whitespace-nowrap">
+                          <div className="text-white text-xs md:text-xl font-bold mb-2 md:mb-3 text-center whitespace-nowrap">
                             {getTeamName(teamId)}
                           </div>
                         )}
@@ -185,11 +185,11 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                           ) : (
                             // 開いた状態
                             <div className="relative">
-                              {/* 球団名を紙の中央に配置（親要素の-translate-x-6を補正） */}
-                              <div className="absolute -top-5 md:-top-8 left-1/2 -translate-x-[calc(50%-0.625rem)] md:-translate-x-[calc(50%-1.5rem)] text-white text-xs md:text-xl font-bold text-center whitespace-nowrap z-10">
+                              {/* 球団名を紙の中央に配置 */}
+                              <div className="absolute -top-5 md:-top-8 left-1/2 -translate-x-1/2 text-white text-xs md:text-xl font-bold text-center whitespace-nowrap z-10">
                                 {getTeamName(teamId)}
                               </div>
-                              <div className="flex h-20 w-16 -translate-x-2.5 md:h-40 md:w-32 md:-translate-x-6">
+                              <div className="flex h-20 w-16 md:h-40 md:w-32 mx-auto">
                                 <div className="w-1/2 bg-white border-r-2 border-gray-300 rounded-l shadow-lg animate-[unfoldLeft_1s_ease-out]" />
                                 <div className="w-1/2 bg-white flex items-center justify-center rounded-r shadow-lg animate-[unfoldRight_1s_ease-out]">
                                   {isWinner && (
