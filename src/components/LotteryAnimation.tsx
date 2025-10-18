@@ -93,7 +93,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                   </Badge>
                 </div>
 
-                <div className="flex items-end justify-center gap-8 px-8">
+                <div className="flex items-end justify-center gap-20 px-8">
                   {sortedCompetingTeams.map((teamId, index) => {
                     const isWinner = teamId === currentData.winnerId;
                     const showPaper = phase === "papers" || phase === "result";
@@ -138,7 +138,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                                 className={`
                                   relative bg-white rounded shadow-xl
                                   transition-all duration-1500
-                                  ${!showResult ? "h-56" : "h-64 w-56 -translate-x-14"}
+                                  ${!showResult ? "h-56" : "h-64 w-48 -translate-x-10"}
                                   ${!showResult ? "perspective-1000" : ""}
                                 `}
                                 style={{
