@@ -67,17 +67,9 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     return teams.find(t => t.id === teamId)?.shortName || "";
   };
 
-  // 球団数に応じてレイアウトクラスを動的に決定（モバイル対応・2列対応）
+  // 球団数に応じてレイアウトクラスを動的に決定（1段3球団固定）
   const getLayoutClass = (teamCount: number) => {
-    if (teamCount <= 3) {
-      return "flex items-center justify-center gap-6 md:gap-20";
-    } else if (teamCount === 4) {
-      return "grid grid-cols-2 md:flex items-center justify-center gap-4 md:gap-12";
-    } else if (teamCount <= 6) {
-      return "grid grid-cols-2 md:flex items-center justify-center gap-2 md:gap-10 max-w-4xl mx-auto";
-    } else {
-      return "grid grid-cols-2 md:grid-cols-3 lg:flex items-center justify-center gap-2 md:gap-6 max-w-6xl mx-auto";
-    }
+    return "grid grid-cols-3 gap-4 md:gap-8 max-w-5xl mx-auto";
   };
 
   return (
@@ -87,7 +79,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
         hideCloseButton
       >
         <div 
-          className="flex items-center justify-center min-h-screen w-full relative py-24 md:py-32 px-4"
+          className="flex items-center justify-center min-h-screen w-full relative py-32 md:py-40 px-4"
           style={{
             backgroundImage: `url(${draftVenueBg})`,
             backgroundSize: 'cover',
