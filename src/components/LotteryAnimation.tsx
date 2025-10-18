@@ -87,7 +87,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
         hideCloseButton
       >
         <div 
-          className="flex items-center justify-center h-full w-full relative py-8 md:py-12"
+          className="flex items-center justify-center h-full w-full relative py-16 md:py-20 px-4"
           style={{
             backgroundImage: `url(${draftVenueBg})`,
             backgroundSize: 'cover',
