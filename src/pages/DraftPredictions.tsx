@@ -45,6 +45,7 @@ interface RawSupabasePlayer {
   team: string;
   position: string;
   category: string;
+  year?: number;
   evaluations: string[];
 }
 
@@ -62,7 +63,7 @@ interface NormalizedPlayer {
 const normalizeSupabasePlayer = (player: RawSupabasePlayer): NormalizedPlayer => ({
   ...player,
   position: [player.position],
-  draftYear: "2025",
+  draftYear: player.year ? String(player.year) : "2025",
   videoLinks: [],
 });
 
@@ -102,7 +103,7 @@ export default function DraftPredictions() {
     if (user) {
       const { data, error } = await supabase
         .from("players")
-        .select("id, name, team, position, category, evaluations")
+        .select("id, name, team, position, category, year, evaluations")
         .eq("user_id", user.id);
 
       if (!error && data && data.length > 0) {
