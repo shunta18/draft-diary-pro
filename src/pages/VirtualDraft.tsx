@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Footer } from "@/components/Footer";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { LotteryAnimation } from "@/components/LotteryAnimation";
 import mustacheLogo from "@/assets/mustache-logo.png";
 
 // Supabaseから取得した生データの型
@@ -183,11 +185,26 @@ const VirtualDraft = () => {
     const saved = localStorage.getItem('draftTableZoom');
     return saved ? parseFloat(saved) : 0.55;
   });
+  const [showLotteryAnimation, setShowLotteryAnimation] = useState(() => {
+    const saved = localStorage.getItem('showLotteryAnimation');
+    return saved !== null ? saved === 'true' : true;
+  });
+  const [lotteryAnimationData, setLotteryAnimationData] = useState<Array<{
+    playerName: string;
+    competingTeamIds: number[];
+    winnerId: number;
+  }>>([]);
+  const [showAnimation, setShowAnimation] = useState(false);
 
   // ズームレベルをlocalStorageに保存
   useEffect(() => {
     localStorage.setItem('draftTableZoom', zoomLevel.toString());
   }, [zoomLevel]);
+
+  // アニメーション設定をlocalStorageに保存
+  useEffect(() => {
+    localStorage.setItem('showLotteryAnimation', showLotteryAnimation.toString());
+  }, [showLotteryAnimation]);
 
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev + 0.05, 1.0));
@@ -419,12 +436,28 @@ const VirtualDraft = () => {
     // 実際の指名巡目を計算（現在までに決定した選手数 ÷ 12 + 1）
     const actualRound = Math.floor(finalSelections.length / 12) + 1;
     
+    // 抽選が必要な選手を抽出
+    const lotteryPlayers: Array<{
+      playerId: number;
+      playerName: string;
+      competingTeams: number[];
+      winner: number;
+    }> = [];
+
     playerCounts.forEach((competingTeams, playerId) => {
       const player = players.find(p => p.id === playerId);
       
       if (competingTeams.length > 1) {
         const winner = competingTeams[Math.floor(Math.random() * competingTeams.length)];
         const losers = competingTeams.filter(t => t !== winner);
+        
+        lotteryPlayers.push({
+          playerId,
+          playerName: player?.name || "不明",
+          competingTeams,
+          winner,
+        });
+        
         results.push({
           playerId,
           playerName: player?.name || "不明",
@@ -451,6 +484,27 @@ const VirtualDraft = () => {
       }
     });
 
+    // アニメーションありの場合
+    if (showLotteryAnimation && lotteryPlayers.length > 0) {
+      const animationData = lotteryPlayers.map(lp => ({
+        playerName: lp.playerName,
+        competingTeamIds: lp.competingTeams,
+        winnerId: lp.winner,
+      }));
+      
+      setLotteryAnimationData(animationData);
+      setShowAnimation(true);
+      
+      // アニメーション完了後に実行する処理を保存
+      (window as any).__lotteryResults = results;
+      (window as any).__finalSelections = newFinalSelections;
+    } else {
+      // アニメーションなしの場合は即座に結果を反映
+      applyLotteryResults(results, newFinalSelections);
+    }
+  };
+
+  const applyLotteryResults = (results: LotteryResult[], newFinalSelections: FinalSelection[]) => {
     setAllRoundResults(prev => [...prev, results]);
     setFinalSelections(newFinalSelections);
 
@@ -482,6 +536,15 @@ const VirtualDraft = () => {
         description: `${results.length > 0 ? `${results.length}名の選手について抽選を実施しました。` : ''}第${currentRound + 1}次選択を開始してください。`,
       });
     }
+  };
+
+  const handleAnimationComplete = () => {
+    setShowAnimation(false);
+    const results = (window as any).__lotteryResults || [];
+    const newFinalSelections = (window as any).__finalSelections || [];
+    applyLotteryResults(results, newFinalSelections);
+    delete (window as any).__lotteryResults;
+    delete (window as any).__finalSelections;
   };
 
   const getTeamName = (teamId: number) => {
@@ -1227,7 +1290,7 @@ const VirtualDraft = () => {
         )}
 
         {canExecuteLottery() && finalSelections.length < teams.length && (
-          <div className="mb-8 text-center">
+          <div className="mb-8 text-center space-y-4">
             <Button 
               size="lg" 
               onClick={executeLottery}
@@ -1236,6 +1299,15 @@ const VirtualDraft = () => {
               <Shuffle className="h-5 w-5" />
               第{currentRound}次選択抽選実行
             </Button>
+            
+            <div className="flex items-center justify-center gap-3 text-sm">
+              <span className="text-muted-foreground">抽選アニメーション</span>
+              <Switch
+                checked={showLotteryAnimation}
+                onCheckedChange={setShowLotteryAnimation}
+              />
+              <span className="text-muted-foreground">{showLotteryAnimation ? 'ON' : 'OFF'}</span>
+            </div>
           </div>
         )}
         
@@ -1779,19 +1851,28 @@ const VirtualDraft = () => {
                             }
                           }
                           
-                          return rows;
-                        })()}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+          return rows;
+        })()}
+      </TableBody>
+    </Table>
+  </div>
+</div>
+</div>
+</div>
+</div>
+</DialogContent>
+</Dialog>
+
+{/* 抽選アニメーション */}
+{showAnimation && (
+  <LotteryAnimation
+    lotteryData={lotteryAnimationData}
+    teams={teams}
+    onComplete={handleAnimationComplete}
+  />
+)}
+</div>
+);
 };
 
 export default VirtualDraft;
