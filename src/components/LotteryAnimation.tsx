@@ -125,23 +125,31 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                           {getTeamName(teamId)}
                         </div>
 
-                        {/* 箱 */}
+                        {/* 箱（正面視点） */}
                         <div
                           className={`
-                            w-32 h-40 bg-gradient-to-b from-gray-600 to-gray-800
-                            border-4 border-gray-700 rounded-lg shadow-2xl
-                            relative overflow-visible
-                            ${showResult && isWinner ? "ring-4 ring-yellow-400 scale-110" : ""}
+                            w-32 h-40 relative
+                            ${showResult && isWinner ? "scale-110" : ""}
                             transition-all duration-500
                           `}
                         >
+                          {/* 箱本体 */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-amber-800 to-amber-900 border-4 border-amber-950 rounded-lg shadow-2xl" />
+                          
+                          {/* 箱の蓋 */}
+                          <div className="absolute -top-2 left-0 right-0 h-4 bg-gradient-to-b from-amber-700 to-amber-800 border-4 border-amber-950 rounded-t-lg shadow-lg" />
+                          
+                          {/* 勝者のハイライト */}
+                          {showResult && isWinner && (
+                            <div className="absolute inset-0 ring-4 ring-yellow-400 rounded-lg animate-[highlight_2s_ease-in-out]" />
+                          )}
                           {/* 紙 */}
                           {showPaper && (
                             <div
                               className={`
-                                absolute left-1/2 -translate-x-1/2 w-20
+                                absolute left-1/2 -translate-x-1/2 w-20 z-10
                                 transition-all duration-[3000ms] ease-out
-                                ${phase === "papers" ? "-bottom-2" : "-bottom-48"}
+                                ${phase === "papers" ? "-top-2" : "-top-48"}
                               `}
                             >
                               {/* 折りたたまれた紙（開く前） */}
