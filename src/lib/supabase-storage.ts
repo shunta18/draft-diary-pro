@@ -37,6 +37,7 @@ export interface DiaryEntry {
   category: string;
   match_card: string;
   score: string;
+  tournament_name?: string;
   player_comments?: string;
   overall_impression?: string;
   videos?: string[];
@@ -311,6 +312,8 @@ export const addDiaryEntry = async (entryData: Omit<DiaryEntry, 'id'>): Promise<
 
 export const updateDiaryEntry = async (id: number, entryData: Omit<DiaryEntry, 'id'>): Promise<DiaryEntry | null> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
     const { data, error } = await supabase
       .from('diary_entries')
       .update(entryData)
@@ -319,6 +322,30 @@ export const updateDiaryEntry = async (id: number, entryData: Omit<DiaryEntry, '
       .single();
     
     if (error) throw error;
+
+    // 公開日記も更新
+    if (user && data) {
+      const { error: publicUpdateError } = await supabase
+        .from('public_diary_entries' as any)
+        .update({
+          match_card: entryData.match_card,
+          date: entryData.date,
+          venue: entryData.venue,
+          score: entryData.score,
+          category: entryData.category,
+          tournament_name: entryData.tournament_name,
+          player_comments: entryData.player_comments,
+          overall_impression: entryData.overall_impression,
+          videos: entryData.videos
+        })
+        .eq('user_id', user.id)
+        .eq('original_diary_id', id);
+      
+      if (publicUpdateError) {
+        console.log('[updateDiaryEntry] Public diary update skipped or failed:', publicUpdateError);
+      }
+    }
+    
     return data;
   } catch (error) {
     console.error('Failed to update diary entry:', error);
@@ -1005,6 +1032,7 @@ export interface PublicDiaryEntry {
   venue: string;
   score: string;
   category: string;
+  tournament_name?: string;
   player_comments?: string;
   overall_impression?: string;
   videos?: string[];
@@ -1088,6 +1116,7 @@ export const uploadDiaryToPublic = async (diaryId: number): Promise<void> => {
       venue: diary.venue,
       score: diary.score,
       category: diary.category,
+      tournament_name: diary.tournament_name,
       player_comments: diary.player_comments,
       overall_impression: diary.overall_impression,
       videos: diary.videos
@@ -1199,6 +1228,7 @@ export const importDiaryFromPublic = async (publicDiaryId: string): Promise<void
       venue: (publicDiary as any).venue,
       score: (publicDiary as any).score,
       category: (publicDiary as any).category,
+      tournament_name: (publicDiary as any).tournament_name,
       player_comments: (publicDiary as any).player_comments,
       overall_impression: (publicDiary as any).overall_impression,
       videos: (publicDiary as any).videos
