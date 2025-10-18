@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import lotteryBoxImage from "@/assets/lottery-box.png";
 
 // 抽選順序（セ・リーグ優先）
 const lotteryOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6]; // ヤクルト→ロッテ→広島→西武→中日→楽天→巨人→オリックス→DeNA→日本ハム→阪神→ソフトバンク
@@ -125,19 +126,20 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                           {getTeamName(teamId)}
                         </div>
 
-                        {/* 箱（正面視点） */}
+                        {/* 箱（画像） */}
                         <div
                           className={`
-                            w-32 h-40 relative
+                            w-40 h-40 relative
                             ${showResult && isWinner ? "scale-110" : ""}
                             transition-all duration-500
                           `}
                         >
-                          {/* 箱本体 */}
-                          <div className="absolute inset-0 bg-gradient-to-b from-amber-800 to-amber-900 border-4 border-amber-950 rounded-lg shadow-2xl" />
-                          
-                          {/* 箱の蓋 */}
-                          <div className="absolute -top-2 left-0 right-0 h-4 bg-gradient-to-b from-amber-700 to-amber-800 border-4 border-amber-950 rounded-t-lg shadow-lg" />
+                          {/* 箱の画像 */}
+                          <img 
+                            src={lotteryBoxImage} 
+                            alt="抽選箱" 
+                            className="w-full h-full object-contain"
+                          />
                           
                           {/* 勝者のハイライト */}
                           {showResult && isWinner && (
