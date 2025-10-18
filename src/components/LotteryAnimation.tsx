@@ -183,8 +183,8 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                           ) : (
                             // 開いた状態
                             <div className="relative">
-                              {/* 球団名を紙の中央に配置 */}
-                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white text-xl font-bold text-center whitespace-nowrap z-10">
+                              {/* 球団名を紙の中央に配置（親要素の-translate-x-6を補正） */}
+                              <div className="absolute -top-8 left-1/2 -translate-x-[calc(50%-1.5rem)] text-white text-xl font-bold text-center whitespace-nowrap z-10">
                                 {getTeamName(teamId)}
                               </div>
                               <div className="flex h-40 w-32 -translate-x-6">
