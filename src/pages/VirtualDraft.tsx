@@ -1552,7 +1552,7 @@ const VirtualDraft = () => {
         </div>
 
         {canExecuteLottery() && finalSelections.length < teams.length && (
-          <div className="mt-8 mb-8 text-center">
+          <div className="mt-8 mb-8 text-center space-y-4">
             <Button 
               size="lg" 
               onClick={executeLottery}
@@ -1561,6 +1561,15 @@ const VirtualDraft = () => {
               <Shuffle className="h-5 w-5" />
               第{currentRound}次選択抽選実行
             </Button>
+            
+            <div className="flex items-center justify-center gap-3 text-sm">
+              <span className="text-muted-foreground">抽選アニメーション</span>
+              <Switch
+                checked={showLotteryAnimation}
+                onCheckedChange={setShowLotteryAnimation}
+              />
+              <span className="text-muted-foreground">{showLotteryAnimation ? 'ON' : 'OFF'}</span>
+            </div>
           </div>
         )}
 
