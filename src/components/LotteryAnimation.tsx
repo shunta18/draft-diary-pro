@@ -67,14 +67,16 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     return teams.find(t => t.id === teamId)?.shortName || "";
   };
 
-  // 球団数に応じてレイアウトクラスを動的に決定（モバイル対応）
+  // 球団数に応じてレイアウトクラスを動的に決定（モバイル対応・2列対応）
   const getLayoutClass = (teamCount: number) => {
-    if (teamCount <= 4) {
-      return "flex items-center justify-center gap-8 md:gap-20";
+    if (teamCount <= 3) {
+      return "flex items-center justify-center gap-6 md:gap-20";
+    } else if (teamCount === 4) {
+      return "grid grid-cols-2 md:flex items-center justify-center gap-6 md:gap-12";
     } else if (teamCount <= 6) {
-      return "flex items-center justify-center gap-6 md:gap-12";
+      return "grid grid-cols-2 md:flex items-center justify-center gap-4 md:gap-10 max-w-4xl mx-auto";
     } else {
-      return "flex items-center justify-center gap-4 md:gap-8 flex-wrap max-w-6xl mx-auto";
+      return "grid grid-cols-2 md:grid-cols-3 lg:flex items-center justify-center gap-3 md:gap-6 max-w-6xl mx-auto";
     }
   };
 
