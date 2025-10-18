@@ -972,6 +972,12 @@ export default function PublicPlayers() {
                   <Label>会場</Label>
                   <p>{selectedDiary.venue}</p>
                 </div>
+                {selectedDiary.tournament_name && (
+                  <div>
+                    <Label>大会名</Label>
+                    <p>{selectedDiary.tournament_name}</p>
+                  </div>
+                )}
                 <div>
                   <Label>スコア</Label>
                   <p>{selectedDiary.score}</p>
