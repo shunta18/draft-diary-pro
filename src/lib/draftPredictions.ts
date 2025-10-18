@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const DRAFT_YEAR = "2025";
 const SESSION_ID_KEY = "draft_prediction_session_id";
 
 // セッションIDの取得または生成
@@ -17,7 +16,8 @@ export const getOrCreateSessionId = (): string => {
 export const upsertPlayerVote = async (
   teamId: number,
   playerId: number,
-  isVoting: boolean
+  isVoting: boolean,
+  draftYear: string = "2025"
 ): Promise<{ error: Error | null }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -32,7 +32,7 @@ export const upsertPlayerVote = async (
           session_id: user ? null : sessionId,
           team_id: teamId,
           player_id: playerId,
-          draft_year: DRAFT_YEAR,
+          draft_year: draftYear,
         }, {
           onConflict: user ? 'user_id,team_id,player_id,draft_year' : 'session_id,team_id,player_id,draft_year'
         });
@@ -45,7 +45,7 @@ export const upsertPlayerVote = async (
         .delete()
         .eq("team_id", teamId)
         .eq("player_id", playerId)
-        .eq("draft_year", DRAFT_YEAR);
+        .eq("draft_year", draftYear);
 
       if (user) {
         query.eq("user_id", user.id);
@@ -68,7 +68,8 @@ export const upsertPlayerVote = async (
 export const upsertPositionVote = async (
   teamId: number,
   position: string,
-  isVoting: boolean
+  isVoting: boolean,
+  draftYear: string = "2025"
 ): Promise<{ error: Error | null }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
@@ -83,7 +84,7 @@ export const upsertPositionVote = async (
           session_id: user ? null : sessionId,
           team_id: teamId,
           position: position,
-          draft_year: DRAFT_YEAR,
+          draft_year: draftYear,
         }, {
           onConflict: user ? 'user_id,team_id,position,draft_year' : 'session_id,team_id,position,draft_year'
         });
@@ -96,7 +97,7 @@ export const upsertPositionVote = async (
         .delete()
         .eq("team_id", teamId)
         .eq("position", position)
-        .eq("draft_year", DRAFT_YEAR);
+        .eq("draft_year", draftYear);
 
       if (user) {
         query.eq("user_id", user.id);
@@ -116,7 +117,7 @@ export const upsertPositionVote = async (
 };
 
 // ユーザーの投票状態を取得
-export const getUserVotes = async () => {
+export const getUserVotes = async (draftYear: string = "2025") => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     const sessionId = getOrCreateSessionId();
@@ -125,7 +126,7 @@ export const getUserVotes = async () => {
     const playerQuery = supabase
       .from("draft_team_player_votes")
       .select("team_id, player_id")
-      .eq("draft_year", DRAFT_YEAR);
+      .eq("draft_year", draftYear);
 
     if (user) {
       playerQuery.eq("user_id", user.id);
@@ -140,7 +141,7 @@ export const getUserVotes = async () => {
     const positionQuery = supabase
       .from("draft_team_position_votes")
       .select("team_id, position")
-      .eq("draft_year", DRAFT_YEAR);
+      .eq("draft_year", draftYear);
 
     if (user) {
       positionQuery.eq("user_id", user.id);
@@ -173,7 +174,7 @@ export interface DraftPredictions {
 }
 
 // 投票結果を集計
-export const fetchDraftPredictions = async (draftYear: string = DRAFT_YEAR): Promise<DraftPredictions> => {
+export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise<DraftPredictions> => {
   try {
     // 選手投票の集計
     const { data: playerVotesData, error: playerError } = await supabase
@@ -231,7 +232,7 @@ export const fetchDraftPredictions = async (draftYear: string = DRAFT_YEAR): Pro
 };
 
 // 全選手の投票数を取得（投票ページ表示用）
-export const getPlayerVoteCounts = async (draftYear: string = DRAFT_YEAR) => {
+export const getPlayerVoteCounts = async (draftYear: string = "2025") => {
   try {
     const { data, error } = await supabase
       .from("draft_team_player_votes")
@@ -255,7 +256,7 @@ export const getPlayerVoteCounts = async (draftYear: string = DRAFT_YEAR) => {
 };
 
 // 全ポジションの投票数を取得（投票ページ表示用）
-export const getPositionVoteCounts = async (draftYear: string = DRAFT_YEAR) => {
+export const getPositionVoteCounts = async (draftYear: string = "2025") => {
   try {
     const { data, error } = await supabase
       .from("draft_team_position_votes")

@@ -70,6 +70,7 @@ const normalizeLocalPlayer = (player: LocalPlayer): NormalizedPlayer => ({
 });
 
 export default function DraftPredictions() {
+  const [selectedYear, setSelectedYear] = useState("2025");
   const [selectedTeam, setSelectedTeam] = useState(1);
   const [players, setPlayers] = useState<NormalizedPlayer[]>([]);
   const [userPlayerVotes, setUserPlayerVotes] = useState<{ team_id: number; player_id: number }[]>([]);
@@ -83,7 +84,7 @@ export default function DraftPredictions() {
   // データ読み込み
   useEffect(() => {
     loadData();
-  }, [user]);
+  }, [user, selectedYear]);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -105,15 +106,15 @@ export default function DraftPredictions() {
     }
 
     // ユーザーの投票状態を読み込み
-    const { playerVotes, positionVotes } = await getUserVotes();
+    const { playerVotes, positionVotes } = await getUserVotes(selectedYear);
     setUserPlayerVotes(playerVotes);
     setUserPositionVotes(positionVotes);
 
     // 全体の投票数を読み込み
-    const { voteCounts: playerCounts } = await getPlayerVoteCounts();
+    const { voteCounts: playerCounts } = await getPlayerVoteCounts(selectedYear);
     setPlayerVoteCounts(playerCounts);
 
-    const { voteCounts: positionCounts } = await getPositionVoteCounts();
+    const { voteCounts: positionCounts } = await getPositionVoteCounts(selectedYear);
     setPositionVoteCounts(positionCounts);
 
     setIsLoading(false);
@@ -131,7 +132,7 @@ export default function DraftPredictions() {
           table: "draft_team_player_votes",
         },
         async () => {
-          const { voteCounts } = await getPlayerVoteCounts();
+          const { voteCounts } = await getPlayerVoteCounts(selectedYear);
           setPlayerVoteCounts(voteCounts);
         }
       )
@@ -160,7 +161,7 @@ export default function DraftPredictions() {
   }, []);
 
   const handlePlayerVoteToggle = async (playerId: number, isChecked: boolean) => {
-    const { error } = await upsertPlayerVote(selectedTeam, playerId, isChecked);
+    const { error } = await upsertPlayerVote(selectedTeam, playerId, isChecked, selectedYear);
 
     if (error) {
       toast({
@@ -181,12 +182,12 @@ export default function DraftPredictions() {
     }
 
     // 投票数を再読み込み
-    const { voteCounts } = await getPlayerVoteCounts();
+    const { voteCounts } = await getPlayerVoteCounts(selectedYear);
     setPlayerVoteCounts(voteCounts);
   };
 
   const handlePositionVoteToggle = async (position: string, isChecked: boolean) => {
-    const { error } = await upsertPositionVote(selectedTeam, position, isChecked);
+    const { error } = await upsertPositionVote(selectedTeam, position, isChecked, selectedYear);
 
     if (error) {
       toast({
@@ -207,7 +208,7 @@ export default function DraftPredictions() {
     }
 
     // 投票数を再読み込み
-    const { voteCounts } = await getPositionVoteCounts();
+    const { voteCounts } = await getPositionVoteCounts(selectedYear);
     setPositionVoteCounts(voteCounts);
   };
 
@@ -259,13 +260,38 @@ export default function DraftPredictions() {
           <div className="text-center space-y-4">
             <div className="flex items-center justify-center gap-3">
               <Vote className="h-8 w-8 text-primary" />
-              <h1 className="text-4xl font-bold">2025年ドラフトアンケート</h1>
+              <h1 className="text-4xl font-bold">ドラフトアンケート</h1>
             </div>
             <p className="text-muted-foreground text-lg">
               各球団が注目する選手や補強ポジションを予測して投票しよう！<br />
               投票結果はAI仮想ドラフトに反映されます。
             </p>
           </div>
+
+          {/* 年度選択 */}
+          <Card>
+            <CardHeader>
+              <CardTitle>年度を選択</CardTitle>
+              <CardDescription>投票する年度を選んでください</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex gap-2">
+                {["2025"].map((year) => (
+                  <button
+                    key={year}
+                    onClick={() => setSelectedYear(year)}
+                    className={`px-6 py-2 rounded-lg font-semibold transition-all ${
+                      selectedYear === year
+                        ? "bg-primary text-primary-foreground shadow-lg"
+                        : "bg-muted text-muted-foreground hover:bg-muted/80"
+                    }`}
+                  >
+                    {year}年
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {/* 球団選択 */}
           <Card>
