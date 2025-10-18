@@ -251,7 +251,7 @@ const Index = () => {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-primary">ドラフトアンケート</h3>
-                    <p className="text-sm text-muted-foreground">各球団の注目選手を予測</p>
+                    <p className="text-sm text-muted-foreground">各球団の注目選手を予測<br />仮想ドラフトのAI学習に活用されます</p>
                     <p className="text-xs text-green-600 mt-1 font-medium">みんなの予想を見る →</p>
                   </div>
                 </div>
