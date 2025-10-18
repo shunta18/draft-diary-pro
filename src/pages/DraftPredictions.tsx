@@ -7,6 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +19,8 @@ import {
   getPlayerVoteCounts,
   getPositionVoteCounts,
 } from "@/lib/draftPredictions";
-import { Vote, TrendingUp } from "lucide-react";
+import { Vote, TrendingUp, Plus } from "lucide-react";
+import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 
 const teams = [
   { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800" },
@@ -53,11 +55,15 @@ interface NormalizedPlayer {
   position: string[];
   category: string;
   evaluations: string[];
+  draftYear: string;
+  videoLinks: string[];
 }
 
 const normalizeSupabasePlayer = (player: RawSupabasePlayer): NormalizedPlayer => ({
   ...player,
   position: [player.position],
+  draftYear: "2025",
+  videoLinks: [],
 });
 
 const normalizeLocalPlayer = (player: LocalPlayer): NormalizedPlayer => ({
@@ -67,6 +73,8 @@ const normalizeLocalPlayer = (player: LocalPlayer): NormalizedPlayer => ({
   position: player.position,
   category: player.category,
   evaluations: player.evaluations,
+  draftYear: player.draftYear,
+  videoLinks: player.videoLinks,
 });
 
 export default function DraftPredictions() {
@@ -334,49 +342,80 @@ export default function DraftPredictions() {
                     {teams.find((t) => t.id === selectedTeam)?.name}が注目する選手
                   </CardTitle>
                   <CardDescription>
-                    この球団が指名しそうな選手にチェックを入れてください（複数選択可）
+                    この球団が注目しそうな選手を選択してください（複数選択可）
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {isLoading ? (
                     <p className="text-muted-foreground text-center py-8">読み込み中...</p>
                   ) : (
-                    <div className="space-y-2 max-h-[600px] overflow-y-auto">
-                      {sortedPlayers.map((player) => {
-                        const voteCount = getPlayerVoteCount(player.id);
-                        const votePercentage = (voteCount / maxPlayerVotes) * 100;
+                    <div className="space-y-4">
+                      {/* 選手を追加ボタン */}
+                      <PlayerSelectionDialog
+                        players={players}
+                        onSelect={(playerId) => {
+                          if (playerId !== undefined) {
+                            handlePlayerVoteToggle(playerId, true);
+                          }
+                        }}
+                        onPlayerAdded={() => loadData()}
+                      >
+                        <Button variant="outline" className="w-full">
+                          <Plus className="h-4 w-4 mr-2" />
+                          選手を検索して追加
+                        </Button>
+                      </PlayerSelectionDialog>
 
-                        return (
-                          <div
-                            key={player.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-                          >
-                            <Checkbox
-                              checked={isPlayerVoted(player.id)}
-                              onCheckedChange={(checked) =>
-                                handlePlayerVoteToggle(player.id, checked as boolean)
-                              }
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-1">
-                                <p className="font-semibold">{player.name}</p>
-                                <Badge variant="outline" className="text-xs">
-                                  {player.team}
-                                </Badge>
-                                <Badge variant="secondary" className="text-xs">
-                                  {Array.isArray(player.position) ? player.position.join("/") : player.position}
-                                </Badge>
+                      {/* 投票済みの選手一覧 */}
+                      <div className="space-y-2 max-h-[500px] overflow-y-auto">
+                        {userPlayerVotes
+                          .filter((v) => v.team_id === selectedTeam)
+                          .map((vote) => {
+                            const player = players.find((p) => p.id === vote.player_id);
+                            if (!player) return null;
+                            
+                            const voteCount = getPlayerVoteCount(player.id);
+                            const votePercentage = (voteCount / maxPlayerVotes) * 100;
+
+                            return (
+                              <div
+                                key={player.id}
+                                className="flex items-center gap-3 p-3 rounded-lg border bg-accent/30"
+                              >
+                                <Checkbox
+                                  checked={true}
+                                  onCheckedChange={(checked) =>
+                                    handlePlayerVoteToggle(player.id, checked as boolean)
+                                  }
+                                />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="font-semibold">{player.name}</p>
+                                    <Badge variant="outline" className="text-xs">
+                                      {player.team}
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {Array.isArray(player.position) ? player.position.join("/") : player.position}
+                                    </Badge>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Progress value={votePercentage} className="h-2 flex-1" />
+                                    <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                      {voteCount}票
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <Progress value={votePercentage} className="h-2 flex-1" />
-                                <span className="text-sm text-muted-foreground whitespace-nowrap">
-                                  {voteCount}票
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
+                            );
+                          })}
+                        
+                        {userPlayerVotes.filter((v) => v.team_id === selectedTeam).length === 0 && (
+                          <p className="text-center text-muted-foreground py-8">
+                            まだ選手が選択されていません。<br />
+                            上のボタンから選手を検索して追加してください。
+                          </p>
+                        )}
+                      </div>
                     </div>
                   )}
                 </CardContent>
