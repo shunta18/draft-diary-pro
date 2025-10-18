@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,9 +8,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { addPlayer } from "@/lib/supabase-storage";
+import { addPlayer, getPlayers, Player } from "@/lib/supabase-storage";
 import { useToast } from "@/hooks/use-toast";
-import { Save, X } from "lucide-react";
+import { Save, X, AlertTriangle } from "lucide-react";
+import { calculateSimilarity } from "@/lib/utils";
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"];
 const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
@@ -48,6 +50,9 @@ interface PlayerFormDialogProps {
 export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerFormDialogProps) {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+  const [similarPlayers, setSimilarPlayers] = useState<Array<{ player: Player; similarity: number }>>([]);
+  const [pendingPlayerData, setPendingPlayerData] = useState<any>(null);
   const [formData, setFormData] = useState({
     name: "",
     draftYear: "2025",
@@ -121,6 +126,68 @@ export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerForm
     }));
   };
 
+  const checkForDuplicates = async (playerData: any) => {
+    try {
+      const existingPlayers = await getPlayers();
+      const similar: Array<{ player: Player; similarity: number }> = [];
+
+      for (const player of existingPlayers) {
+        const nameSimilarity = calculateSimilarity(playerData.name, player.name);
+        
+        // 名前の類似度が80%以上の場合
+        if (nameSimilarity >= 80) {
+          // 所属チームも同じ場合は類似度を上げる
+          const teamMatch = playerData.team === player.team;
+          const yearMatch = playerData.year === player.year;
+          
+          let adjustedSimilarity = nameSimilarity;
+          if (teamMatch) adjustedSimilarity += 10;
+          if (yearMatch) adjustedSimilarity += 5;
+          
+          similar.push({ 
+            player, 
+            similarity: Math.min(adjustedSimilarity, 100) 
+          });
+        }
+      }
+
+      // 類似度が高い順にソート
+      similar.sort((a, b) => b.similarity - a.similarity);
+
+      return similar;
+    } catch (error) {
+      console.error("Failed to check for duplicates:", error);
+      return [];
+    }
+  };
+
+  const savePlayer = async (playerData: any) => {
+    try {
+      const result = await addPlayer(playerData);
+      
+      if (result) {
+        toast({
+          title: "選手を追加しました",
+          description: `${formData.name}が正常に登録されました。`,
+        });
+        resetForm();
+        onOpenChange(false);
+        onSuccess?.();
+      } else {
+        throw new Error("Failed to add player");
+      }
+    } catch (error) {
+      console.error("Failed to save player:", error);
+      const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
+      
+      toast({
+        title: "エラーが発生しました",
+        description: `選手の保存に失敗しました: ${errorMessage}`,
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -158,19 +225,20 @@ export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerForm
         return;
       }
 
-      const result = await addPlayer(playerData);
+      // 類似選手をチェック
+      const similar = await checkForDuplicates(playerData);
       
-      if (result) {
-        toast({
-          title: "選手を追加しました",
-          description: `${formData.name}が正常に登録されました。`,
-        });
-        resetForm();
-        onOpenChange(false);
-        onSuccess?.();
-      } else {
-        throw new Error("Failed to add player");
+      if (similar.length > 0) {
+        // 類似選手が見つかった場合、確認ダイアログを表示
+        setSimilarPlayers(similar);
+        setPendingPlayerData(playerData);
+        setShowDuplicateAlert(true);
+        setIsSubmitting(false);
+        return;
       }
+
+      // 類似選手がいない場合は直接保存
+      await savePlayer(playerData);
     } catch (error) {
       console.error("Failed to save player:", error);
       const errorMessage = error instanceof Error ? error.message : "不明なエラーが発生しました";
@@ -185,12 +253,31 @@ export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerForm
     }
   };
 
+  const handleConfirmSave = async () => {
+    setShowDuplicateAlert(false);
+    setIsSubmitting(true);
+    try {
+      await savePlayer(pendingPlayerData);
+    } finally {
+      setIsSubmitting(false);
+      setPendingPlayerData(null);
+      setSimilarPlayers([]);
+    }
+  };
+
+  const handleCancelSave = () => {
+    setShowDuplicateAlert(false);
+    setPendingPlayerData(null);
+    setSimilarPlayers([]);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>新規選手追加</DialogTitle>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>新規選手追加</DialogTitle>
+          </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* 基本情報 */}
@@ -356,5 +443,46 @@ export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerForm
         </form>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showDuplicateAlert} onOpenChange={setShowDuplicateAlert}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <AlertTriangle className="h-5 w-5 text-warning" />
+            似た選手が見つかりました
+          </AlertDialogTitle>
+          <AlertDialogDescription className="space-y-3">
+            <p>以下の選手と類似しています。同じ選手を重複登録しようとしていませんか？</p>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {similarPlayers.slice(0, 5).map(({ player, similarity }) => (
+                <div key={player.id} className="p-3 border rounded-lg bg-muted/50">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="font-medium">{player.name}</span>
+                    <Badge variant="secondary" className="ml-2">
+                      類似度 {similarity}%
+                    </Badge>
+                  </div>
+                  <div className="text-sm text-muted-foreground space-y-0.5">
+                    <div>所属: {player.team}</div>
+                    {player.year && <div>ドラフト年度: {player.year}年</div>}
+                    {player.position && <div>ポジション: {player.position}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-sm font-medium">それでも登録を続けますか？</p>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={handleCancelSave}>
+            キャンセル
+          </AlertDialogCancel>
+          <AlertDialogAction onClick={handleConfirmSave}>
+            それでも登録
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }
