@@ -72,11 +72,11 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     if (teamCount <= 3) {
       return "flex items-center justify-center gap-6 md:gap-20";
     } else if (teamCount === 4) {
-      return "grid grid-cols-2 md:flex items-center justify-center gap-6 md:gap-12";
+      return "grid grid-cols-2 md:flex items-center justify-center gap-4 md:gap-12";
     } else if (teamCount <= 6) {
-      return "grid grid-cols-2 md:flex items-center justify-center gap-4 md:gap-10 max-w-4xl mx-auto";
+      return "grid grid-cols-2 md:flex items-center justify-center gap-2 md:gap-10 max-w-4xl mx-auto";
     } else {
-      return "grid grid-cols-2 md:grid-cols-3 lg:flex items-center justify-center gap-3 md:gap-6 max-w-6xl mx-auto";
+      return "grid grid-cols-2 md:grid-cols-3 lg:flex items-center justify-center gap-2 md:gap-6 max-w-6xl mx-auto";
     }
   };
 
@@ -153,9 +153,9 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
 
             {/* Phase 3-4: 紙が閉じた状態 → 開く */}
             {(phase === "papers" || phase === "open") && (
-              <div className="text-center px-4">
+              <div className="text-center px-2 md:px-4">
                 <h3 className="text-2xl md:text-4xl font-bold text-white mb-6 md:mb-12">{currentData.playerName}</h3>
-                <div className={`${getLayoutClass(sortedCompetingTeams.length)} px-8`}>
+                <div className={`${getLayoutClass(sortedCompetingTeams.length)} px-2 md:px-8`}>
                   {sortedCompetingTeams.map((teamId, index) => {
                     const isWinner = teamId === currentData.winnerId;
                     const showOpen = phase === "open";
@@ -170,7 +170,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                       >
                         {/* 球団名 - 紙が閉じている時は上、開いた時は中央 */}
                         {!showOpen && (
-                          <div className="text-white text-sm md:text-xl font-bold mb-2 md:mb-3 text-center whitespace-nowrap">
+                          <div className="text-white text-xs md:text-xl font-bold mb-1 md:mb-3 text-center whitespace-nowrap">
                             {getTeamName(teamId)}
                           </div>
                         )}
@@ -179,17 +179,17 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                         <div className="relative">
                           {!showOpen ? (
                             // 閉じた状態
-                            <div className="w-12 h-20 md:w-20 md:h-32 bg-white rounded shadow-xl border-2 border-gray-300">
+                            <div className="w-10 h-16 md:w-20 md:h-32 bg-white rounded shadow-xl border-2 border-gray-300">
                               <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-400" />
                             </div>
                           ) : (
                             // 開いた状態
                             <div className="relative">
                               {/* 球団名を紙の中央に配置（親要素の-translate-x-6を補正） */}
-                              <div className="absolute -top-6 md:-top-8 left-1/2 -translate-x-[calc(50%-0.875rem)] md:-translate-x-[calc(50%-1.5rem)] text-white text-sm md:text-xl font-bold text-center whitespace-nowrap z-10">
+                              <div className="absolute -top-5 md:-top-8 left-1/2 -translate-x-[calc(50%-0.625rem)] md:-translate-x-[calc(50%-1.5rem)] text-white text-xs md:text-xl font-bold text-center whitespace-nowrap z-10">
                                 {getTeamName(teamId)}
                               </div>
-                              <div className="flex h-24 w-20 -translate-x-3.5 md:h-40 md:w-32 md:-translate-x-6">
+                              <div className="flex h-20 w-16 -translate-x-2.5 md:h-40 md:w-32 md:-translate-x-6">
                                 <div className="w-1/2 bg-white border-r-2 border-gray-300 rounded-l shadow-lg animate-[unfoldLeft_1s_ease-out]" />
                                 <div className="w-1/2 bg-white flex items-center justify-center rounded-r shadow-lg animate-[unfoldRight_1s_ease-out]">
                                   {isWinner && (
