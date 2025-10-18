@@ -157,7 +157,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                                 className={`
                                   relative bg-white rounded shadow-xl
                                   transition-all duration-1500
-                                  ${!showResult ? "h-48" : "h-56 w-32 -translate-x-6"}
+                                  ${!showResult ? "h-32" : "h-40 w-32 -translate-x-6"}
                                   ${!showResult ? "perspective-1000" : ""}
                                 `}
                                 style={{
