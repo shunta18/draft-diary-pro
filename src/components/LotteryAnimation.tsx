@@ -155,10 +155,12 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                           animationDelay: `${index * 50}ms`,
                         }}
                       >
-                        {/* 球団名 */}
-                        <div className="text-white text-xl font-bold mb-3 text-center whitespace-nowrap">
-                          {getTeamName(teamId)}
-                        </div>
+                        {/* 球団名 - 紙が閉じている時は上、開いた時は中央 */}
+                        {!showOpen && (
+                          <div className="text-white text-xl font-bold mb-3 text-center whitespace-nowrap">
+                            {getTeamName(teamId)}
+                          </div>
+                        )}
                         
                         {/* 紙 */}
                         <div className="relative">
@@ -169,16 +171,22 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                             </div>
                           ) : (
                             // 開いた状態
-                            <div className="flex h-40 w-32 -translate-x-6">
-                              <div className="w-1/2 bg-white border-r-2 border-gray-300 rounded-l shadow-lg animate-[unfoldLeft_1s_ease-out]" />
-                              <div className="w-1/2 bg-white flex items-center justify-center rounded-r shadow-lg animate-[unfoldRight_1s_ease-out]">
-                                {isWinner && (
-                                  <div className="text-center px-2">
-                                    <div className="text-red-600 font-bold text-sm leading-tight whitespace-nowrap">
-                                      交渉権<br />獲得
+                            <div className="relative">
+                              {/* 球団名を紙の中央に配置 */}
+                              <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-white text-xl font-bold text-center whitespace-nowrap z-10">
+                                {getTeamName(teamId)}
+                              </div>
+                              <div className="flex h-40 w-32 -translate-x-6">
+                                <div className="w-1/2 bg-white border-r-2 border-gray-300 rounded-l shadow-lg animate-[unfoldLeft_1s_ease-out]" />
+                                <div className="w-1/2 bg-white flex items-center justify-center rounded-r shadow-lg animate-[unfoldRight_1s_ease-out]">
+                                  {isWinner && (
+                                    <div className="text-center px-2">
+                                      <div className="text-red-600 font-bold text-sm leading-tight whitespace-nowrap">
+                                        交渉権<br />獲得
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  )}
+                                </div>
                               </div>
                             </div>
                           )}
