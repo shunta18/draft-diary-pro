@@ -139,7 +139,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                           {showPaper && (
                             <div
                               className={`
-                                absolute left-1/2 -translate-x-1/2 w-28
+                                absolute left-1/2 -translate-x-1/2 w-20
                                 transition-all duration-[3000ms] ease-out
                                 ${phase === "papers" ? "-bottom-2" : "-bottom-48"}
                               `}
@@ -149,7 +149,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                                 className={`
                                   relative bg-white rounded shadow-xl
                                   transition-all duration-1500
-                                  ${!showResult ? "h-56" : "h-64 w-48 -translate-x-10"}
+                                  ${!showResult ? "h-48" : "h-56 w-32 -translate-x-6"}
                                   ${!showResult ? "perspective-1000" : ""}
                                 `}
                                 style={{
