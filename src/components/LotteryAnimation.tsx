@@ -168,38 +168,30 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                           animationDelay: `${index * 50}ms`,
                         }}
                       >
-                        {/* 球団名 - 紙が閉じている時は上、開いた時は中央 */}
-                        {!showOpen && (
-                          <div className="text-white text-xs md:text-xl font-bold mb-3 md:mb-4 text-center whitespace-nowrap">
-                            {getTeamName(teamId)}
-                          </div>
-                        )}
+                        {/* 球団名 - 常に上に表示 */}
+                        <div className="text-white text-xs md:text-xl font-bold mb-4 md:mb-6 text-center whitespace-nowrap">
+                          {getTeamName(teamId)}
+                        </div>
                         
                         {/* 紙 */}
                         <div className="relative">
                           {!showOpen ? (
                             // 閉じた状態
                             <div className="w-10 h-16 md:w-20 md:h-32 bg-white rounded shadow-xl border-2 border-gray-300">
-                              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-400" />
+                              <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-400 -translate-x-1/2" />
                             </div>
                           ) : (
-                            // 開いた状態
-                            <div className="relative">
-                              {/* 球団名を紙の中央に配置 */}
-                              <div className="absolute -top-5 md:-top-8 left-1/2 -translate-x-1/2 text-white text-xs md:text-xl font-bold text-center whitespace-nowrap z-10">
-                                {getTeamName(teamId)}
-                              </div>
-                              <div className="flex h-20 w-16 md:h-40 md:w-32 mx-auto">
-                                <div className="w-1/2 bg-white border-r-2 border-gray-300 rounded-l shadow-lg animate-[unfoldLeft_1s_ease-out]" />
-                                <div className="w-1/2 bg-white flex items-center justify-center rounded-r shadow-lg animate-[unfoldRight_1s_ease-out]">
-                                  {isWinner && (
-                                    <div className="text-center px-1 md:px-2">
-                                      <div className="text-red-600 font-bold text-[10px] md:text-sm leading-tight whitespace-nowrap">
-                                        交渉権<br />獲得
-                                      </div>
+                            // 開いた状態 - その場で開く
+                            <div className="flex h-16 w-20 md:h-32 md:w-40">
+                              <div className="w-1/2 bg-white border-r-2 border-gray-300 rounded-l shadow-lg animate-[unfoldLeft_1s_ease-out]" />
+                              <div className="w-1/2 bg-white flex items-center justify-center rounded-r shadow-lg animate-[unfoldRight_1s_ease-out]">
+                                {isWinner && (
+                                  <div className="text-center px-1 md:px-2">
+                                    <div className="text-red-600 font-bold text-[10px] md:text-sm leading-tight whitespace-nowrap">
+                                      交渉権<br />獲得
                                     </div>
-                                  )}
-                                </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}
