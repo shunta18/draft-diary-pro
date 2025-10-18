@@ -1193,7 +1193,9 @@ const VirtualDraft = () => {
                       <>
                         <h3 className="font-semibold mb-3">第{roundIndex + 1}次選択抽選</h3>
                         <div className="space-y-4">
-                          {roundResults.map(result => (
+                          {[...roundResults]
+                            .sort((a, b) => b.competingTeams.length - a.competingTeams.length)
+                            .map(result => (
                             <div key={result.playerId} className="border-b pb-4 last:border-b-0">
                               <h4 className="font-semibold text-lg mb-2">
                                 {result.playerName} 
