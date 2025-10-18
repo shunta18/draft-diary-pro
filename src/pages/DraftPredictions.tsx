@@ -21,18 +21,18 @@ import {
 import { Vote, TrendingUp } from "lucide-react";
 
 const teams = [
-  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム" },
-  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天" },
-  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武" },
-  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ" },
-  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス" },
-  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク" },
-  { id: 7, name: "読売ジャイアンツ", shortName: "巨人" },
-  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト" },
-  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA" },
-  { id: 10, name: "中日ドラゴンズ", shortName: "中日" },
-  { id: 11, name: "阪神タイガース", shortName: "阪神" },
-  { id: 12, name: "広島東洋カープ", shortName: "広島" },
+  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800" },
+  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900" },
+  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武", color: "from-blue-500 to-blue-700" },
+  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ", color: "from-gray-800 to-black" },
+  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス", color: "from-blue-600 to-gray-800" },
+  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク", color: "from-yellow-500 to-yellow-700" },
+  { id: 7, name: "読売ジャイアンツ", shortName: "巨人", color: "from-orange-500 to-orange-700" },
+  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト", color: "from-green-600 to-green-800" },
+  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA", color: "from-blue-500 to-blue-700" },
+  { id: 10, name: "中日ドラゴンズ", shortName: "中日", color: "from-blue-700 to-blue-900" },
+  { id: 11, name: "阪神タイガース", shortName: "阪神", color: "from-yellow-500 to-yellow-700" },
+  { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800" },
 ];
 
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手"];
@@ -279,10 +279,10 @@ export default function DraftPredictions() {
                   <button
                     key={team.id}
                     onClick={() => setSelectedTeam(team.id)}
-                    className={`p-3 rounded-lg border-2 transition-all ${
+                    className={`p-3 rounded-lg border-2 transition-all font-semibold text-white ${
                       selectedTeam === team.id
-                        ? "border-primary bg-primary/10 font-semibold"
-                        : "border-border hover:border-primary/50"
+                        ? `bg-gradient-to-r ${team.color} border-white shadow-lg scale-105`
+                        : `bg-gradient-to-r ${team.color} border-transparent opacity-70 hover:opacity-100 hover:scale-105`
                     }`}
                   >
                     {team.shortName}
