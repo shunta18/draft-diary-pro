@@ -166,7 +166,8 @@ export type Database = {
           created_at: string
           draft_year: string
           id: string
-          player_id: number
+          player_id: number | null
+          public_player_id: number | null
           session_id: string | null
           team_id: number
           updated_at: string
@@ -176,7 +177,8 @@ export type Database = {
           created_at?: string
           draft_year?: string
           id?: string
-          player_id: number
+          player_id?: number | null
+          public_player_id?: number | null
           session_id?: string | null
           team_id: number
           updated_at?: string
@@ -186,13 +188,22 @@ export type Database = {
           created_at?: string
           draft_year?: string
           id?: string
-          player_id?: number
+          player_id?: number | null
+          public_player_id?: number | null
           session_id?: string | null
           team_id?: number
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "draft_team_player_votes_public_player_id_fkey"
+            columns: ["public_player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       draft_team_position_votes: {
         Row: {
@@ -406,27 +417,6 @@ export type Database = {
           venue?: string
           videos?: string[] | null
           view_count?: number
-        }
-        Relationships: []
-      }
-      public_diary_imports: {
-        Row: {
-          created_at: string
-          id: string
-          public_diary_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          public_diary_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          public_diary_id?: string
-          user_id?: string
         }
         Relationships: []
       }

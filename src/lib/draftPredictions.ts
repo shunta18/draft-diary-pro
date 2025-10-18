@@ -31,10 +31,10 @@ export const upsertPlayerVote = async (
           user_id: user?.id || null,
           session_id: user ? null : sessionId,
           team_id: teamId,
-          player_id: playerId,
+          public_player_id: playerId,
           draft_year: draftYear,
         }, {
-          onConflict: user ? 'user_id,team_id,player_id,draft_year' : 'session_id,team_id,player_id,draft_year'
+          onConflict: user ? 'user_id,team_id,public_player_id,draft_year' : 'session_id,team_id,public_player_id,draft_year'
         });
 
       if (error) throw error;
@@ -44,7 +44,7 @@ export const upsertPlayerVote = async (
         .from("draft_team_player_votes")
         .delete()
         .eq("team_id", teamId)
-        .eq("player_id", playerId)
+        .eq("public_player_id", playerId)
         .eq("draft_year", draftYear);
 
       if (user) {
@@ -125,7 +125,7 @@ export const getUserVotes = async (draftYear: string = "2025") => {
     // 選手投票を取得
     const playerQuery = supabase
       .from("draft_team_player_votes")
-      .select("team_id, player_id")
+      .select("team_id, public_player_id")
       .eq("draft_year", draftYear);
 
     if (user) {
@@ -179,7 +179,7 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
     // 選手投票の集計
     const { data: playerVotesData, error: playerError } = await supabase
       .from("draft_team_player_votes")
-      .select("team_id, player_id")
+      .select("team_id, public_player_id")
       .eq("draft_year", draftYear);
 
     if (playerError) throw playerError;
@@ -192,17 +192,17 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
 
     if (positionError) throw positionError;
 
-    // 選手投票をMap形式に変換（player_id -> [{teamId, count}]）
+    // 選手投票をMap形式に変換（public_player_id -> [{teamId, count}]）
     const playerVotesMap = new Map<number, { count: number; teamId: number }[]>();
     (playerVotesData || []).forEach((vote) => {
-      const existing = playerVotesMap.get(vote.player_id) || [];
+      const existing = playerVotesMap.get(vote.public_player_id) || [];
       const teamVote = existing.find(v => v.teamId === vote.team_id);
       if (teamVote) {
         teamVote.count++;
       } else {
         existing.push({ teamId: vote.team_id, count: 1 });
       }
-      playerVotesMap.set(vote.player_id, existing);
+      playerVotesMap.set(vote.public_player_id, existing);
     });
 
     // ポジション投票をMap形式に変換（position -> [{teamId, count}]）
@@ -236,15 +236,15 @@ export const getPlayerVoteCounts = async (draftYear: string = "2025") => {
   try {
     const { data, error } = await supabase
       .from("draft_team_player_votes")
-      .select("team_id, player_id")
+      .select("team_id, public_player_id")
       .eq("draft_year", draftYear);
 
     if (error) throw error;
 
-    // team_id, player_id ごとに集計
+    // team_id, public_player_id ごとに集計
     const voteCounts: Record<string, number> = {};
     (data || []).forEach((vote) => {
-      const key = `${vote.team_id}_${vote.player_id}`;
+      const key = `${vote.team_id}_${vote.public_player_id}`;
       voteCounts[key] = (voteCounts[key] || 0) + 1;
     });
 

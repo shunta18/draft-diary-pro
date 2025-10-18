@@ -78,11 +78,13 @@ const normalizeLocalPlayer = (player: LocalPlayer): NormalizedPlayer => ({
   videoLinks: player.videoLinks,
 });
 
+const ADMIN_USER_ID = "5cc66826-fb1d-4743-a18c-98265fbe55f4";
+
 export default function DraftPredictions() {
   const [selectedYear, setSelectedYear] = useState("2025");
   const [selectedTeam, setSelectedTeam] = useState(1);
   const [players, setPlayers] = useState<NormalizedPlayer[]>([]);
-  const [userPlayerVotes, setUserPlayerVotes] = useState<{ team_id: number; player_id: number }[]>([]);
+  const [userPlayerVotes, setUserPlayerVotes] = useState<{ team_id: number; public_player_id: number }[]>([]);
   const [userPositionVotes, setUserPositionVotes] = useState<{ team_id: number; position: string }[]>([]);
   const [playerVoteCounts, setPlayerVoteCounts] = useState<Record<string, number>>({});
   const [positionVoteCounts, setPositionVoteCounts] = useState<Record<string, number>>({});
@@ -98,19 +100,15 @@ export default function DraftPredictions() {
   const loadData = async () => {
     setIsLoading(true);
 
-    // 選手データの読み込み
-    let allPlayers: NormalizedPlayer[] = [];
-    if (user) {
-      const { data, error } = await supabase
-        .from("players")
-        .select("id, name, team, position, category, year, evaluations")
-        .eq("user_id", user.id);
+    // AdminのデータからS選手データを読み込み
+    const { data, error } = await supabase
+      .from("players")
+      .select("id, name, team, position, category, year, evaluations")
+      .eq("user_id", ADMIN_USER_ID);
 
-      if (!error && data && data.length > 0) {
-        allPlayers = data.map(normalizeSupabasePlayer);
-      } else {
-        allPlayers = getDefaultPlayers().map(normalizeLocalPlayer);
-      }
+    let allPlayers: NormalizedPlayer[] = [];
+    if (!error && data && data.length > 0) {
+      allPlayers = data.map(normalizeSupabasePlayer);
     } else {
       allPlayers = getDefaultPlayers().map(normalizeLocalPlayer);
     }
@@ -190,10 +188,10 @@ export default function DraftPredictions() {
 
     // ローカル状態を更新
     if (isChecked) {
-      setUserPlayerVotes([...userPlayerVotes, { team_id: selectedTeam, player_id: playerId }]);
+      setUserPlayerVotes([...userPlayerVotes, { team_id: selectedTeam, public_player_id: playerId }]);
     } else {
       setUserPlayerVotes(
-        userPlayerVotes.filter((v) => !(v.team_id === selectedTeam && v.player_id === playerId))
+        userPlayerVotes.filter((v) => !(v.team_id === selectedTeam && v.public_player_id === playerId))
       );
     }
 
@@ -229,7 +227,7 @@ export default function DraftPredictions() {
   };
 
   const isPlayerVoted = (playerId: number) => {
-    return userPlayerVotes.some((v) => v.team_id === selectedTeam && v.player_id === playerId);
+    return userPlayerVotes.some((v) => v.team_id === selectedTeam && v.public_player_id === playerId);
   };
 
   const isPositionVoted = (position: string) => {
@@ -377,10 +375,10 @@ export default function DraftPredictions() {
 
                       {/* 投票済みの選手一覧 */}
                       <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                        {userPlayerVotes
+                      {userPlayerVotes
                           .filter((v) => v.team_id === selectedTeam)
                           .map((vote) => {
-                            const player = players.find((p) => p.id === vote.player_id);
+                            const player = players.find((p) => p.id === vote.public_player_id);
                             if (!player) return null;
                             
                             const voteCount = getPlayerVoteCount(player.id);
