@@ -112,16 +112,27 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                     alt="抽選箱" 
                     className="w-full h-full object-contain"
                   />
-                  {/* 上から紙が引かれる演出 */}
+                  {/* 上から厚紙が引かれる演出 */}
                   {sortedCompetingTeams.map((teamId, index) => (
                     <div
                       key={teamId}
-                      className="absolute left-1/2 -translate-x-1/2 w-16 h-24 bg-white rounded shadow-xl animate-[pullPaper_2s_ease-out]"
+                      className="absolute left-1/2 -translate-x-1/2 animate-[pullPaper_3s_ease-out]"
                       style={{
-                        animationDelay: `${index * 100}ms`,
-                        top: '-120px',
+                        animationDelay: `${index * 150}ms`,
+                        top: '40%',
                       }}
-                    />
+                    >
+                      {/* 厚紙の本体 */}
+                      <div className="relative w-20 h-32">
+                        {/* 紙の表面 */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100 rounded border-2 border-gray-300 shadow-lg">
+                          {/* 折り目の線 */}
+                          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-400/50 -translate-x-1/2" />
+                          {/* 紙の厚み表現 */}
+                          <div className="absolute -right-0.5 top-1 bottom-1 w-1 bg-gradient-to-r from-gray-200 to-gray-300 rounded-r" />
+                        </div>
+                      </div>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -200,12 +211,19 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
       <style>{`
         @keyframes pullPaper {
           0% {
-            top: 50%;
+            top: 40%;
             opacity: 1;
+            transform: translateX(-50%) translateY(0) rotateX(0deg);
+          }
+          50% {
+            top: 10%;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0) rotateX(-5deg);
           }
           100% {
-            top: -120px;
+            top: -150px;
             opacity: 0;
+            transform: translateX(-50%) translateY(0) rotateX(-10deg);
           }
         }
 
