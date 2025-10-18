@@ -34,20 +34,20 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
 
-    // Phase 1: 選手情報表示（2秒）
-    timers.push(setTimeout(() => setPhase("drawing"), 2000));
+    // Phase 1: 選手情報表示（3秒）
+    timers.push(setTimeout(() => setPhase("drawing"), 3000));
     
-    // Phase 2: 抽選箱から紙を引く演出（2秒）
-    timers.push(setTimeout(() => setPhase("papers"), 4000));
+    // Phase 2: 抽選箱から紙を引く演出（3秒）
+    timers.push(setTimeout(() => setPhase("papers"), 6000));
     
-    // Phase 3: 紙が閉じた状態で表示（1秒）
-    timers.push(setTimeout(() => setPhase("open"), 5000));
+    // Phase 3: 紙が閉じた状態で表示（2秒）
+    timers.push(setTimeout(() => setPhase("open"), 8000));
     
-    // Phase 4: 一斉に紙を開く（2秒）
-    timers.push(setTimeout(() => setPhase("winner"), 7000));
+    // Phase 4: 一斉に紙を開く（3秒）
+    timers.push(setTimeout(() => setPhase("winner"), 11000));
     
-    // Phase 5: 勝者をアップで表示（4秒）
-    timers.push(setTimeout(() => setPhase("fadeout"), 11000));
+    // Phase 5: 勝者をアップで表示（5秒）
+    timers.push(setTimeout(() => setPhase("fadeout"), 16000));
     
     // Phase 6: フェードアウト（1秒後）
     timers.push(setTimeout(() => {
@@ -57,7 +57,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
       } else {
         onComplete();
       }
-    }, 12000));
+    }, 17000));
 
     return () => timers.forEach(timer => clearTimeout(timer));
   }, [currentPlayerIndex, lotteryData.length, onComplete]);
