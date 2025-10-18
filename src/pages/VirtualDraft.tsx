@@ -1179,51 +1179,53 @@ const VirtualDraft = () => {
         )}
 
         {allRoundResults.length > 0 && (
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shuffle className="h-5 w-5" />
-                抽選結果
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-6">
-                {allRoundResults.map((roundResults, roundIndex) => (
-                  <div key={roundIndex}>
-                    {roundResults.length > 0 && (
-                      <>
-                        <h3 className="font-semibold mb-3">第{roundIndex + 1}次選択抽選</h3>
-                        <div className="space-y-4">
-                          {[...roundResults]
-                            .sort((a, b) => b.competingTeams.length - a.competingTeams.length)
-                            .map(result => (
-                            <div key={result.playerId} className="border-b pb-4 last:border-b-0">
-                              <h4 className="font-semibold text-lg mb-2">
-                                {result.playerName} 
-                                <Badge variant="outline" className="ml-2">{result.competingTeams.length}球団競合</Badge>
-                              </h4>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                競合: {result.competingTeams.map(id => getTeamName(id)).join(", ")}
-                              </p>
-                              <p className="text-sm">
-                                <span className="font-semibold text-green-600">
-                                  獲得: {getTeamName(result.winner)}
-                                </span>
-                              </p>
-                            </div>
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div className="flex items-center justify-center gap-3 mt-6 pt-6 border-t">
-                <img src={mustacheLogo} alt="BaaS Logo" className="h-8 w-auto" />
-                <p className="text-sm font-medium text-muted-foreground">BaaS 野球スカウトノート</p>
-              </div>
-            </CardContent>
-          </Card>
+          <>
+            <Card className="mb-4">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shuffle className="h-5 w-5" />
+                  抽選結果
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {allRoundResults.map((roundResults, roundIndex) => (
+                    <div key={roundIndex}>
+                      {roundResults.length > 0 && (
+                        <>
+                          <h3 className="font-semibold mb-3">第{roundIndex + 1}次選択抽選</h3>
+                          <div className="space-y-4">
+                            {[...roundResults]
+                              .sort((a, b) => b.competingTeams.length - a.competingTeams.length)
+                              .map(result => (
+                              <div key={result.playerId} className="border-b pb-4 last:border-b-0">
+                                <h4 className="font-semibold text-lg mb-2">
+                                  {result.playerName} 
+                                  <Badge variant="outline" className="ml-2">{result.competingTeams.length}球団競合</Badge>
+                                </h4>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  競合: {result.competingTeams.map(id => getTeamName(id)).join(", ")}
+                                </p>
+                                <p className="text-sm">
+                                  <span className="font-semibold text-green-600">
+                                    獲得: {getTeamName(result.winner)}
+                                  </span>
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+            <div className="flex items-center justify-center gap-3 mb-8">
+              <img src={mustacheLogo} alt="BaaS Logo" className="h-8 w-auto" />
+              <p className="text-sm font-medium text-muted-foreground">BaaS 野球スカウトノート</p>
+            </div>
+          </>
         )}
 
         {canExecuteLottery() && finalSelections.length < teams.length && (
