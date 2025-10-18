@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import lotteryBoxImage from "@/assets/lottery-box.png";
+import draftVenueBg from "@/assets/draft-venue-bg.png";
 
 // 抽選順序（セ・リーグ優先）
 const lotteryOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6]; // ヤクルト→ロッテ→広島→西武→中日→楽天→巨人→オリックス→DeNA→日本ハム→阪神→ソフトバンク
@@ -80,12 +81,22 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
   return (
     <Dialog open={true}>
       <DialogContent 
-        className="max-w-full h-screen w-screen p-0 bg-black/95"
+        className="max-w-full h-screen w-screen p-0"
         hideCloseButton
       >
-        <div className="flex items-center justify-center h-full w-full">
+        <div 
+          className="flex items-center justify-center h-full w-full relative"
+          style={{
+            backgroundImage: `url(${draftVenueBg})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+        >
+          {/* 暗めのオーバーレイでコンテンツを見やすく */}
+          <div className="absolute inset-0 bg-black/70" />
           <div 
             className={`
+              relative z-10
               transition-opacity duration-1000
               ${phase === "fadeout" ? "opacity-0" : "opacity-100"}
             `}
