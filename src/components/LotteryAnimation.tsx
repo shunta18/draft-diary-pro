@@ -9,6 +9,8 @@ const lotteryOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6]; // ヤクルト→
 interface LotteryAnimationProps {
   lotteryData: Array<{
     playerName: string;
+    team: string;
+    position: string;
     competingTeamIds: number[];
     winnerId: number;
   }>;
@@ -64,13 +66,15 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     return teams.find(t => t.id === teamId)?.shortName || "";
   };
 
-  // 円形配置の角度を計算
-  const getCirclePosition = (index: number, total: number) => {
-    const angle = (index * 360) / total - 90; // -90で12時の位置からスタート
-    const radius = 280;
-    const x = Math.cos((angle * Math.PI) / 180) * radius;
-    const y = Math.sin((angle * Math.PI) / 180) * radius;
-    return { x, y };
+  // 球団数に応じてレイアウトクラスを動的に決定
+  const getLayoutClass = (teamCount: number) => {
+    if (teamCount <= 4) {
+      return "flex items-center justify-center gap-20";
+    } else if (teamCount <= 6) {
+      return "flex items-center justify-center gap-12";
+    } else {
+      return "flex items-center justify-center gap-8 flex-wrap max-w-6xl mx-auto";
+    }
   };
 
   return (
@@ -90,7 +94,8 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
             {phase === "info" && (
               <div className="text-center animate-fade-in">
                 <h2 className="text-6xl font-bold text-white mb-4">{currentData.playerName}</h2>
-                <div className="text-2xl text-white/80 mb-6">所属チーム・ポジション</div>
+                <div className="text-3xl text-white/90 mb-2">{currentData.team}</div>
+                <div className="text-2xl text-white/80 mb-6">{currentData.position}</div>
                 <Badge variant="outline" className="text-3xl px-8 py-3 bg-white/10 text-white border-white/30">
                   {currentData.competingTeamIds.length}球団競合
                 </Badge>
@@ -126,20 +131,16 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
             {(phase === "papers" || phase === "open") && (
               <div className="text-center">
                 <h3 className="text-4xl font-bold text-white mb-12">{currentData.playerName}</h3>
-                <div className="relative w-[600px] h-[600px] mx-auto">
+                <div className={`${getLayoutClass(sortedCompetingTeams.length)} px-8`}>
                   {sortedCompetingTeams.map((teamId, index) => {
                     const isWinner = teamId === currentData.winnerId;
-                    const position = getCirclePosition(index, sortedCompetingTeams.length);
                     const showOpen = phase === "open";
 
                     return (
                       <div
                         key={teamId}
-                        className="absolute animate-fade-in"
+                        className="flex flex-col items-center animate-fade-in"
                         style={{
-                          left: `calc(50% + ${position.x}px)`,
-                          top: `calc(50% + ${position.y}px)`,
-                          transform: 'translate(-50%, -50%)',
                           animationDelay: `${index * 50}ms`,
                         }}
                       >

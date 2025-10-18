@@ -191,6 +191,8 @@ const VirtualDraft = () => {
   });
   const [lotteryAnimationData, setLotteryAnimationData] = useState<Array<{
     playerName: string;
+    team: string;
+    position: string;
     competingTeamIds: number[];
     winnerId: number;
   }>>([]);
@@ -486,11 +488,16 @@ const VirtualDraft = () => {
 
     // アニメーションありの場合
     if (showLotteryAnimation && lotteryPlayers.length > 0) {
-      const animationData = lotteryPlayers.map(lp => ({
-        playerName: lp.playerName,
-        competingTeamIds: lp.competingTeams,
-        winnerId: lp.winner,
-      }));
+      const animationData = lotteryPlayers.map(lp => {
+        const player = players.find(p => p.id === lp.playerId);
+        return {
+          playerName: lp.playerName,
+          team: player?.team || "不明",
+          position: player?.position?.[0] || "不明",
+          competingTeamIds: lp.competingTeams,
+          winnerId: lp.winner,
+        };
+      });
       
       setLotteryAnimationData(animationData);
       setShowAnimation(true);
