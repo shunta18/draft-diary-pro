@@ -360,6 +360,7 @@ export default function DraftPredictions() {
                       {/* 選手を追加ボタン */}
                       <PlayerSelectionDialog
                         players={players}
+                        draftYear={selectedYear}
                         onSelect={(playerId) => {
                           if (playerId !== undefined) {
                             handlePlayerVoteToggle(playerId, true);
