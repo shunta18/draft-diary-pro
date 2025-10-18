@@ -60,6 +60,17 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     return teams.find(t => t.id === teamId)?.shortName || "";
   };
 
+  // 球団数に応じてレイアウトクラスを動的に決定
+  const getLayoutClass = (teamCount: number) => {
+    if (teamCount <= 4) {
+      return "flex items-end justify-center gap-20";
+    } else if (teamCount <= 6) {
+      return "flex items-end justify-center gap-12";
+    } else {
+      return "grid grid-cols-6 gap-8 justify-items-center";
+    }
+  };
+
   return (
     <Dialog open={true}>
       <DialogContent 
@@ -93,7 +104,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                   </Badge>
                 </div>
 
-                <div className="flex items-end justify-center gap-20 px-8">
+                <div className={`${getLayoutClass(sortedCompetingTeams.length)} px-8`}>
                   {sortedCompetingTeams.map((teamId, index) => {
                     const isWinner = teamId === currentData.winnerId;
                     const showPaper = phase === "papers" || phase === "result";
