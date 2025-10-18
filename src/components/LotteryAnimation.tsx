@@ -40,8 +40,8 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     // Phase 3: 紙が出てくる（3秒後）
     timers.push(setTimeout(() => setPhase("result"), 6000));
     
-    // Phase 4: 結果表示（3秒後）
-    timers.push(setTimeout(() => setPhase("fadeout"), 9000));
+    // Phase 4: 結果表示（4秒後 - 確認時間を延長）
+    timers.push(setTimeout(() => setPhase("fadeout"), 10000));
     
     // Phase 5: フェードアウト（1秒後）
     timers.push(setTimeout(() => {
@@ -51,7 +51,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
       } else {
         onComplete();
       }
-    }, 10000));
+    }, 11000));
 
     return () => timers.forEach(timer => clearTimeout(timer));
   }, [currentPlayerIndex, lotteryData.length, onComplete]);
