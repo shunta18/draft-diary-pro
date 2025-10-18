@@ -161,6 +161,72 @@ export type Database = {
         }
         Relationships: []
       }
+      draft_team_player_votes: {
+        Row: {
+          created_at: string
+          draft_year: string
+          id: string
+          player_id: number
+          session_id: string | null
+          team_id: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          draft_year?: string
+          id?: string
+          player_id: number
+          session_id?: string | null
+          team_id: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          draft_year?: string
+          id?: string
+          player_id?: number
+          session_id?: string | null
+          team_id?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      draft_team_position_votes: {
+        Row: {
+          created_at: string
+          draft_year: string
+          id: string
+          position: string
+          session_id: string | null
+          team_id: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          draft_year?: string
+          id?: string
+          position: string
+          session_id?: string | null
+          team_id: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          draft_year?: string
+          id?: string
+          position?: string
+          session_id?: string | null
+          team_id?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       players: {
         Row: {
           age: number | null
