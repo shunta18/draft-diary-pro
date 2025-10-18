@@ -67,14 +67,14 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     return teams.find(t => t.id === teamId)?.shortName || "";
   };
 
-  // 球団数に応じてレイアウトクラスを動的に決定
+  // 球団数に応じてレイアウトクラスを動的に決定（モバイル対応）
   const getLayoutClass = (teamCount: number) => {
     if (teamCount <= 4) {
-      return "flex items-center justify-center gap-20";
+      return "flex items-center justify-center gap-8 md:gap-20";
     } else if (teamCount <= 6) {
-      return "flex items-center justify-center gap-12";
+      return "flex items-center justify-center gap-6 md:gap-12";
     } else {
-      return "flex items-center justify-center gap-8 flex-wrap max-w-6xl mx-auto";
+      return "flex items-center justify-center gap-4 md:gap-8 flex-wrap max-w-6xl mx-auto";
     }
   };
 
@@ -103,11 +103,11 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
           >
             {/* Phase 1: 選手情報 */}
             {phase === "info" && (
-              <div className="text-center animate-fade-in">
-                <h2 className="text-6xl font-bold text-white mb-4">{currentData.playerName}</h2>
-                <div className="text-3xl text-white/90 mb-2">{currentData.team}</div>
-                <div className="text-2xl text-white/80 mb-6">{currentData.position}</div>
-                <Badge variant="outline" className="text-3xl px-8 py-3 bg-white/10 text-white border-white/30">
+              <div className="text-center animate-fade-in px-4">
+                <h2 className="text-3xl md:text-6xl font-bold text-white mb-3 md:mb-4">{currentData.playerName}</h2>
+                <div className="text-xl md:text-3xl text-white/90 mb-2">{currentData.team}</div>
+                <div className="text-lg md:text-2xl text-white/80 mb-4 md:mb-6">{currentData.position}</div>
+                <Badge variant="outline" className="text-xl md:text-3xl px-6 md:px-8 py-2 md:py-3 bg-white/10 text-white border-white/30">
                   {currentData.competingTeamIds.length}球団競合
                 </Badge>
               </div>
@@ -115,9 +115,9 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
 
             {/* Phase 2: 抽選箱から紙を引く演出 */}
             {phase === "drawing" && (
-              <div className="text-center">
-                <h3 className="text-4xl font-bold text-white mb-12">{currentData.playerName}</h3>
-                <div className="relative w-64 h-64 mx-auto">
+              <div className="text-center px-4">
+                <h3 className="text-2xl md:text-4xl font-bold text-white mb-8 md:mb-12">{currentData.playerName}</h3>
+                <div className="relative w-48 h-48 md:w-64 md:h-64 mx-auto">
                   <img 
                     src={lotteryBoxImage} 
                     alt="抽選箱" 
@@ -134,7 +134,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                       }}
                     >
                       {/* 厚紙の本体 */}
-                      <div className="relative w-20 h-32">
+                      <div className="relative w-14 h-24 md:w-20 md:h-32">
                         {/* 紙の表面 */}
                         <div className="absolute inset-0 bg-gradient-to-br from-white via-gray-50 to-gray-100 rounded border-2 border-gray-300 shadow-lg">
                           {/* 折り目の線 */}
@@ -151,8 +151,8 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
 
             {/* Phase 3-4: 紙が閉じた状態 → 開く */}
             {(phase === "papers" || phase === "open") && (
-              <div className="text-center">
-                <h3 className="text-4xl font-bold text-white mb-12">{currentData.playerName}</h3>
+              <div className="text-center px-4">
+                <h3 className="text-2xl md:text-4xl font-bold text-white mb-6 md:mb-12">{currentData.playerName}</h3>
                 <div className={`${getLayoutClass(sortedCompetingTeams.length)} px-8`}>
                   {sortedCompetingTeams.map((teamId, index) => {
                     const isWinner = teamId === currentData.winnerId;
@@ -168,7 +168,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                       >
                         {/* 球団名 - 紙が閉じている時は上、開いた時は中央 */}
                         {!showOpen && (
-                          <div className="text-white text-xl font-bold mb-3 text-center whitespace-nowrap">
+                          <div className="text-white text-sm md:text-xl font-bold mb-2 md:mb-3 text-center whitespace-nowrap">
                             {getTeamName(teamId)}
                           </div>
                         )}
@@ -177,22 +177,22 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                         <div className="relative">
                           {!showOpen ? (
                             // 閉じた状態
-                            <div className="w-20 h-32 bg-white rounded shadow-xl border-2 border-gray-300">
+                            <div className="w-12 h-20 md:w-20 md:h-32 bg-white rounded shadow-xl border-2 border-gray-300">
                               <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-gray-400" />
                             </div>
                           ) : (
                             // 開いた状態
                             <div className="relative">
                               {/* 球団名を紙の中央に配置（親要素の-translate-x-6を補正） */}
-                              <div className="absolute -top-8 left-1/2 -translate-x-[calc(50%-1.5rem)] text-white text-xl font-bold text-center whitespace-nowrap z-10">
+                              <div className="absolute -top-6 md:-top-8 left-1/2 -translate-x-[calc(50%-0.875rem)] md:-translate-x-[calc(50%-1.5rem)] text-white text-sm md:text-xl font-bold text-center whitespace-nowrap z-10">
                                 {getTeamName(teamId)}
                               </div>
-                              <div className="flex h-40 w-32 -translate-x-6">
+                              <div className="flex h-24 w-20 -translate-x-3.5 md:h-40 md:w-32 md:-translate-x-6">
                                 <div className="w-1/2 bg-white border-r-2 border-gray-300 rounded-l shadow-lg animate-[unfoldLeft_1s_ease-out]" />
                                 <div className="w-1/2 bg-white flex items-center justify-center rounded-r shadow-lg animate-[unfoldRight_1s_ease-out]">
                                   {isWinner && (
-                                    <div className="text-center px-2">
-                                      <div className="text-red-600 font-bold text-sm leading-tight whitespace-nowrap">
+                                    <div className="text-center px-1 md:px-2">
+                                      <div className="text-red-600 font-bold text-[10px] md:text-sm leading-tight whitespace-nowrap">
                                         交渉権<br />獲得
                                       </div>
                                     </div>
@@ -211,14 +211,14 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
 
             {/* Phase 5: 勝者をアップで表示 */}
             {phase === "winner" && (
-              <div className="text-center animate-scale-in">
-                <div className="text-6xl font-bold text-white mb-6">
+              <div className="text-center animate-scale-in px-4">
+                <div className="text-3xl md:text-6xl font-bold text-white mb-4 md:mb-6">
                   {getTeamName(currentData.winnerId)}
                 </div>
-                <div className="text-5xl font-bold text-white mb-8">
+                <div className="text-2xl md:text-5xl font-bold text-white mb-6 md:mb-8">
                   {currentData.playerName}
                 </div>
-                <Badge variant="outline" className="text-4xl px-12 py-4 bg-yellow-400/20 text-yellow-400 border-yellow-400">
+                <Badge variant="outline" className="text-2xl md:text-4xl px-8 md:px-12 py-3 md:py-4 bg-yellow-400/20 text-yellow-400 border-yellow-400">
                   交渉権獲得
                 </Badge>
               </div>
