@@ -170,7 +170,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                       >
                         {/* 球団名 - 紙が閉じている時は上、開いた時は中央 */}
                         {!showOpen && (
-                          <div className="text-white text-xs md:text-xl font-bold mb-2 md:mb-3 text-center whitespace-nowrap">
+                          <div className="text-white text-xs md:text-xl font-bold mb-3 md:mb-4 text-center whitespace-nowrap">
                             {getTeamName(teamId)}
                           </div>
                         )}
