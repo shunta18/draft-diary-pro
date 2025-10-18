@@ -98,6 +98,7 @@ export default function DraftPredictions() {
     setIsLoading(true);
 
     // 選手データの読み込み
+    let allPlayers: NormalizedPlayer[] = [];
     if (user) {
       const { data, error } = await supabase
         .from("players")
@@ -105,13 +106,19 @@ export default function DraftPredictions() {
         .eq("user_id", user.id);
 
       if (!error && data && data.length > 0) {
-        setPlayers(data.map(normalizeSupabasePlayer));
+        allPlayers = data.map(normalizeSupabasePlayer);
       } else {
-        setPlayers(getDefaultPlayers().map(normalizeLocalPlayer));
+        allPlayers = getDefaultPlayers().map(normalizeLocalPlayer);
       }
     } else {
-      setPlayers(getDefaultPlayers().map(normalizeLocalPlayer));
+      allPlayers = getDefaultPlayers().map(normalizeLocalPlayer);
     }
+
+    // 選択された年度の選手のみをフィルタリング
+    const filteredPlayers = allPlayers.filter(
+      (player) => player.draftYear === selectedYear
+    );
+    setPlayers(filteredPlayers);
 
     // ユーザーの投票状態を読み込み
     const { playerVotes, positionVotes } = await getUserVotes(selectedYear);
