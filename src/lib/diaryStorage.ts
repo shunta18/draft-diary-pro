@@ -3,6 +3,7 @@ export interface DiaryEntry {
   date: string;
   venue: string;
   category: string;
+  tournamentName?: string;
   matchCard: string;
   score: string;
   playerComments: string;
@@ -19,6 +20,7 @@ const defaultDiaryEntries: DiaryEntry[] = [
     date: "2012-08-09",
     venue: "甲子園",
     category: "高校",
+    tournamentName: "第94回全国高等学校野球選手権大会",
     matchCard: "今治西(愛媛代表)対桐光学園(神奈川代表)",
     score: "今治西0-7桐光",
     playerComments: "桐光学園の2年生、松井裕樹。県予選で強豪横浜高校相手に9回3安打3失点で完投。準決勝、決勝も完投。",
