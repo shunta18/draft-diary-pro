@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Download, Eye, User } from "lucide-react";
+import { ArrowLeft, Download, Eye, User, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
 import { useParams, useNavigate } from "react-router-dom";
 import { 
@@ -12,14 +13,17 @@ import {
   getUserProfileById, 
   importPlayerFromPublic,
   incrementPublicPlayerViewCount,
+  getPlayers,
   type PublicPlayer,
-  type Profile 
+  type Profile,
+  type Player
 } from "@/lib/supabase-storage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { calculateSimilarity } from "@/lib/utils";
 
 const evaluationColors = {
   "1位競合": "bg-red-500 text-white",
@@ -71,6 +75,9 @@ export default function UserPublicPlayers() {
   const [players, setPlayers] = useState<PublicPlayer[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<PublicPlayer | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
+  const [similarPlayers, setSimilarPlayers] = useState<Array<{ player: Player; similarity: number }>>([]);
+  const [pendingImportPlayer, setPendingImportPlayer] = useState<PublicPlayer | null>(null);
 
   useEffect(() => {
     if (userId) {
@@ -108,6 +115,37 @@ export default function UserPublicPlayers() {
     loadData();
   };
 
+  const checkForDuplicates = async (playerToImport: PublicPlayer) => {
+    try {
+      const existingPlayers = await getPlayers();
+      const similar: Array<{ player: Player; similarity: number }> = [];
+
+      for (const player of existingPlayers) {
+        const nameSimilarity = calculateSimilarity(playerToImport.name, player.name);
+        
+        if (nameSimilarity >= 80) {
+          const teamMatch = playerToImport.team === player.team;
+          const yearMatch = playerToImport.year === player.year;
+          
+          let adjustedSimilarity = nameSimilarity;
+          if (teamMatch) adjustedSimilarity += 10;
+          if (yearMatch) adjustedSimilarity += 5;
+          
+          similar.push({ 
+            player, 
+            similarity: Math.min(adjustedSimilarity, 100) 
+          });
+        }
+      }
+
+      similar.sort((a, b) => b.similarity - a.similarity);
+      return similar;
+    } catch (error) {
+      console.error("Failed to check for duplicates:", error);
+      return [];
+    }
+  };
+
   const handleImport = async (player: PublicPlayer) => {
     if (!user) {
       toast({
@@ -118,6 +156,19 @@ export default function UserPublicPlayers() {
       return;
     }
 
+    const similar = await checkForDuplicates(player);
+    
+    if (similar.length > 0) {
+      setSimilarPlayers(similar);
+      setPendingImportPlayer(player);
+      setShowDuplicateAlert(true);
+      return;
+    }
+
+    await executeImport(player);
+  };
+
+  const executeImport = async (player: PublicPlayer) => {
     const result = await importPlayerFromPublic(player.id);
     if (result) {
       toast({
@@ -132,6 +183,21 @@ export default function UserPublicPlayers() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleConfirmImport = async () => {
+    setShowDuplicateAlert(false);
+    if (pendingImportPlayer) {
+      await executeImport(pendingImportPlayer);
+      setPendingImportPlayer(null);
+      setSimilarPlayers([]);
+    }
+  };
+
+  const handleCancelImport = () => {
+    setShowDuplicateAlert(false);
+    setPendingImportPlayer(null);
+    setSimilarPlayers([]);
   };
 
   return (
@@ -311,6 +377,46 @@ export default function UserPublicPlayers() {
           )}
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={showDuplicateAlert} onOpenChange={setShowDuplicateAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-warning" />
+              似た選手が見つかりました
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>以下の選手と類似しています。同じ選手を重複登録しようとしていませんか？</p>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {similarPlayers.slice(0, 5).map(({ player, similarity }) => (
+                  <div key={player.id} className="p-3 border rounded-lg bg-muted/50">
+                    <div className="flex justify-between items-start mb-1">
+                      <span className="font-medium">{player.name}</span>
+                      <Badge variant="secondary" className="ml-2">
+                        類似度 {similarity}%
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground space-y-0.5">
+                      <div>所属: {player.team}</div>
+                      {player.year && <div>ドラフト年度: {player.year}年</div>}
+                      {player.position && <div>ポジション: {player.position}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-sm font-medium">それでもインポートを続けますか？</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={handleCancelImport}>
+              キャンセル
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmImport}>
+              それでもインポート
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>
