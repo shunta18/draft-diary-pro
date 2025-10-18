@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Footer } from "@/components/Footer";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
+import mustacheLogo from "@/assets/mustache-logo.png";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -1216,6 +1217,10 @@ const VirtualDraft = () => {
                     )}
                   </div>
                 ))}
+              </div>
+              <div className="flex items-center justify-center gap-3 mt-6 pt-6 border-t">
+                <img src={mustacheLogo} alt="BaaS Logo" className="h-8 w-auto" />
+                <p className="text-sm font-medium text-muted-foreground">BaaS 野球スカウトノート</p>
               </div>
             </CardContent>
           </Card>
