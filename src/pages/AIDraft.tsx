@@ -645,6 +645,30 @@ export default function AIDraft() {
           </Card>
         )}
 
+        {/* 各球団の指名人数設定 */}
+        {!simulating && !simulationResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle>各球団の指名人数</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>指名人数: {maxRounds}人</Label>
+                <Slider
+                  value={[maxRounds]}
+                  onValueChange={([value]) => setMaxRounds(value)}
+                  min={1}
+                  max={20}
+                  step={1}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  各球団が指名する選手の人数を設定します（1〜20人）
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* 設定パネル */}
         {showSettings && (
           <Card>
@@ -703,16 +727,6 @@ export default function AIDraft() {
                   max={100}
                   step={5}
                   disabled={!isAdmin}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>最大ラウンド数: {maxRounds}</Label>
-                <Slider
-                  value={[maxRounds]}
-                  onValueChange={([value]) => setMaxRounds(value)}
-                  min={1}
-                  max={20}
-                  step={1}
                 />
               </div>
               <div className="pt-4 space-y-3">
