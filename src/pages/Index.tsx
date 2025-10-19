@@ -381,7 +381,17 @@ const Index = () => {
               </div>
               
               <div>
-                <h4 className="font-medium text-primary">3. 観戦日記・スカウティングレポート</h4>
+                <h4 className="font-medium text-primary">3. ドラフトアンケート（予想投票）</h4>
+                <p className="text-muted-foreground">
+                  各球団がどの選手を指名するか、どのポジションの選手を獲得するかを予想して投票できる機能です。
+                  全国の野球ファンによる集合知を可視化し、注目選手や各球団の補強ポイントが一目で分かります。
+                  投票データは仮想ドラフトのAI学習にも活用され、よりリアルなドラフトシミュレーションを実現。
+                  自分の予想と他のファンの予想を比較することで、新たな視点や気づきが得られます。
+                </p>
+              </div>
+              
+              <div>
+                <h4 className="font-medium text-primary">4. 観戦日記・スカウティングレポート</h4>
                 <p className="text-muted-foreground">
                   実際に野球の試合を観戦した際の記録を日記形式で保存できます。
                   試合日時、対戦カード、球場、天候、観戦した選手、試合結果、スコア、そして詳細な観戦メモまで、
@@ -391,7 +401,7 @@ const Index = () => {
               </div>
               
               <div>
-                <h4 className="font-medium text-primary">4. ドラフト候補データベース</h4>
+                <h4 className="font-medium text-primary">5. ドラフト候補データベース</h4>
                 <p className="text-muted-foreground">
                   他のユーザーが公開した選手情報を閲覧・参考にできる共有データベース機能です。
                   全国の野球ファンが注目する選手情報を確認でき、自分では観戦できなかった選手の情報も入手可能。
@@ -401,7 +411,7 @@ const Index = () => {
               </div>
               
               <div>
-                <h4 className="font-medium text-primary">5. 仮想ドラフト会議</h4>
+                <h4 className="font-medium text-primary">6. 仮想ドラフト会議</h4>
                 <p className="text-muted-foreground">
                   実際のプロ野球ドラフト会議をシミュレーションできる機能です。
                   抽選による指名順決定から、各球団の指名まで、本番さながらの緊張感を体験。
@@ -411,7 +421,7 @@ const Index = () => {
               </div>
               
               <div>
-                <h4 className="font-medium text-primary">6. データの永続的な保存</h4>
+                <h4 className="font-medium text-primary">7. データの永続的な保存</h4>
                 <p className="text-muted-foreground">
                   アカウント登録により、入力したすべてのデータがクラウド上に安全に保存されます。
                   複数のデバイスからアクセス可能で、パソコン、スマートフォン、タブレットなど、
