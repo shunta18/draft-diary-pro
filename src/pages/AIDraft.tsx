@@ -732,7 +732,16 @@ export default function AIDraft() {
                               
                               return (
                                 <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r">
-                                  {player ? player.name : "―"}
+                                  {player ? (
+                                    <div className="flex flex-col items-center gap-1">
+                                      <span>{player.name}</span>
+                                      {pick?.isContested && (
+                                        <Badge variant="destructive" className="text-[10px] px-1 py-0">
+                                          ⚡️競合
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  ) : "―"}
                                 </TableCell>
                               );
                             })}
@@ -763,6 +772,11 @@ export default function AIDraft() {
                 </>
               )}
             </DialogTitle>
+            {currentPickInfo && currentPickInfo.round === 1 && (
+              <p className="text-sm text-muted-foreground mt-2">
+                ⚡️ 1巡目は抽選制です。他球団と競合する可能性があります。
+              </p>
+            )}
           </DialogHeader>
           
           <div className="space-y-4 flex-1 overflow-hidden flex flex-col">

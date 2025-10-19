@@ -86,68 +86,164 @@ export async function runDraftSimulation(
   for (let round = 1; round <= maxRounds; round++) {
     const waiverOrder = getWaiverOrder(round);
     
-    for (const teamId of waiverOrder) {
-      if (availablePlayers.length === 0) break;
+    // 1巡目は抽選制（全球団が全選手から選択可能）
+    if (round === 1) {
+      const firstRoundPicks: { teamId: number; playerId: number }[] = [];
       
-      let selectedPlayerId: number;
-      let topScore: any;
-      
-      // ユーザーが操作する球団の場合
-      if (userTeamIds && userTeamIds.includes(teamId) && onUserTeamPick) {
-        selectedPlayerId = await onUserTeamPick(round, teamId, availablePlayers);
+      // 全球団が選手を選択（競合を許可）
+      for (const teamId of waiverOrder) {
+        if (availablePlayers.length === 0) break;
         
-        // スコアを計算（表示用）
-        const scores = await calculateDraftScores(
-          round,
-          teamId,
-          availablePlayers,
-          picks,
-          weightConfig,
-          draftYear
-        );
-        topScore = scores.find(s => s.playerId === selectedPlayerId) || scores[0];
-      } else {
-        // AIが自動で選択（確率的選択）
-        const scores = await calculateDraftScores(
-          round,
-          teamId,
-          availablePlayers,
-          picks,
-          weightConfig,
-          draftYear
-        );
+        let selectedPlayerId: number;
         
-        if (scores.length === 0) break;
+        // ユーザーが操作する球団の場合
+        if (userTeamIds && userTeamIds.includes(teamId) && onUserTeamPick) {
+          selectedPlayerId = await onUserTeamPick(round, teamId, availablePlayers);
+        } else {
+          // AI球団：全選手からスコアリングして選択（まだ誰も指名していない状態）
+          const scores = await calculateDraftScores(
+            round,
+            teamId,
+            availablePlayers,
+            [], // 1巡目は空配列（まだ確定していない）
+            weightConfig,
+            draftYear
+          );
+          
+          if (scores.length === 0) break;
+          
+          // スコアに基づいて確率的に選手を選択
+          selectedPlayerId = selectPlayerProbabilistically(scores, 10);
+        }
         
-        // スコアに基づいて確率的に選手を選択
-        selectedPlayerId = selectPlayerProbabilistically(scores, 10);
-        
-        // 選択された選手のスコア情報を取得
-        topScore = scores.find(s => s.playerId === selectedPlayerId) || scores[0];
+        firstRoundPicks.push({ teamId, playerId: selectedPlayerId });
       }
       
-      const selectedPlayer = availablePlayers.find(p => p.id === selectedPlayerId);
-      
-      if (!selectedPlayer) break;
-      
-      const newPick: DraftPick = {
-        teamId,
-        playerId: selectedPlayer.id,
-        playerName: selectedPlayer.name,
-        round
-      };
-      
-      picks.push(newPick);
-      summary.push({
-        round,
-        teamId,
-        playerId: selectedPlayer.id,
-        playerName: selectedPlayer.name,
-        score: topScore
+      // 競合処理：同じ選手を複数球団が指名した場合、抽選で決定
+      const playerToTeams = new Map<number, number[]>();
+      firstRoundPicks.forEach(pick => {
+        if (!playerToTeams.has(pick.playerId)) {
+          playerToTeams.set(pick.playerId, []);
+        }
+        playerToTeams.get(pick.playerId)!.push(pick.teamId);
       });
       
-      // 指名済み選手を除外
-      availablePlayers = availablePlayers.filter(p => p.id !== selectedPlayer.id);
+      // 当選した球団を記録
+      const winningPicks = new Map<number, { teamId: number; isContested: boolean; contestedTeams: number[] }>();
+      
+      playerToTeams.forEach((teams, playerId) => {
+        if (teams.length === 1) {
+          // 競合なし：そのまま決定
+          winningPicks.set(playerId, { teamId: teams[0], isContested: false, contestedTeams: [] });
+        } else {
+          // 競合あり：抽選で決定
+          const winnerIndex = Math.floor(Math.random() * teams.length);
+          const winner = teams[winnerIndex];
+          winningPicks.set(playerId, { teamId: winner, isContested: true, contestedTeams: teams });
+        }
+      });
+      
+      // 当選した指名をpicksに追加し、選手をavailablePlayersから除外
+      for (const [playerId, pickInfo] of winningPicks) {
+        const selectedPlayer = availablePlayers.find(p => p.id === playerId);
+        if (!selectedPlayer) continue;
+        
+        const scores = await calculateDraftScores(
+          round,
+          pickInfo.teamId,
+          availablePlayers,
+          [],
+          weightConfig,
+          draftYear
+        );
+        const topScore = scores.find(s => s.playerId === playerId) || scores[0];
+        
+        const newPick: DraftPick = {
+          teamId: pickInfo.teamId,
+          playerId: selectedPlayer.id,
+          playerName: selectedPlayer.name,
+          round,
+          isContested: pickInfo.isContested,
+          contestedTeams: pickInfo.contestedTeams
+        };
+        
+        picks.push(newPick);
+        summary.push({
+          round,
+          teamId: pickInfo.teamId,
+          playerId: selectedPlayer.id,
+          playerName: selectedPlayer.name,
+          score: topScore
+        });
+        
+        // 指名済み選手を除外
+        availablePlayers = availablePlayers.filter(p => p.id !== selectedPlayer.id);
+      }
+    } else {
+      // 2巡目以降：ウェーバー方式（逐次処理）
+      for (const teamId of waiverOrder) {
+        if (availablePlayers.length === 0) break;
+        
+        let selectedPlayerId: number;
+        let topScore: any;
+        
+        // ユーザーが操作する球団の場合
+        if (userTeamIds && userTeamIds.includes(teamId) && onUserTeamPick) {
+          selectedPlayerId = await onUserTeamPick(round, teamId, availablePlayers);
+          
+          // スコアを計算（表示用）
+          const scores = await calculateDraftScores(
+            round,
+            teamId,
+            availablePlayers,
+            picks,
+            weightConfig,
+            draftYear
+          );
+          topScore = scores.find(s => s.playerId === selectedPlayerId) || scores[0];
+        } else {
+          // AIが自動で選択（確率的選択）
+          const scores = await calculateDraftScores(
+            round,
+            teamId,
+            availablePlayers,
+            picks,
+            weightConfig,
+            draftYear
+          );
+          
+          if (scores.length === 0) break;
+          
+          // スコアに基づいて確率的に選手を選択
+          selectedPlayerId = selectPlayerProbabilistically(scores, 10);
+          
+          // 選択された選手のスコア情報を取得
+          topScore = scores.find(s => s.playerId === selectedPlayerId) || scores[0];
+        }
+        
+        const selectedPlayer = availablePlayers.find(p => p.id === selectedPlayerId);
+        
+        if (!selectedPlayer) break;
+        
+        const newPick: DraftPick = {
+          teamId,
+          playerId: selectedPlayer.id,
+          playerName: selectedPlayer.name,
+          round
+        };
+        
+        picks.push(newPick);
+        summary.push({
+          round,
+          teamId,
+          playerId: selectedPlayer.id,
+          playerName: selectedPlayer.name,
+          score: topScore
+        });
+        
+        // 指名済み選手を除外
+        availablePlayers = availablePlayers.filter(p => p.id !== selectedPlayer.id);
+      }
     }
     
     // ラウンド完了コールバック

@@ -49,6 +49,8 @@ export interface DraftPick {
   playerName: string;
   round: number;
   isDevelopment?: boolean;
+  isContested?: boolean; // 競合指名かどうか
+  contestedTeams?: number[]; // 競合した球団のリスト
 }
 
 interface VoteData {
