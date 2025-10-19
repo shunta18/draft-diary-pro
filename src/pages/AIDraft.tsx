@@ -169,6 +169,8 @@ export default function AIDraft() {
     round: number;
     teamId: number;
     playerName: string;
+    playerTeam: string;
+    playerPosition: string;
   } | null>(null);
   const [singlePickResolve, setSinglePickResolve] = useState<(() => void) | null>(null);
   
@@ -540,7 +542,9 @@ export default function AIDraft() {
             setSinglePickInfo({
               round,
               teamId,
-              playerName: pick.playerName
+              playerName: pick.playerName,
+              playerTeam: pick.playerTeam,
+              playerPosition: pick.playerPosition
             });
             setShowSinglePickComplete(true);
             setSinglePickResolve(() => resolve);
@@ -1181,10 +1185,15 @@ export default function AIDraft() {
                   </p>
                 </div>
                 
-                <div className="mt-6">
+                <div className="mt-6 space-y-2">
                   <p className="text-2xl font-bold text-primary">
                     {singlePickInfo.playerName}
                   </p>
+                  <div className="flex items-center justify-center gap-3 text-sm text-muted-foreground">
+                    <span>{singlePickInfo.playerTeam}</span>
+                    <span>•</span>
+                    <span>{singlePickInfo.playerPosition}</span>
+                  </div>
                 </div>
               </div>
               

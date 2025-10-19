@@ -89,7 +89,7 @@ export async function runDraftSimulation(
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>,
   onLotteryFound?: (lotteries: Array<{ playerName: string; team: string; position: string; competingTeamIds: number[]; winnerId: number }>) => Promise<void>,
   onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, lostPicks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[], hasContest: boolean) => Promise<void>,
-  onSinglePickComplete?: (round: number, teamId: number, pick: { playerId: number; playerName: string }) => Promise<void>
+  onSinglePickComplete?: (round: number, teamId: number, pick: { playerId: number; playerName: string; playerTeam: string; playerPosition: string }) => Promise<void>
 ): Promise<SimulationResult> {
   const picks: DraftPick[] = [];
   const lostPicks: LostPick[] = [];
@@ -343,7 +343,9 @@ export async function runDraftSimulation(
         if (onSinglePickComplete) {
           await onSinglePickComplete(round, teamId, {
             playerId: selectedPlayer.id,
-            playerName: selectedPlayer.name
+            playerName: selectedPlayer.name,
+            playerTeam: selectedPlayer.team,
+            playerPosition: Array.isArray(selectedPlayer.position) ? selectedPlayer.position[0] : selectedPlayer.position
           });
         }
       }
