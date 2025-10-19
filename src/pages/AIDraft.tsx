@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
@@ -174,6 +174,12 @@ export default function AIDraft() {
   } | null>(null);
   const [singlePickResolve, setSinglePickResolve] = useState<(() => void) | null>(null);
   const [shouldStopSimulation, setShouldStopSimulation] = useState(false);
+  const shouldStopSimulationRef = useRef(false);
+  
+  // shouldStopSimulationの変更をrefに同期
+  useEffect(() => {
+    shouldStopSimulationRef.current = shouldStopSimulation;
+  }, [shouldStopSimulation]);
   
   // 中断した位置を保存するstate
   const [interruptedPickInfo, setInterruptedPickInfo] = useState<{
@@ -1029,7 +1035,10 @@ export default function AIDraft() {
                             playerPosition: pick.playerPosition
                           });
                           setSinglePickResolve(() => () => {
-                            resolve({ shouldContinue: !shouldStopSimulation });
+                            // refを使用して最新のshouldStopSimulationの値を参照
+                            const shouldStop = shouldStopSimulationRef.current;
+                            console.log('singlePickResolve実行:', { shouldStop });
+                            resolve({ shouldContinue: !shouldStop });
                           });
                           setShowSinglePickComplete(true);
                         });
