@@ -181,6 +181,9 @@ export default function AIDraft() {
     teamIndex: number;
   } | null>(null);
   
+  // 「次へ」ボタンが押されたかを追跡するフラグ
+  const [nextButtonClicked, setNextButtonClicked] = useState(false);
+  
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
     voteWeight: 40,
@@ -1268,9 +1271,8 @@ export default function AIDraft() {
 
         {/* 2巡目以降の単一指名完了ダイアログ */}
         <Dialog open={showSinglePickComplete} onOpenChange={(open) => {
-          if (!open && singlePickInfo) {
-            // 中断した位置を保存
-            // 実際のラウンドに応じた正しいウェーバー順を使用
+          if (!open && singlePickInfo && !nextButtonClicked) {
+            // 「次へ」ボタンではなく「✕」ボタンで閉じられた場合のみ中断情報を保存
             const oddRoundOrder = [6, 11, 1, 9, 5, 7, 2, 10, 3, 12, 4, 8];
             const evenRoundOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
             const waiverOrder = singlePickInfo.round % 2 === 1 ? oddRoundOrder : evenRoundOrder;
@@ -1288,7 +1290,10 @@ export default function AIDraft() {
             });
             setShouldStopSimulation(true);
             setAnimationEnabled(false);
+          }
+          if (!open) {
             setShowSinglePickComplete(false);
+            setNextButtonClicked(false); // フラグをリセット
           }
         }}>
           <DialogContent className="max-w-md">
@@ -1324,7 +1329,9 @@ export default function AIDraft() {
               
               <Button
                 onClick={() => {
+                  setNextButtonClicked(true); // 「次へ」ボタンが押されたことを記録
                   setInterruptedPickInfo(null); // 正常に進んだのでクリア
+                  console.log('次へボタン押下 - interruptedPickInfoをクリア');
                   // shouldStopSimulationがtrueの場合は何もしない
                   if (!shouldStopSimulation && singlePickResolve) {
                     singlePickResolve();
