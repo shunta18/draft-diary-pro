@@ -24,6 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Search, ChevronDown } from "lucide-react";
 import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 import { Input } from "@/components/ui/input";
+import { LotteryAnimation } from "@/components/LotteryAnimation";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -120,6 +121,17 @@ export default function AIDraft() {
   const [filterPositions, setFilterPositions] = useState<string[]>([]);
   const [filterCategories, setFilterCategories] = useState<string[]>([]);
   const [filterEvaluations, setFilterEvaluations] = useState<string[]>([]);
+  
+  // 抽選アニメーション用のstate
+  const [lotteryQueue, setLotteryQueue] = useState<Array<Array<{
+    playerName: string;
+    team: string;
+    position: string;
+    competingTeamIds: number[];
+    winnerId: number;
+  }>>>([]);
+  const [currentLotteryIndex, setCurrentLotteryIndex] = useState(0);
+  const [showLottery, setShowLottery] = useState(false);
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
@@ -363,6 +375,8 @@ export default function AIDraft() {
     setSimulating(true);
     setCurrentSimulationRound(0);
     setSimulationResult(null);
+    setLotteryQueue([]);
+    setCurrentLotteryIndex(0);
 
     try {
       const result = await runDraftSimulation(
@@ -389,11 +403,59 @@ export default function AIDraft() {
         } : undefined
       );
       
-      setSimulationResult(result);
-      toast({
-        title: "シミュレーション完了",
-        description: `${result.picks.length}名の指名が完了しました`,
+      // 競合した抽選をキューに追加
+      const lotteries: Array<Array<{
+        playerName: string;
+        team: string;
+        position: string;
+        competingTeamIds: number[];
+        winnerId: number;
+      }>> = [];
+      
+      // 同一ラウンドの競合をグループ化
+      const roundGroups = new Map<number, typeof lotteries[0]>();
+      
+      result.picks.forEach(pick => {
+        if (pick.isContested && pick.contestedTeams && pick.contestedTeams.length > 1) {
+          const player = players.find(p => p.id === pick.playerId);
+          if (player) {
+            const positionStr = Array.isArray(player.position) ? player.position.join("、") : player.position;
+            const lotteryItem = {
+              playerName: player.name,
+              team: player.team,
+              position: positionStr,
+              competingTeamIds: pick.contestedTeams,
+              winnerId: pick.teamId
+            };
+            
+            if (!roundGroups.has(pick.round)) {
+              roundGroups.set(pick.round, []);
+            }
+            roundGroups.get(pick.round)!.push(lotteryItem);
+          }
+        }
       });
+      
+      // ラウンド順にソートして配列に変換
+      const sortedRounds = Array.from(roundGroups.keys()).sort((a, b) => a - b);
+      sortedRounds.forEach(round => {
+        const group = roundGroups.get(round);
+        if (group) {
+          lotteries.push(group);
+        }
+      });
+      
+      if (lotteries.length > 0) {
+        setLotteryQueue(lotteries);
+        setCurrentLotteryIndex(0);
+        setShowLottery(true);
+      } else {
+        setSimulationResult(result);
+        toast({
+          title: "シミュレーション完了",
+          description: `${result.picks.length}名の指名が完了しました`,
+        });
+      }
     } catch (error) {
       console.error("Simulation error:", error);
       toast({
@@ -403,6 +465,22 @@ export default function AIDraft() {
       });
     } finally {
       setSimulating(false);
+    }
+  };
+
+  const handleLotteryComplete = () => {
+    if (currentLotteryIndex < lotteryQueue.length - 1) {
+      // 次の抽選へ
+      setCurrentLotteryIndex(prev => prev + 1);
+    } else {
+      // 全ての抽選が完了
+      setShowLottery(false);
+      if (simulationResult) {
+        toast({
+          title: "シミュレーション完了",
+          description: `${simulationResult.picks.length}名の指名が完了しました`,
+        });
+      }
     }
   };
 
@@ -844,6 +922,15 @@ export default function AIDraft() {
       </main>
 
       <Footer />
+
+      {/* 抽選アニメーション */}
+      {showLottery && lotteryQueue.length > 0 && currentLotteryIndex < lotteryQueue.length && (
+        <LotteryAnimation
+          lotteryData={lotteryQueue[currentLotteryIndex]}
+          teams={teams}
+          onComplete={handleLotteryComplete}
+        />
+      )}
 
       {/* 選手選択ダイアログ */}
       <Dialog open={showPlayerSelection} onOpenChange={setShowPlayerSelection}>
