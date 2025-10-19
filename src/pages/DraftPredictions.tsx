@@ -322,7 +322,7 @@ export default function DraftPredictions() {
                     className={`p-3 rounded-lg border-2 transition-all font-semibold text-white ${
                       selectedTeam === team.id
                         ? `bg-gradient-to-r ${team.color} border-white shadow-lg scale-105`
-                        : `bg-gradient-to-r ${team.color} border-transparent opacity-70 hover:opacity-100 hover:scale-105`
+                        : `bg-gradient-to-r ${team.color} border-transparent opacity-30 hover:opacity-100 hover:scale-105`
                     }`}
                   >
                     {team.shortName}
