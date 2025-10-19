@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2, Trash2, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,6 +97,7 @@ export default function Players() {
   const [uploadingPlayerId, setUploadingPlayerId] = useState<number | null>(null);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [isUploadingBulk, setIsUploadingBulk] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"registration" | "evaluation">("registration");
 
   useEffect(() => {
     loadPlayers();
@@ -149,22 +150,48 @@ export default function Players() {
     };
   }, [user]);
 
-  const filteredPlayers = players.filter((player) => {
-    const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         player.team.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(player.category);
+  // 評価からスコアを計算するヘルパー関数
+  const getEvaluationScore = (evaluations: string[] | undefined): number => {
+    if (!evaluations || evaluations.length === 0) return 999; // 評価なしは最後
     
-    // ポジションフィルター：選手のポジションを分割してチェック
-    const playerPositions = player.position.split(/[,、]/).map(p => p.trim());
-    const matchesPosition = selectedPositions.length === 0 || 
-      playerPositions.some(pos => selectedPositions.includes(pos));
+    const scores = evaluations.map(evaluation => {
+      const index = evaluationOrder.indexOf(evaluation);
+      return index === -1 ? 999 : index;
+    });
     
-    const matchesEvaluation = selectedEvaluations.length === 0 || 
-      (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
-    
-    return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
-  });
+    return Math.min(...scores); // 最も高い評価（小さいindex）を採用
+  };
+
+  const filteredPlayers = players
+    .filter((player) => {
+      const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           player.team.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(player.category);
+      
+      // ポジションフィルター：選手のポジションを分割してチェック
+      const playerPositions = player.position.split(/[,、]/).map(p => p.trim());
+      const matchesPosition = selectedPositions.length === 0 || 
+        playerPositions.some(pos => selectedPositions.includes(pos));
+      
+      const matchesEvaluation = selectedEvaluations.length === 0 || 
+        (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
+      
+      return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
+    })
+    .sort((a, b) => {
+      if (sortOrder === "registration") {
+        // 登録順（IDの降順 = 新しい順）
+        const idA = a.id || 0;
+        const idB = b.id || 0;
+        return idB - idA;
+      } else {
+        // 評価順（評価が高い順）
+        const scoreA = getEvaluationScore(a.evaluations);
+        const scoreB = getEvaluationScore(b.evaluations);
+        return scoreA - scoreB;
+      }
+    });
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -542,6 +569,31 @@ export default function Players() {
           </div>
           
           <div className="grid grid-cols-2 gap-2 sm:flex sm:space-x-2 sm:grid-cols-none">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-32 justify-between">
+                  <span className="truncate">
+                    {sortOrder === "registration" ? "登録順" : "評価順"}
+                  </span>
+                  <ArrowUpDown className="h-4 w-4 ml-2 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-3 bg-background z-50">
+                <RadioGroup value={sortOrder} onValueChange={(value: "registration" | "evaluation") => setSortOrder(value)}>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="registration" id="sort-registration" />
+                      <Label htmlFor="sort-registration" className="cursor-pointer">登録順（新しい順）</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="evaluation" id="sort-evaluation" />
+                      <Label htmlFor="sort-evaluation" className="cursor-pointer">評価順（高い順）</Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </PopoverContent>
+            </Popover>
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full sm:w-32 justify-between">
