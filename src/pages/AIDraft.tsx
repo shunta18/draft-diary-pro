@@ -366,49 +366,51 @@ export default function AIDraft() {
         </div>
 
         {/* 操作球団選択 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>操作球団選択</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <Label>操作する球団を選択してください（複数選択可能）</Label>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {teams.map(team => (
-                  <div 
-                    key={team.id} 
-                    className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-                  >
-                    <Checkbox
-                      id={`team-${team.id}`}
-                      checked={userTeamIds.includes(team.id)}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setUserTeamIds([...userTeamIds, team.id]);
-                        } else {
-                          setUserTeamIds(userTeamIds.filter(id => id !== team.id));
-                        }
-                      }}
-                    />
-                    <label
-                      htmlFor={`team-${team.id}`}
-                      className="flex-1 cursor-pointer"
+        {!simulating && !simulationResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle>操作球団選択</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                <Label>操作する球団を選択してください（複数選択可能）</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {teams.map(team => (
+                    <div 
+                      key={team.id} 
+                      className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
                     >
-                      <div className={`px-3 py-1.5 rounded text-sm font-medium text-white bg-gradient-to-r ${team.color}`}>
-                        {team.name}
-                      </div>
-                    </label>
-                  </div>
-                ))}
+                      <Checkbox
+                        id={`team-${team.id}`}
+                        checked={userTeamIds.includes(team.id)}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setUserTeamIds([...userTeamIds, team.id]);
+                          } else {
+                            setUserTeamIds(userTeamIds.filter(id => id !== team.id));
+                          }
+                        }}
+                      />
+                      <label
+                        htmlFor={`team-${team.id}`}
+                        className="flex-1 cursor-pointer"
+                      >
+                        <div className={`px-3 py-1.5 rounded text-sm font-medium text-white bg-gradient-to-r ${team.color}`}>
+                          {team.name}
+                        </div>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {userTeamIds.length > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {userTeamIds.length}球団を選択中
+                  </p>
+                )}
               </div>
-              {userTeamIds.length > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  {userTeamIds.length}球団を選択中
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 設定パネル */}
         {showSettings && (
