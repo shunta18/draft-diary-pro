@@ -38,7 +38,12 @@ const teams = [
   { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800" },
 ];
 
-const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手"];
+const positions = [
+  { value: "投手", label: "投手" },
+  { value: "捕手", label: "捕手" },
+  { value: "内野手", label: "内野手" },
+  { value: "外野手", label: "外野手" },
+];
 
 interface RawSupabasePlayer {
   id: number;
@@ -276,14 +281,14 @@ export default function DraftPredictions() {
   // ドラフト順位ごとのソート済みポジション
   const getSortedPositionsForRound = (draftRound: number) => {
     return [...positions].sort((a, b) => {
-      const countA = getPositionVoteCount(draftRound, a);
-      const countB = getPositionVoteCount(draftRound, b);
+      const countA = getPositionVoteCount(draftRound, a.value);
+      const countB = getPositionVoteCount(draftRound, b.value);
       return countB - countA;
     });
   };
 
   const getMaxPositionVotesForRound = (draftRound: number) => {
-    return Math.max(...positions.map((p) => getPositionVoteCount(draftRound, p)), 1);
+    return Math.max(...positions.map((p) => getPositionVoteCount(draftRound, p.value)), 1);
   };
 
   return (
@@ -477,39 +482,44 @@ export default function DraftPredictions() {
 
                       return (
                         <div key={round} className="space-y-3">
-                          <div className="flex items-center gap-3">
-                            <div className="font-bold text-lg w-20">{round}位</div>
-                            <Select
-                              value={selectedPosition || "__none__"}
-                              onValueChange={(value) => 
-                                handlePositionVoteChange(round, value === "__none__" ? null : value)
-                              }
-                            >
-                              <SelectTrigger className={selectedPosition ? "flex-1 bg-accent/50 border-primary" : "flex-1"}>
-                                <SelectValue placeholder="ポジションを選択" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="__none__">選択なし</SelectItem>
-                                {positions.map((position) => (
-                                  <SelectItem key={position} value={position}>
-                                    {position}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
+                          <div className="space-y-2">
+                            <div className="font-bold text-lg">{round}位</div>
+                            <div className="flex flex-wrap gap-2">
+                              {positions.map((position) => {
+                                const isSelected = selectedPosition === position.value;
+                                const voteCount = getPositionVoteCount(round, position.value);
+                                
+                                return (
+                                  <Button
+                                    key={position.value}
+                                    variant={isSelected ? "default" : "outline"}
+                                    size="lg"
+                                    onClick={() => handlePositionVoteChange(round, isSelected ? null : position.value)}
+                                    className="flex-1 min-w-[120px]"
+                                  >
+                                    <div className="flex flex-col items-center gap-1">
+                                      <span>{position.label}</span>
+                                      {voteCount > 0 && (
+                                        <span className="text-xs opacity-70">{voteCount}票</span>
+                                      )}
+                                    </div>
+                                  </Button>
+                                );
+                              })}
+                            </div>
                           </div>
                           
-                          {/* 各ポジションの投票数を表示 */}
-                          <div className="ml-24 space-y-2">
+                          {/* トップ3のポジション投票数を表示 */}
+                          <div className="space-y-2">
                             {sortedPositions.slice(0, 3).map((position) => {
-                              const voteCount = getPositionVoteCount(round, position);
+                              const voteCount = getPositionVoteCount(round, position.value);
                               const votePercentage = maxVotes > 0 ? (voteCount / maxVotes) * 100 : 0;
                               
                               if (voteCount === 0) return null;
 
                               return (
-                                <div key={position} className="flex items-center gap-2">
-                                  <span className="text-sm font-medium w-20">{position}</span>
+                                <div key={position.value} className="flex items-center gap-2">
+                                  <span className="text-sm font-medium w-20">{position.label}</span>
                                   <Progress value={votePercentage} className="h-2 flex-1" />
                                   <span className="text-sm text-muted-foreground whitespace-nowrap">
                                     {voteCount}票
