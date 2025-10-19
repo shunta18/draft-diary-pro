@@ -19,6 +19,7 @@ interface PlayerSelectionDialogProps {
   onSelect: (playerId: number | undefined) => void;
   onPlayerAdded?: () => void;
   children: React.ReactNode;
+  draftYear?: string;
 }
 
 // ポジションの順序を定義
@@ -32,7 +33,7 @@ const evaluationOrder = [
   "4位", "5位", "6位以下", "育成"
 ];
 
-export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onPlayerAdded, children }: PlayerSelectionDialogProps) {
+export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onPlayerAdded, children, draftYear }: PlayerSelectionDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
   const [searchName, setSearchName] = useState("");
@@ -83,7 +84,10 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onP
     const matchesEvaluation = filterEvaluations.length === 0 || 
       (player.evaluations && player.evaluations.some(evaluation => filterEvaluations.includes(evaluation)));
     
-    return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation;
+    // 年度フィルター：draftYearが指定されている場合、その年度の選手のみ表示
+    const matchesYear = !draftYear || (player as any).draftYear === draftYear;
+    
+    return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation && matchesYear;
   }).sort((a, b) => {
     // 評価が高い順に並び替え（評価が同じ場合は名前順）
     const rankA = getHighestEvaluationRank(a.evaluations);

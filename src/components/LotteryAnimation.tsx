@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import lotteryBoxImage from "@/assets/lottery-box.png";
 import draftVenueBg from "@/assets/draft-venue-bg.png";
@@ -32,6 +33,15 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     return lotteryOrder.indexOf(a) - lotteryOrder.indexOf(b);
   });
 
+  const handleSkip = () => {
+    if (currentPlayerIndex < lotteryData.length - 1) {
+      setCurrentPlayerIndex(prev => prev + 1);
+      setPhase("info");
+    } else {
+      onComplete();
+    }
+  };
+
   useEffect(() => {
     const timers: NodeJS.Timeout[] = [];
 
@@ -52,12 +62,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
     
     // Phase 6: フェードアウト（1秒後）
     timers.push(setTimeout(() => {
-      if (currentPlayerIndex < lotteryData.length - 1) {
-        setCurrentPlayerIndex(prev => prev + 1);
-        setPhase("info");
-      } else {
-        onComplete();
-      }
+      handleSkip();
     }, 17000));
 
     return () => timers.forEach(timer => clearTimeout(timer));
@@ -88,7 +93,17 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
         >
           {/* 暗めのオーバーレイでコンテンツを見やすく */}
           <div className="absolute inset-0 bg-black/70" />
-          <div 
+          
+          {/* スキップボタン */}
+          <Button
+            onClick={handleSkip}
+            variant="outline"
+            className="absolute top-4 right-4 z-20 bg-background/80 hover:bg-background"
+          >
+            スキップ
+          </Button>
+          
+          <div
             className={`
               relative z-10
               transition-opacity duration-1000

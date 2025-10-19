@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2, Trash2, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -97,6 +97,7 @@ export default function Players() {
   const [uploadingPlayerId, setUploadingPlayerId] = useState<number | null>(null);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [isUploadingBulk, setIsUploadingBulk] = useState(false);
+  const [sortOrder, setSortOrder] = useState<"registration" | "evaluation">("registration");
 
   useEffect(() => {
     loadPlayers();
@@ -149,22 +150,48 @@ export default function Players() {
     };
   }, [user]);
 
-  const filteredPlayers = players.filter((player) => {
-    const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         player.team.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(player.category);
+  // 評価からスコアを計算するヘルパー関数
+  const getEvaluationScore = (evaluations: string[] | undefined): number => {
+    if (!evaluations || evaluations.length === 0) return 999; // 評価なしは最後
     
-    // ポジションフィルター：選手のポジションを分割してチェック
-    const playerPositions = player.position.split(/[,、]/).map(p => p.trim());
-    const matchesPosition = selectedPositions.length === 0 || 
-      playerPositions.some(pos => selectedPositions.includes(pos));
+    const scores = evaluations.map(evaluation => {
+      const index = evaluationOrder.indexOf(evaluation);
+      return index === -1 ? 999 : index;
+    });
     
-    const matchesEvaluation = selectedEvaluations.length === 0 || 
-      (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
-    
-    return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
-  });
+    return Math.min(...scores); // 最も高い評価（小さいindex）を採用
+  };
+
+  const filteredPlayers = players
+    .filter((player) => {
+      const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           player.team.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(player.category);
+      
+      // ポジションフィルター：選手のポジションを分割してチェック
+      const playerPositions = player.position.split(/[,、]/).map(p => p.trim());
+      const matchesPosition = selectedPositions.length === 0 || 
+        playerPositions.some(pos => selectedPositions.includes(pos));
+      
+      const matchesEvaluation = selectedEvaluations.length === 0 || 
+        (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
+      
+      return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
+    })
+    .sort((a, b) => {
+      if (sortOrder === "registration") {
+        // 登録順（IDの降順 = 新しい順）
+        const idA = a.id || 0;
+        const idB = b.id || 0;
+        return idB - idA;
+      } else {
+        // 評価順（評価が高い順）
+        const scoreA = getEvaluationScore(a.evaluations);
+        const scoreB = getEvaluationScore(b.evaluations);
+        return scoreA - scoreB;
+      }
+    });
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -217,6 +244,16 @@ export default function Players() {
       toast({
         title: "ログインが必要です",
         description: "共通DBにアップロードするにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // インポートした選手はアップロード不可
+    if (player.imported_from_public_player_id) {
+      toast({
+        title: "アップロードできません",
+        description: "インポートした選手はアップロードできません。自分で作成した選手のみアップロード可能です。",
         variant: "destructive",
       });
       return;
@@ -486,14 +523,29 @@ export default function Players() {
               {selectedPlayerIds.length > 0 && (
                 <>
                   <Button
-                    onClick={() => handleBulkUpload(selectedPlayerIds)}
+                    onClick={() => {
+                      // インポートした選手を除外してアップロード
+                      const uploadablePlayerIds = selectedPlayerIds.filter(id => {
+                        const player = players.find(p => p.id === id);
+                        return player && !player.imported_from_public_player_id;
+                      });
+                      if (uploadablePlayerIds.length === 0) {
+                        toast({
+                          title: "アップロード可能な選手がありません",
+                          description: "インポートした選手はアップロードできません。",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      handleBulkUpload(uploadablePlayerIds);
+                    }}
                     variant="secondary"
                     size="sm"
                     disabled={isUploadingBulk || players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length === 0}
                     className="gap-2 w-full sm:w-auto"
                   >
                     <Upload className="h-4 w-4" />
-                    {isUploadingBulk ? "アップロード中..." : `選択した${selectedPlayerIds.length}名をアップロード`}
+                    {isUploadingBulk ? "アップロード中..." : `選択した${players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length}名をアップロード`}
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -542,6 +594,31 @@ export default function Players() {
           </div>
           
           <div className="grid grid-cols-2 gap-2 sm:flex sm:space-x-2 sm:grid-cols-none">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-32 justify-between">
+                  <span className="truncate">
+                    {sortOrder === "registration" ? "登録順" : "評価順"}
+                  </span>
+                  <ArrowUpDown className="h-4 w-4 ml-2 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-3 bg-background z-50">
+                <RadioGroup value={sortOrder} onValueChange={(value: "registration" | "evaluation") => setSortOrder(value)}>
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="registration" id="sort-registration" />
+                      <Label htmlFor="sort-registration" className="cursor-pointer">登録順（新しい順）</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="evaluation" id="sort-evaluation" />
+                      <Label htmlFor="sort-evaluation" className="cursor-pointer">評価順（高い順）</Label>
+                    </div>
+                  </div>
+                </RadioGroup>
+              </PopoverContent>
+            </Popover>
+
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full sm:w-32 justify-between">
@@ -736,6 +813,11 @@ export default function Players() {
                           <Badge className="bg-green-500 text-white text-xs flex-shrink-0">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             公開中
+                          </Badge>
+                        )}
+                        {player.imported_from_public_player_id && (
+                          <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-300 flex-shrink-0">
+                            インポート
                           </Badge>
                         )}
                         {player.id === 1 && (
