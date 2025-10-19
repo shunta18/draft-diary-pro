@@ -196,6 +196,21 @@ export default function PublicPlayers() {
   const checkForDuplicates = async (playerToImport: PublicPlayer) => {
     try {
       const existingPlayers = await getPlayers();
+      
+      // すでにインポート済みかチェック
+      const alreadyImported = existingPlayers.find(
+        player => player.imported_from_public_player_id === playerToImport.id
+      );
+      
+      if (alreadyImported) {
+        toast({
+          title: "すでにインポート済みです",
+          description: `${playerToImport.name}は既にあなたの選手リストに存在します。`,
+          variant: "destructive",
+        });
+        return null;
+      }
+      
       const similar: Array<{ player: Player; similarity: number }> = [];
 
       for (const player of existingPlayers) {
@@ -236,6 +251,11 @@ export default function PublicPlayers() {
 
     // 類似選手をチェック
     const similar = await checkForDuplicates(player);
+    
+    // nullの場合はすでにインポート済み
+    if (similar === null) {
+      return;
+    }
     
     if (similar.length > 0) {
       setSimilarPlayers(similar);
