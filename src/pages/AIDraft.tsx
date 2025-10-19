@@ -141,12 +141,9 @@ export default function AIDraft() {
   const [picksCompleteInfo, setPicksCompleteInfo] = useState<{
     pickRound: number;
     picks: Array<{teamId: number; playerId: number; playerName: string}>;
+    hasContest: boolean;
   } | null>(null);
-  
-  // 抽選アナウンス用のstate
-  const [showLotteryAnnouncement, setShowLotteryAnnouncement] = useState(false);
-  const [contestedCount, setContestedCount] = useState(0);
-  const [lotteryAnnouncementResolve, setLotteryAnnouncementResolve] = useState<(() => void) | null>(null);
+  const [picksCompleteResolve, setPicksCompleteResolve] = useState<(() => void) | null>(null);
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
@@ -452,24 +449,12 @@ export default function AIDraft() {
             setLotteryResolve(() => resolve);
           });
         } : undefined,
-        // 全球団の指名完了時
-        async (pickRound, picks, availablePlayers) => {
+        // 全球団の指名完了時（競合情報も含める）
+        async (pickRound, picks, availablePlayers, hasContest) => {
           return new Promise<void>((resolve) => {
-            setPicksCompleteInfo({ pickRound, picks });
+            setPicksCompleteInfo({ pickRound, picks, hasContest });
             setShowPicksComplete(true);
-            // 3秒後に自動で次へ
-            setTimeout(() => {
-              setShowPicksComplete(false);
-              resolve();
-            }, 3000);
-          });
-        },
-        // 抽選アナウンス
-        async (contestedCount) => {
-          return new Promise<void>((resolve) => {
-            setContestedCount(contestedCount);
-            setShowLotteryAnnouncement(true);
-            setLotteryAnnouncementResolve(() => resolve);
+            setPicksCompleteResolve(() => resolve);
           });
         }
       );
@@ -1190,44 +1175,56 @@ export default function AIDraft() {
               )}
             </DialogTitle>
           </DialogHeader>
-          <div className="space-y-2 max-h-96 overflow-y-auto">
-            {picksCompleteInfo?.picks.map((pick) => {
-              const team = teams.find(t => t.id === pick.teamId);
-              return (
-                <div key={pick.teamId} className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
-                  <span className="font-medium">{team?.name}</span>
-                  <span className="text-lg">{pick.playerName}</span>
+          <div className="space-y-4">
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {picksCompleteInfo?.picks.map((pick) => {
+                const team = teams.find(t => t.id === pick.teamId);
+                return (
+                  <div key={pick.teamId} className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                    <span className="font-medium">{team?.name}</span>
+                    <span className="text-lg">{pick.playerName}</span>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {picksCompleteInfo?.hasContest && (
+              <div className="pt-4 border-t">
+                <div className="text-center space-y-4 py-4">
+                  <p className="text-lg font-medium">⚡️ 競合が発生しました</p>
+                  <div className="animate-pulse text-4xl">🎰</div>
+                  <Button 
+                    size="lg" 
+                    className="w-full"
+                    onClick={() => {
+                      setShowPicksComplete(false);
+                      if (picksCompleteResolve) {
+                        picksCompleteResolve();
+                        setPicksCompleteResolve(null);
+                      }
+                    }}
+                  >
+                    抽選に進む
+                  </Button>
                 </div>
-              );
-            })}
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* 抽選アナウンスダイアログ */}
-      <Dialog open={showLotteryAnnouncement} onOpenChange={setShowLotteryAnnouncement}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-2xl text-center">⚡️ 抽選に入ります</DialogTitle>
-          </DialogHeader>
-          <div className="text-center space-y-6 py-6">
-            <p className="text-lg">
-              {contestedCount}名の選手が競合しています
-            </p>
-            <div className="animate-pulse text-4xl">🎰</div>
-            <Button 
-              size="lg" 
-              className="w-full"
-              onClick={() => {
-                setShowLotteryAnnouncement(false);
-                if (lotteryAnnouncementResolve) {
-                  lotteryAnnouncementResolve();
-                  setLotteryAnnouncementResolve(null);
-                }
-              }}
-            >
-              抽選に進む
-            </Button>
+              </div>
+            )}
+            
+            {!picksCompleteInfo?.hasContest && (
+              <Button 
+                size="lg" 
+                className="w-full"
+                onClick={() => {
+                  setShowPicksComplete(false);
+                  if (picksCompleteResolve) {
+                    picksCompleteResolve();
+                    setPicksCompleteResolve(null);
+                  }
+                }}
+              >
+                次へ進む
+              </Button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

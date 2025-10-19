@@ -88,8 +88,7 @@ export async function runDraftSimulation(
   userTeamIds?: number[],
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>,
   onLotteryFound?: (lotteries: Array<{ playerName: string; team: string; position: string; competingTeamIds: number[]; winnerId: number }>) => Promise<void>,
-  onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[]) => Promise<void>,
-  onLotteryAnnouncement?: (contestedCount: number) => Promise<void>
+  onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[], hasContest: boolean) => Promise<void>
 ): Promise<SimulationResult> {
   const picks: DraftPick[] = [];
   const lostPicks: LostPick[] = [];
@@ -135,19 +134,6 @@ export async function runDraftSimulation(
           }
           
           currentRoundPicks.push({ teamId, playerId: selectedPlayerId });
-        }
-        
-        // 全球団の指名が完了したことを通知
-        if (onPicksComplete) {
-          const picksWithNames = currentRoundPicks.map(pick => {
-            const player = availablePlayers.find(p => p.id === pick.playerId);
-            return {
-              teamId: pick.teamId,
-              playerId: pick.playerId,
-              playerName: player?.name || ""
-            };
-          });
-          await onPicksComplete(pickRound, picksWithNames, availablePlayers);
         }
         
         // 競合処理：同じ選手を複数球団が指名した場合、抽選で決定
@@ -208,9 +194,17 @@ export async function runDraftSimulation(
           }
         });
         
-        // 競合がある場合は抽選アナウンス
-        if (currentLotteries.length > 0 && onLotteryAnnouncement) {
-          await onLotteryAnnouncement(currentLotteries.length);
+        // 全球団の指名が完了したことを通知（競合情報も含める）
+        if (onPicksComplete) {
+          const picksWithNames = currentRoundPicks.map(pick => {
+            const player = availablePlayers.find(p => p.id === pick.playerId);
+            return {
+              teamId: pick.teamId,
+              playerId: pick.playerId,
+              playerName: player?.name || ""
+            };
+          });
+          await onPicksComplete(pickRound, picksWithNames, availablePlayers, currentLotteries.length > 0);
         }
         
         // 抽選アニメーションがある場合は表示
