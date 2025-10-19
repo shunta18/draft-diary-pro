@@ -17,6 +17,7 @@ import { NormalizedPlayer, DraftPick, WeightConfig } from "@/lib/draftScoring";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -757,19 +758,14 @@ export default function AIDraft() {
               {simulating && (
                 <Progress value={(currentSimulationRound / maxRounds) * 100} className="w-64" />
               )}
-              <div className="flex items-center gap-2 pt-2">
-                <Checkbox
-                  id="animation-toggle"
+              <div className="flex items-center justify-center gap-3 text-sm">
+                <span className="text-muted-foreground">抽選アニメーション</span>
+                <Switch
                   checked={animationEnabled}
-                  onCheckedChange={(checked) => setAnimationEnabled(checked as boolean)}
+                  onCheckedChange={setAnimationEnabled}
                   disabled={simulating}
                 />
-                <Label 
-                  htmlFor="animation-toggle" 
-                  className="text-sm cursor-pointer"
-                >
-                  抽選アニメーションを表示
-                </Label>
+                <span className="text-muted-foreground">{animationEnabled ? 'ON' : 'OFF'}</span>
               </div>
             </CardContent>
           </Card>
