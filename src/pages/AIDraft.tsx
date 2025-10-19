@@ -516,61 +516,54 @@ export default function AIDraft() {
             </div>
 
             <Card>
-              <CardContent className="p-6">
+              <CardContent className="p-6 overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-24">球団</TableHead>
-                      {Array.from({ length: maxRounds }, (_, i) => i + 1).map(round => (
-                        <TableHead key={round} className="text-center min-w-[120px]">
-                          {round}位
-                        </TableHead>
-                      ))}
+                      <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10"></TableHead>
+                      {displayOrder.map(teamId => {
+                        const team = teams.find(t => t.id === teamId);
+                        if (!team) return null;
+                        return (
+                          <TableHead 
+                            key={team.id} 
+                            className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white`}
+                          >
+                            {team.shortName}
+                          </TableHead>
+                        );
+                      })}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {displayOrder.map(teamId => {
-                      const team = teams.find(t => t.id === teamId);
-                      const picks = getTeamPicks(teamId);
+                    {(() => {
+                      const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
+                      const rows = [];
                       
-                      return (
-                        <TableRow key={teamId}>
-                          <TableCell className="font-medium">
-                            <div className={`text-xs px-2 py-1 rounded bg-gradient-to-r ${team?.color} text-white`}>
-                              {team?.shortName}
-                            </div>
-                          </TableCell>
-                          {Array.from({ length: maxRounds }, (_, i) => i + 1).map(round => {
-                            const pick = picks.find(p => p.round === round);
-                            const summaryItem = simulationResult.summary.find(
-                              s => s.teamId === teamId && s.round === round
-                            );
-                            
-                            return (
-                              <TableCell key={round} className="text-center">
-                                {pick ? (
-                                  <div className="space-y-1">
-                                    <div className="font-medium text-sm">{pick.playerName}</div>
-                                    {summaryItem && (
-                                      <>
-                                        <Badge variant="secondary" className="text-xs">
-                                          {summaryItem.score.totalScore.toFixed(1)}点
-                                        </Badge>
-                                        <div className="text-xs text-muted-foreground">
-                                          {summaryItem.score.reason}
-                                        </div>
-                                      </>
-                                    )}
-                                  </div>
-                                ) : (
-                                  <span className="text-muted-foreground">-</span>
-                                )}
-                              </TableCell>
-                            );
-                          })}
-                        </TableRow>
-                      );
-                    })}
+                      for (let round = 1; round <= maxRound; round++) {
+                        rows.push(
+                          <TableRow key={`round-${round}`}>
+                            <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r">
+                              {round}位
+                            </TableCell>
+                            {displayOrder.map(teamId => {
+                              const team = teams.find(t => t.id === teamId);
+                              if (!team) return null;
+                              const pick = simulationResult.picks.find(p => p.teamId === teamId && p.round === round);
+                              const player = pick ? players.find(p => p.id === pick.playerId) : null;
+                              
+                              return (
+                                <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r">
+                                  {player ? player.name : "―"}
+                                </TableCell>
+                              );
+                            })}
+                          </TableRow>
+                        );
+                      }
+                      
+                      return rows;
+                    })()}
                   </TableBody>
                 </Table>
               </CardContent>
