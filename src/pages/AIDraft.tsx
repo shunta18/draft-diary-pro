@@ -117,7 +117,7 @@ export default function AIDraft() {
   const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPicks, setCurrentPicks] = useState<DraftPick[]>([]);
-  const [currentLostPicks, setCurrentLostPicks] = useState<Array<{teamId: number; playerId: number; playerName: string}>>([]);
+  const [currentLostPicks, setCurrentLostPicks] = useState<Array<{teamId: number; playerId: number; playerName: string; pickLabel: string}>>([]);
   
   // フィルター用のstate
   const [searchName, setSearchName] = useState("");
@@ -487,13 +487,20 @@ export default function AIDraft() {
           
           // currentLostPicksに外れた指名を追加
           setCurrentLostPicks(prev => {
+            const newLostPicks = lostPicks.map(lp => ({
+              teamId: lp.teamId,
+              playerId: lp.playerId,
+              playerName: lp.playerName,
+              pickLabel: pickRound === 1 ? "1位" : `外れ${pickRound - 1}位`
+            }));
+            
             const filtered = prev.filter(existing =>
-              !lostPicks.some(lp =>
+              !newLostPicks.some(lp =>
                 existing.teamId === lp.teamId &&
-                existing.playerId === lp.playerId
+                existing.pickLabel === lp.pickLabel
               )
             );
-            return [...filtered, ...lostPicks];
+            return [...filtered, ...newLostPicks];
           });
           
           return new Promise<void>((resolve) => {
@@ -1293,7 +1300,9 @@ export default function AIDraft() {
               {picksCompleteInfo && (
                 picksCompleteInfo.pickRound === 1 
                   ? "1位指名結果" 
-                  : `外れ${picksCompleteInfo.pickRound - 1}位指名が出揃いました`
+                  : picksCompleteInfo.pickRound === 2
+                  ? "第二次指名結果"
+                  : `第${picksCompleteInfo.pickRound}次指名結果`
               )}
             </DialogTitle>
           </DialogHeader>
@@ -1340,7 +1349,7 @@ export default function AIDraft() {
                         <TableCell className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap">{label}</TableCell>
                         {displayOrder.map(teamId => {
                           const pick = firstRoundPicks.find(p => p.teamId === teamId && p.pickLabel === label);
-                          const lostPick = currentLostPicks.find(lp => lp.teamId === teamId);
+                          const lostPick = currentLostPicks.find(lp => lp.teamId === teamId && lp.pickLabel === label);
                           const player = players.find(p => p.id === (pick?.playerId || lostPick?.playerId));
                           const hasContest = label.includes('1位') && firstRoundPicks.filter(p => p.playerId === pick?.playerId).length > 1;
                           const isLost = !pick && lostPick;
