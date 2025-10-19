@@ -1182,12 +1182,10 @@ export default function AIDraft() {
                 return (
                   <div 
                     key={pick.teamId} 
-                    className={`flex flex-col items-center p-4 rounded-lg border shadow-sm bg-gradient-to-r ${team?.color} opacity-20`}
+                    className={`flex flex-col items-center p-4 rounded-lg border shadow-sm bg-gradient-to-r ${team?.color}`}
                   >
-                    <div className="relative z-10">
-                      <span className="text-sm font-medium text-foreground mb-1 block text-center">{team?.name}</span>
-                      <span className="text-lg font-bold text-foreground block text-center">{pick.playerName}</span>
-                    </div>
+                    <span className="text-sm font-medium text-white/90 mb-1">{team?.name}</span>
+                    <span className="text-lg font-bold text-white">{pick.playerName}</span>
                   </div>
                 );
               })}
