@@ -135,7 +135,8 @@ export async function calculateDraftScores(
     playerRatingWeight: 20,
     realismWeight: 10
   },
-  draftYear: string = "2025"
+  draftYear: string = "2025",
+  unfulfilled1stRoundNeeds?: Map<number, string[]>
 ): Promise<DraftScore[]> {
   // 投票データを取得
   const predictions = await fetchDraftPredictions(draftYear);
@@ -182,6 +183,23 @@ export async function calculateDraftScores(
     } else {
       // 投票データがない場合はデフォルト値
       teamNeedsScore = 50;
+    }
+    
+    // 2位以降で、1位で取れなかったポジションを優先
+    if (round === 2 && unfulfilled1stRoundNeeds && unfulfilled1stRoundNeeds.has(teamId)) {
+      const unfulfilledPositions = unfulfilled1stRoundNeeds.get(teamId)!;
+      for (const position of unfulfilledPositions) {
+        const matchScore = calculatePositionMatch(player.position, position);
+        if (matchScore === 100) {
+          // 完全マッチの場合は+30点ボーナス
+          teamNeedsScore = Math.min(100, teamNeedsScore + 30);
+          break;
+        } else if (matchScore >= 70) {
+          // 部分マッチの場合は+15点ボーナス
+          teamNeedsScore = Math.min(100, teamNeedsScore + 15);
+          break;
+        }
+      }
     }
     
     // 0-100の範囲に正規化

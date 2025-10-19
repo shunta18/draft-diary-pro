@@ -101,6 +101,7 @@ export async function runDraftSimulation(
   
   const pickedPlayerIds = new Set(existingPicks.map(p => p.playerId));
   let availablePlayers = allPlayers.filter(p => !pickedPlayerIds.has(p.id));
+  let unfulfilled1stRoundNeeds = new Map<number, string[]>();
   
   for (let round = startFromRound; round <= maxRounds; round++) {
     const waiverOrder = getWaiverOrder(round);
@@ -280,6 +281,54 @@ export async function runDraftSimulation(
         // 選手がいなくなったら終了
         if (availablePlayers.length === 0) break;
       }
+      
+      // 1位指名完了後、各球団の未充足ニーズを計算
+      const unfulfilled1stRoundNeeds = new Map<number, string[]>();
+      
+      for (const teamId of teams.map(t => t.id)) {
+        // 1位指名時のポジション投票データを取得
+        const predictions = await import("./draftPredictions").then(m => m.fetchDraftPredictions(draftYear));
+        const positionVotes = predictions.positionVotes;
+        
+        const teamPositionVotes: { position: string; votes: number }[] = [];
+        Object.entries(positionVotes).forEach(([key, votes]) => {
+          const [voteTeamId, voteRound, position] = key.split('_');
+          if (parseInt(voteTeamId) === teamId && voteRound === "1") {
+            teamPositionVotes.push({ position, votes: votes.length });
+          }
+        });
+        
+        // 投票数でソートし、スコアが70以上相当のポジションを取得
+        teamPositionVotes.sort((a, b) => b.votes - a.votes);
+        const maxVotes = Math.max(...teamPositionVotes.map(v => v.votes), 1);
+        const highNeedPositions = teamPositionVotes
+          .filter(v => (v.votes / maxVotes) * 100 >= 70)
+          .map(v => v.position);
+        
+        // 1位で指名した選手のポジションを取得
+        const firstRoundPick = picks.find(p => p.teamId === teamId && p.round === 1);
+        if (firstRoundPick) {
+          const pickedPlayer = allPlayers.find(p => p.id === firstRoundPick.playerId);
+          const pickedPositions = pickedPlayer?.position || [];
+          
+          // 高ニーズポジションのうち、指名した選手のポジションと一致しないものを記録
+          const unfulfilled = highNeedPositions.filter(needPos => {
+            // 完全マッチまたは部分マッチをチェック
+            const isMatched = pickedPositions.some(pickedPos => {
+              if (needPos === "投手" && (pickedPos === "投手" || pickedPos === "P")) return true;
+              if (needPos === "野手" && pickedPos !== "投手" && pickedPos !== "P") return true;
+              if (pickedPos === needPos) return true;
+              if (pickedPos.includes(needPos) || needPos.includes(pickedPos)) return true;
+              return false;
+            });
+            return !isMatched;
+          });
+          
+          if (unfulfilled.length > 0) {
+            unfulfilled1stRoundNeeds.set(teamId, unfulfilled);
+          }
+        }
+      }
     } else {
       // 2巡目以降：ウェーバー方式（逐次処理）
       const startIndex = round === startFromRound ? startFromTeamIndex : 0;
@@ -301,7 +350,8 @@ export async function runDraftSimulation(
             availablePlayers,
             picks,
             weightConfig,
-            draftYear
+            draftYear,
+            unfulfilled1stRoundNeeds
           );
           topScore = scores.find(s => s.playerId === selectedPlayerId) || scores[0];
         } else {
@@ -312,7 +362,8 @@ export async function runDraftSimulation(
             availablePlayers,
             picks,
             weightConfig,
-            draftYear
+            draftYear,
+            unfulfilled1stRoundNeeds
           );
           
           if (scores.length === 0) break;
