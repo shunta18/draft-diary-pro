@@ -9,7 +9,7 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getDefaultPlayers, Player as LocalPlayer } from "@/lib/playerStorage";
-import { Play, ArrowLeft, Settings, Download } from "lucide-react";
+import { Play, ArrowLeft, Settings, Download, Maximize2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { runDraftSimulation, SimulationResult } from "@/lib/draftSimulation";
@@ -26,6 +26,7 @@ import { Search, ChevronDown } from "lucide-react";
 import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 import { Input } from "@/components/ui/input";
 import { LotteryAnimation } from "@/components/LotteryAnimation";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -118,6 +119,7 @@ export default function AIDraft() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPicks, setCurrentPicks] = useState<DraftPick[]>([]);
   const [currentLostPicks, setCurrentLostPicks] = useState<Array<{teamId: number; playerId: number; playerName: string; pickLabel: string}>>([]);
+  const [showFullScreen, setShowFullScreen] = useState(false);
   
   // フィルター用のstate
   const [searchName, setSearchName] = useState("");
@@ -866,6 +868,10 @@ export default function AIDraft() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
               <div className="flex gap-2 flex-wrap">
+                <Button onClick={() => setShowFullScreen(true)} variant="outline" size="sm" className="flex-1 sm:flex-none">
+                  <Maximize2 className="w-4 h-4 mr-2" />
+                  全画面表示
+                </Button>
                 <Button onClick={() => {
                   if (!simulationResult) return;
                   
@@ -916,121 +922,204 @@ export default function AIDraft() {
               </div>
             </div>
 
-            <Card>
-              <CardContent className="p-6 overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10 w-20"></TableHead>
-                      {displayOrder.map(teamId => {
-                        const team = teams.find(t => t.id === teamId);
-                        if (!team) return null;
-                        return (
-                          <TableHead 
-                            key={team.id} 
-                            className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white w-28`}
-                          >
-                            {team.shortName}
-                          </TableHead>
-                        );
-                      })}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(() => {
-                      // 1巡目の指名をpickLabelでグループ化し、各球団の抽選外れも取得
-                      const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
-                      const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
-                      
-                      const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
-                      const rows = [];
-                      
-                      // 1巡目は特別処理（全ての指名を「1位」で括る）
-                      if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
-                        // 各球団ごとの行数を計算（成功した指名 + 外れた指名）
-                        const rowsPerTeam = displayOrder.map(teamId => {
-                          const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
-                          const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
-                          return teamPicks.length + teamLostPicks.length;
-                        });
-                        const maxRowsTotal = Math.max(...rowsPerTeam, 1);
-                        
-                        // 行を生成
-                        for (let rowIndex = 0; rowIndex < maxRowsTotal; rowIndex++) {
-                          rows.push(
-                            <TableRow key={`round-1-${rowIndex}`}>
-                              {rowIndex === 0 && (
-                                <TableCell 
-                                  rowSpan={maxRowsTotal}
-                                  className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r w-20"
-                                >
-                                  1位
+            <Tabs defaultValue="all" className="w-full">
+              <TabsList className="grid w-full grid-cols-13">
+                <TabsTrigger value="all">全体</TabsTrigger>
+                {teams.map(team => (
+                  <TabsTrigger key={team.id} value={team.id.toString()}>
+                    {team.shortName}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              <TabsContent value="all">
+                <Card>
+                  <CardContent className="p-6 overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10 w-20"></TableHead>
+                          {displayOrder.map(teamId => {
+                            const team = teams.find(t => t.id === teamId);
+                            if (!team) return null;
+                            return (
+                              <TableHead 
+                                key={team.id} 
+                                className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white w-28`}
+                              >
+                                {team.shortName}
+                              </TableHead>
+                            );
+                          })}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(() => {
+                          // 1巡目の指名をpickLabelでグループ化し、各球団の抽選外れも取得
+                          const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
+                          const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
+                          
+                          const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
+                          const rows = [];
+                          
+                          // 1巡目は特別処理（全ての指名を「1位」で括る）
+                          if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
+                            const rowsPerTeam = displayOrder.map(teamId => {
+                              const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
+                              const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
+                              return teamPicks.length + teamLostPicks.length;
+                            });
+                            const maxRowsTotal = Math.max(...rowsPerTeam, 1);
+                            
+                            for (let rowIndex = 0; rowIndex < maxRowsTotal; rowIndex++) {
+                              rows.push(
+                                <TableRow key={`round-1-${rowIndex}`}>
+                                  {rowIndex === 0 && (
+                                    <TableCell 
+                                      rowSpan={maxRowsTotal}
+                                      className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r w-20"
+                                    >
+                                      1位
+                                    </TableCell>
+                                  )}
+                                  {displayOrder.map(teamId => {
+                                    const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
+                                    const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
+                                    const allTeamItems = [...teamLostPicks.map(lp => ({ type: 'lost', data: lp })), ...teamPicks.map(p => ({ type: 'pick', data: p }))];
+                                    
+                                    if (rowIndex >= allTeamItems.length) {
+                                      return (
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                          ―
+                                        </TableCell>
+                                      );
+                                    }
+                                    
+                                    const item = allTeamItems[rowIndex];
+                                    
+                                    if (item.type === 'lost') {
+                                      return (
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r w-28">
+                                          {item.data.playerName}
+                                        </TableCell>
+                                      );
+                                    } else {
+                                      const player = players.find(p => p.id === item.data.playerId);
+                                      return (
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                          {player ? player.name : "―"}
+                                        </TableCell>
+                                      );
+                                    }
+                                  })}
+                                </TableRow>
+                              );
+                            }
+                          }
+                          
+                          // 2巡目以降は通常表示
+                          for (let round = 2; round <= maxRound; round++) {
+                            rows.push(
+                              <TableRow key={`round-${round}`}>
+                                <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r w-20">
+                                  {round}位
                                 </TableCell>
-                              )}
-                              {displayOrder.map(teamId => {
-                                const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
-                                const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
-                                const allTeamItems = [...teamLostPicks.map(lp => ({ type: 'lost', data: lp })), ...teamPicks.map(p => ({ type: 'pick', data: p }))];
-                                
-                                if (rowIndex >= allTeamItems.length) {
+                                {displayOrder.map(teamId => {
+                                  const team = teams.find(t => t.id === teamId);
+                                  if (!team) return null;
+                                  const pick = simulationResult.picks.find(p => p.teamId === teamId && p.round === round);
+                                  const player = pick ? players.find(p => p.id === pick.playerId) : null;
+                                  
                                   return (
-                                    <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
-                                      ―
-                                    </TableCell>
-                                  );
-                                }
-                                
-                                const item = allTeamItems[rowIndex];
-                                
-                                if (item.type === 'lost') {
-                                  return (
-                                    <TableCell key={teamId} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r w-28">
-                                      {item.data.playerName}
-                                    </TableCell>
-                                  );
-                                } else {
-                                  const player = players.find(p => p.id === item.data.playerId);
-                                  return (
-                                    <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                    <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r w-28">
                                       {player ? player.name : "―"}
                                     </TableCell>
                                   );
-                                }
-                              })}
-                            </TableRow>
-                          );
-                        }
-                      }
-                      
-                      // 2巡目以降は通常表示
-                      for (let round = 2; round <= maxRound; round++) {
-                        rows.push(
-                          <TableRow key={`round-${round}`}>
-                            <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r w-20">
-                              {round}位
-                            </TableCell>
-                            {displayOrder.map(teamId => {
-                              const team = teams.find(t => t.id === teamId);
-                              if (!team) return null;
-                              const pick = simulationResult.picks.find(p => p.teamId === teamId && p.round === round);
-                              const player = pick ? players.find(p => p.id === pick.playerId) : null;
+                                })}
+                              </TableRow>
+                            );
+                          }
+                          
+                          return rows;
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {teams.map(team => (
+                <TabsContent key={team.id} value={team.id.toString()}>
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className={`bg-gradient-to-br ${team.color} text-white p-4 rounded-lg`}>
+                        {team.name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <div className="space-y-4">
+                        {(() => {
+                          const teamPicks = simulationResult.picks.filter(p => p.teamId === team.id);
+                          const teamLostPicks = simulationResult.lostPicks?.filter(lp => lp.teamId === team.id) || [];
+                          const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
+                          
+                          return (
+                            <>
+                              {/* 1巡目 */}
+                              {teamPicks.filter(p => p.round === 1).length > 0 || teamLostPicks.filter(lp => lp.round === 1).length > 0 ? (
+                                <div className="space-y-2">
+                                  <h3 className="font-semibold text-lg">1位</h3>
+                                  <div className="space-y-1">
+                                    {teamLostPicks.filter(lp => lp.round === 1).map((lp, idx) => {
+                                      const player = players.find(p => p.id === lp.playerId);
+                                      return (
+                                        <div key={`lost-${idx}`} className="p-3 bg-muted/30 rounded-lg text-muted-foreground/50">
+                                          <div className="font-medium">{lp.playerName}</div>
+                                          <div className="text-sm">{player?.team || ''}</div>
+                                          <div className="text-xs">{player?.position || ''}</div>
+                                        </div>
+                                      );
+                                    })}
+                                    {teamPicks.filter(p => p.round === 1).map(pick => {
+                                      const player = players.find(p => p.id === pick.playerId);
+                                      return (
+                                        <div key={pick.playerId} className="p-3 bg-primary/5 rounded-lg border-2 border-primary/20">
+                                          <div className="font-bold text-lg">{player?.name || ''}</div>
+                                          <div className="text-sm text-muted-foreground">{player?.team || ''}</div>
+                                          <div className="text-sm text-muted-foreground">{player?.position || ''}</div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              ) : null}
                               
-                              return (
-                                <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r w-28">
-                                  {player ? player.name : "―"}
-                                </TableCell>
-                              );
-                            })}
-                          </TableRow>
-                        );
-                      }
-                      
-                      return rows;
-                    })()}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
+                              {/* 2巡目以降 */}
+                              {Array.from({ length: maxRound - 1 }, (_, i) => i + 2).map(round => {
+                                const pick = teamPicks.find(p => p.round === round);
+                                if (!pick) return null;
+                                const player = players.find(p => p.id === pick.playerId);
+                                
+                                return (
+                                  <div key={round} className="space-y-2">
+                                    <h3 className="font-semibold text-lg">{round}位</h3>
+                                    <div className="p-3 bg-primary/5 rounded-lg border-2 border-primary/20">
+                                      <div className="font-bold text-lg">{player?.name || ''}</div>
+                                      <div className="text-sm text-muted-foreground">{player?.team || ''}</div>
+                                      <div className="text-sm text-muted-foreground">{player?.position || ''}</div>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              ))}
+            </Tabs>
           </div>
         )}
       </main>
@@ -1404,6 +1493,213 @@ export default function AIDraft() {
               次へ進む
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 全画面表示ダイアログ */}
+      <Dialog open={showFullScreen} onOpenChange={setShowFullScreen}>
+        <DialogContent className="max-w-[98vw] w-full max-h-[98vh] overflow-hidden flex flex-col p-2">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="text-xl">シミュレーション結果 - 全画面表示</DialogTitle>
+          </DialogHeader>
+          
+          {simulationResult && (
+            <Tabs defaultValue="all" className="w-full flex-1 flex flex-col overflow-hidden">
+              <TabsList className="grid w-full grid-cols-13 shrink-0">
+                <TabsTrigger value="all">全体</TabsTrigger>
+                {teams.map(team => (
+                  <TabsTrigger key={team.id} value={team.id.toString()}>
+                    {team.shortName}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+              
+              <TabsContent value="all" className="flex-1 overflow-auto mt-2">
+                <Card className="h-full">
+                  <CardContent className="p-4 overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10 w-20"></TableHead>
+                          {displayOrder.map(teamId => {
+                            const team = teams.find(t => t.id === teamId);
+                            if (!team) return null;
+                            return (
+                              <TableHead 
+                                key={team.id} 
+                                className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white w-28`}
+                              >
+                                {team.shortName}
+                              </TableHead>
+                            );
+                          })}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(() => {
+                          const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
+                          const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
+                          
+                          const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
+                          const rows = [];
+                          
+                          if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
+                            const rowsPerTeam = displayOrder.map(teamId => {
+                              const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
+                              const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
+                              return teamPicks.length + teamLostPicks.length;
+                            });
+                            const maxRowsTotal = Math.max(...rowsPerTeam, 1);
+                            
+                            for (let rowIndex = 0; rowIndex < maxRowsTotal; rowIndex++) {
+                              rows.push(
+                                <TableRow key={`round-1-${rowIndex}`}>
+                                  {rowIndex === 0 && (
+                                    <TableCell 
+                                      rowSpan={maxRowsTotal}
+                                      className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-sm align-middle border-r w-20"
+                                    >
+                                      1位
+                                    </TableCell>
+                                  )}
+                                  {displayOrder.map(teamId => {
+                                    const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
+                                    const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
+                                    const allTeamItems = [...teamLostPicks.map(lp => ({ type: 'lost', data: lp })), ...teamPicks.map(p => ({ type: 'pick', data: p }))];
+                                    
+                                    if (rowIndex >= allTeamItems.length) {
+                                      return (
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-sm border-r w-28">
+                                          ―
+                                        </TableCell>
+                                      );
+                                    }
+                                    
+                                    const item = allTeamItems[rowIndex];
+                                    
+                                    if (item.type === 'lost') {
+                                      return (
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-sm text-muted-foreground/50 border-r w-28">
+                                          {item.data.playerName}
+                                        </TableCell>
+                                      );
+                                    } else {
+                                      const player = players.find(p => p.id === item.data.playerId);
+                                      return (
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-sm border-r w-28">
+                                          {player ? player.name : "―"}
+                                        </TableCell>
+                                      );
+                                    }
+                                  })}
+                                </TableRow>
+                              );
+                            }
+                          }
+                          
+                          for (let round = 2; round <= maxRound; round++) {
+                            rows.push(
+                              <TableRow key={`round-${round}`}>
+                                <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-sm align-middle border-r w-20">
+                                  {round}位
+                                </TableCell>
+                                {displayOrder.map(teamId => {
+                                  const team = teams.find(t => t.id === teamId);
+                                  if (!team) return null;
+                                  const pick = simulationResult.picks.find(p => p.teamId === teamId && p.round === round);
+                                  const player = pick ? players.find(p => p.id === pick.playerId) : null;
+                                  
+                                  return (
+                                    <TableCell key={team.id} className="whitespace-nowrap text-center text-sm border-r w-28">
+                                      {player ? player.name : "―"}
+                                    </TableCell>
+                                  );
+                                })}
+                              </TableRow>
+                            );
+                          }
+                          
+                          return rows;
+                        })()}
+                      </TableBody>
+                    </Table>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              {teams.map(team => (
+                <TabsContent key={team.id} value={team.id.toString()} className="flex-1 overflow-auto mt-2">
+                  <Card className="h-full">
+                    <CardHeader>
+                      <CardTitle className={`bg-gradient-to-br ${team.color} text-white p-4 rounded-lg`}>
+                        {team.name}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-4">
+                      <ScrollArea className="h-full">
+                        <div className="space-y-4">
+                          {(() => {
+                            const teamPicks = simulationResult.picks.filter(p => p.teamId === team.id);
+                            const teamLostPicks = simulationResult.lostPicks?.filter(lp => lp.teamId === team.id) || [];
+                            const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
+                            
+                            return (
+                              <>
+                                {teamPicks.filter(p => p.round === 1).length > 0 || teamLostPicks.filter(lp => lp.round === 1).length > 0 ? (
+                                  <div className="space-y-2">
+                                    <h3 className="font-semibold text-lg">1位</h3>
+                                    <div className="space-y-1">
+                                      {teamLostPicks.filter(lp => lp.round === 1).map((lp, idx) => {
+                                        const player = players.find(p => p.id === lp.playerId);
+                                        return (
+                                          <div key={`lost-${idx}`} className="p-3 bg-muted/30 rounded-lg text-muted-foreground/50">
+                                            <div className="font-medium">{lp.playerName}</div>
+                                            <div className="text-sm">{player?.team || ''}</div>
+                                            <div className="text-xs">{player?.position || ''}</div>
+                                          </div>
+                                        );
+                                      })}
+                                      {teamPicks.filter(p => p.round === 1).map(pick => {
+                                        const player = players.find(p => p.id === pick.playerId);
+                                        return (
+                                          <div key={pick.playerId} className="p-3 bg-primary/5 rounded-lg border-2 border-primary/20">
+                                            <div className="font-bold text-lg">{player?.name || ''}</div>
+                                            <div className="text-sm text-muted-foreground">{player?.team || ''}</div>
+                                            <div className="text-sm text-muted-foreground">{player?.position || ''}</div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ) : null}
+                                
+                                {Array.from({ length: maxRound - 1 }, (_, i) => i + 2).map(round => {
+                                  const pick = teamPicks.find(p => p.round === round);
+                                  if (!pick) return null;
+                                  const player = players.find(p => p.id === pick.playerId);
+                                  
+                                  return (
+                                    <div key={round} className="space-y-2">
+                                      <h3 className="font-semibold text-lg">{round}位</h3>
+                                      <div className="p-3 bg-primary/5 rounded-lg border-2 border-primary/20">
+                                        <div className="font-bold text-lg">{player?.name || ''}</div>
+                                        <div className="text-sm text-muted-foreground">{player?.team || ''}</div>
+                                        <div className="text-sm text-muted-foreground">{player?.position || ''}</div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </>
+                            );
+                          })()}
+                        </div>
+                      </ScrollArea>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              ))}
+            </Tabs>
+          )}
         </DialogContent>
       </Dialog>
     </div>
