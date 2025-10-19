@@ -1164,9 +1164,9 @@ export default function AIDraft() {
 
       <Footer />
 
-      {/* 2巡目以降の単一指名完了ダイアログ */}
-      <Dialog open={showSinglePickComplete} onOpenChange={setShowSinglePickComplete}>
-        <DialogContent className="max-w-md">
+        {/* 2巡目以降の単一指名完了ダイアログ */}
+        <Dialog open={showSinglePickComplete} onOpenChange={setShowSinglePickComplete}>
+          <DialogContent className="max-w-md" hideCloseButton={true}>
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
               {singlePickInfo && `第${singlePickInfo.round}巡目`}
@@ -1197,18 +1197,34 @@ export default function AIDraft() {
                 </div>
               </div>
               
-              <Button
-                onClick={() => {
-                  if (singlePickResolve) {
-                    singlePickResolve();
-                    setSinglePickResolve(null);
-                  }
-                  setShowSinglePickComplete(false);
-                }}
-                className="w-full"
-              >
-                次へ
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    if (singlePickResolve) {
+                      singlePickResolve();
+                      setSinglePickResolve(null);
+                    }
+                    setShowSinglePickComplete(false);
+                    setAnimationEnabled(false);
+                  }}
+                  className="flex-1"
+                >
+                  中断して結果を表示
+                </Button>
+                <Button
+                  onClick={() => {
+                    if (singlePickResolve) {
+                      singlePickResolve();
+                      setSinglePickResolve(null);
+                    }
+                    setShowSinglePickComplete(false);
+                  }}
+                  className="flex-1"
+                >
+                  次へ
+                </Button>
+              </div>
             </div>
           )}
         </DialogContent>
