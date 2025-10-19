@@ -671,6 +671,19 @@ export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Pl
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
+    // Check if already imported to prevent duplicates
+    const { data: existingImport } = await supabase
+      .from('public_player_imports')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('public_player_id', publicPlayerId)
+      .maybeSingle();
+
+    if (existingImport) {
+      console.log('Player already imported by this user');
+      throw new Error('この選手は既にインポート済みです');
+    }
+
     const publicPlayer = await getPublicPlayerById(publicPlayerId);
     if (!publicPlayer) throw new Error('Public player not found');
 
