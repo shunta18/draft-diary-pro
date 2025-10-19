@@ -469,16 +469,16 @@ export default function DraftPredictions() {
                           <div className="flex items-center gap-3">
                             <div className="font-bold text-lg w-20">{round}位</div>
                             <Select
-                              value={selectedPosition || ""}
+                              value={selectedPosition || "__none__"}
                               onValueChange={(value) => 
-                                handlePositionVoteChange(round, value === "" ? null : value)
+                                handlePositionVoteChange(round, value === "__none__" ? null : value)
                               }
                             >
                               <SelectTrigger className="flex-1">
                                 <SelectValue placeholder="ポジションを選択" />
                               </SelectTrigger>
                               <SelectContent>
-                                <SelectItem value="">選択なし</SelectItem>
+                                <SelectItem value="__none__">選択なし</SelectItem>
                                 {positions.map((position) => (
                                   <SelectItem key={position} value={position}>
                                     {position}
