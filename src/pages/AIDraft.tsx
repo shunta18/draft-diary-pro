@@ -192,10 +192,9 @@ export default function AIDraft() {
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
-    voteWeight: 40,
+    voteWeight: 50,
     teamNeedsWeight: 30,
-    playerRatingWeight: 20,
-    realismWeight: 10
+    playerRatingWeight: 20
   });
   const [weightId, setWeightId] = useState<string | null>(null);
 
@@ -265,8 +264,7 @@ export default function AIDraft() {
         const dbWeights = {
           voteWeight: data.vote_weight,
           teamNeedsWeight: data.team_needs_weight,
-          playerRatingWeight: data.player_rating_weight,
-          realismWeight: data.realism_weight
+          playerRatingWeight: data.player_rating_weight
         };
         setWeights(dbWeights);
         setWeightId(data.id);
@@ -383,7 +381,7 @@ export default function AIDraft() {
 
   const saveWeights = async (newWeights: WeightConfig) => {
     const sum = newWeights.voteWeight + newWeights.teamNeedsWeight + 
-                newWeights.playerRatingWeight + newWeights.realismWeight;
+                newWeights.playerRatingWeight;
     
     if (sum !== 100) {
       toast({
@@ -412,10 +410,9 @@ export default function AIDraft() {
         const { error } = await supabase
           .from("draft_scoring_weights")
           .update({
-            vote_weight: newWeights.voteWeight,
+          vote_weight: newWeights.voteWeight,
             team_needs_weight: newWeights.teamNeedsWeight,
-            player_rating_weight: newWeights.playerRatingWeight,
-            realism_weight: newWeights.realismWeight
+            player_rating_weight: newWeights.playerRatingWeight
           })
           .eq("id", weightId);
         
@@ -428,7 +425,6 @@ export default function AIDraft() {
             vote_weight: newWeights.voteWeight,
             team_needs_weight: newWeights.teamNeedsWeight,
             player_rating_weight: newWeights.playerRatingWeight,
-            realism_weight: newWeights.realismWeight,
             created_by: user?.id
           })
           .select()
@@ -627,7 +623,7 @@ export default function AIDraft() {
         item.score.breakdown.voteScore.toFixed(2),
         item.score.breakdown.teamNeedsScore.toFixed(2),
         item.score.breakdown.playerRating.toFixed(2),
-        item.score.breakdown.realismScore.toFixed(2),
+        item.score.breakdown.realismAdjustment.toFixed(2),
         `"${item.score.reason}"`
       ].join(","));
     });
@@ -794,21 +790,19 @@ export default function AIDraft() {
                   disabled={!isAdmin}
                 />
               </div>
-              <div className="space-y-2">
-                <Label>現実性調整スコア: {weights.realismWeight}%</Label>
-                <Slider
-                  value={[weights.realismWeight]}
-                  onValueChange={([value]) => {
-                    setWeights(prev => ({ ...prev, realismWeight: value }));
-                  }}
-                  max={100}
-                  step={5}
-                  disabled={!isAdmin}
-                />
-              </div>
               <div className="pt-4 space-y-3">
+                <div className="space-y-2 p-4 bg-muted/50 rounded-lg">
+                  <h4 className="font-medium text-sm">現実性調整ルール</h4>
+                  <p className="text-xs text-muted-foreground">
+                    以下のルールに基づいてスコアを自動調整します：
+                  </p>
+                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>同ポジション連続指名（投手除く）：-15点</li>
+                    <li>投手/野手3連続指名：-20点</li>
+                  </ul>
+                </div>
                 <div className="text-sm text-muted-foreground">
-                  <p>合計: {weights.voteWeight + weights.teamNeedsWeight + weights.playerRatingWeight + weights.realismWeight}%</p>
+                  <p>合計: {weights.voteWeight + weights.teamNeedsWeight + weights.playerRatingWeight}%</p>
                   <p className="text-xs mt-1">※ 合計が100%になるように調整してください</p>
                   {!isAdmin && (
                     <p className="text-xs mt-2 text-amber-600">※ スコアリング重みの変更は管理者のみ可能です</p>
@@ -818,7 +812,7 @@ export default function AIDraft() {
                   <Button 
                     onClick={() => saveWeights(weights)} 
                     className="w-full"
-                    disabled={weights.voteWeight + weights.teamNeedsWeight + weights.playerRatingWeight + weights.realismWeight !== 100}
+                    disabled={weights.voteWeight + weights.teamNeedsWeight + weights.playerRatingWeight !== 100}
                   >
                     設定を保存
                   </Button>
@@ -930,6 +924,8 @@ export default function AIDraft() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
                <Button 
+                size="lg"
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 text-base"
                 onClick={async () => {
                   if (!simulationResult) return;
                   
@@ -1078,10 +1074,9 @@ export default function AIDraft() {
                     setSimulating(false);
                   }
                 }}
-                variant="outline" 
-                size="sm" 
-                className="flex-1 sm:flex-none"
+                disabled={simulating}
               >
+                <Play className="w-5 h-5 mr-2" />
                 シミュレーションを再開
               </Button>
             </div>
