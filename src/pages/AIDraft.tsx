@@ -175,6 +175,11 @@ export default function AIDraft() {
   const [singlePickResolve, setSinglePickResolve] = useState<(() => void) | null>(null);
   const [shouldStopSimulation, setShouldStopSimulation] = useState(false);
   
+  // 中断した位置を保存するstate
+  const [interruptedPickInfo, setInterruptedPickInfo] = useState<{
+    round: number;
+    teamIndex: number;
+  } | null>(null);
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
@@ -456,6 +461,7 @@ export default function AIDraft() {
     setLotteryQueue([]);
     setCurrentLotteryIndex(0);
     setShouldStopSimulation(false);
+    setInterruptedPickInfo(null); // 新しいシミュレーション開始時にクリア
 
     try {
       const result = await runDraftSimulation(
@@ -923,41 +929,53 @@ export default function AIDraft() {
                   setSimulating(true);
                   setShouldStopSimulation(false);
                   
-                  // 最後に指名された選手を取得して、次の指名情報を設定
+                  let nextRound: number;
+                  let nextTeamIndex: number;
+                  
+                  if (interruptedPickInfo) {
+                    // 中断した位置の情報がある場合は、そこから再開
+                    nextRound = interruptedPickInfo.round;
+                    nextTeamIndex = interruptedPickInfo.teamIndex;
+                    setInterruptedPickInfo(null); // 使用後はクリア
+                  } else {
+                    // 中断情報がない場合は、従来通りpicksから計算
+                    const allPicks = simulationResult.picks;
+                    const maxRoundPicked = Math.max(...allPicks.map(p => p.round));
+                    
+                    // 次のラウンドを計算
+                    nextRound = maxRoundPicked;
+                    const picksInMaxRound = allPicks.filter(p => p.round === maxRoundPicked);
+                    
+                    if (picksInMaxRound.length >= 12) {
+                      // 全球団が指名済みなら次のラウンドへ
+                      nextRound = maxRoundPicked + 1;
+                    }
+                    
+                    if (nextRound > maxRounds) {
+                      toast({
+                        title: "シミュレーション完了",
+                        description: "すべての巡が完了しています",
+                      });
+                      return;
+                    }
+                    
+                    // ウェーバー順（最下位から）で次に指名する球団を見つける
+                    const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+                    const alreadyPickedTeams = allPicks.filter(p => p.round === nextRound).map(p => p.teamId);
+                    nextTeamIndex = waiverOrder.findIndex(teamId => !alreadyPickedTeams.includes(teamId));
+                    
+                    if (nextTeamIndex === -1) {
+                      toast({
+                        title: "エラー",
+                        description: "次の指名球団が見つかりません",
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                  }
+                  
                   const allPicks = simulationResult.picks;
                   const allLostPicks = simulationResult.lostPicks;
-                  const maxRoundPicked = Math.max(...allPicks.map(p => p.round));
-                  
-                  // 次のラウンドを計算
-                  let nextRound = maxRoundPicked;
-                  const picksInMaxRound = allPicks.filter(p => p.round === maxRoundPicked);
-                  
-                  if (picksInMaxRound.length >= 12) {
-                    // 全球団が指名済みなら次のラウンドへ
-                    nextRound = maxRoundPicked + 1;
-                  }
-                  
-                  if (nextRound > maxRounds) {
-                    toast({
-                      title: "シミュレーション完了",
-                      description: "すべての巡が完了しています",
-                    });
-                    return;
-                  }
-                  
-                  // ウェーバー順（最下位から）で次に指名する球団を見つける
-                  const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
-                  const alreadyPickedTeams = allPicks.filter(p => p.round === nextRound).map(p => p.teamId);
-                  const nextTeamIndex = waiverOrder.findIndex(teamId => !alreadyPickedTeams.includes(teamId));
-                  
-                  if (nextTeamIndex === -1) {
-                    toast({
-                      title: "エラー",
-                      description: "次の指名球団が見つかりません",
-                      variant: "destructive",
-                    });
-                    return;
-                  }
                   
                   // 続きからシミュレーションを実行
                   try {
@@ -1244,12 +1262,17 @@ export default function AIDraft() {
 
         {/* 2巡目以降の単一指名完了ダイアログ */}
         <Dialog open={showSinglePickComplete} onOpenChange={(open) => {
-          if (!open) {
-            // ✕ボタンで閉じた場合、シミュレーションを中断
+          if (!open && showSinglePickComplete && singlePickInfo) {
+            // 中断した位置を保存
+            const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+            const teamIndex = waiverOrder.indexOf(singlePickInfo.teamId);
+            setInterruptedPickInfo({
+              round: singlePickInfo.round,
+              teamIndex: teamIndex
+            });
             setShouldStopSimulation(true);
             setAnimationEnabled(false);
             setShowSinglePickComplete(false);
-            // singlePickResolve()は呼ばない（シミュレーションを停止）
           }
         }}>
           <DialogContent className="max-w-md">
@@ -1285,6 +1308,7 @@ export default function AIDraft() {
               
               <Button
                 onClick={() => {
+                  setInterruptedPickInfo(null); // 正常に進んだのでクリア
                   // shouldStopSimulationがtrueの場合は何もしない
                   if (!shouldStopSimulation && singlePickResolve) {
                     singlePickResolve();
