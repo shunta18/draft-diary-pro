@@ -942,95 +942,64 @@ export default function AIDraft() {
                       const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
                       const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
                       
-                      // 全てのラベルを取得（1位、外れ1位、外れ2位...）
-                      const allLabels = [...new Set([
-                        ...firstRoundPicks.map(p => p.pickLabel || "1位"),
-                        ...firstRoundLostPicks.map(p => p.pickLabel || "1位")
-                      ])];
-                      
-                      // 各ラベルについて、最大の試行回数（抽選外れ + 成功）を計算
-                      const maxAttemptsPerLabel = new Map<string, number>();
-                      allLabels.forEach(label => {
-                        displayOrder.forEach(teamId => {
-                          const lostForLabel = firstRoundLostPicks.filter(
-                            lp => lp.teamId === teamId && (lp.pickLabel || "1位") === label
-                          );
-                          const successPick = firstRoundPicks.find(
-                            p => p.teamId === teamId && (p.pickLabel || "1位") === label
-                          );
-                          const attempts = lostForLabel.length + (successPick ? 1 : 0);
-                          maxAttemptsPerLabel.set(label, Math.max(maxAttemptsPerLabel.get(label) || 0, attempts));
-                        });
-                      });
-                      
                       const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
                       const rows = [];
                       
-                      // 1巡目は特別処理（1位、外れ1位、外れ2位...を表示）
-                      if (allLabels.length > 0) {
-                        allLabels.forEach(label => {
-                          const maxAttempts = maxAttemptsPerLabel.get(label) || 0;
-                          const picksForLabel = firstRoundPicks.filter(p => (p.pickLabel || "1位") === label);
-                          const lostPicksForLabel = firstRoundLostPicks.filter(p => (p.pickLabel || "1位") === label);
-                          
-                          // 各試行（抽選外れ + 成功）を行として追加
-                          for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                            rows.push(
-                              <TableRow key={`round-1-${label}-${attempt}`}>
-                                {attempt === 0 ? (
-                                  <TableCell 
-                                    rowSpan={maxAttempts}
-                                    className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r w-20"
-                                  >
-                                    {label}
-                                  </TableCell>
-                                ) : null}
-                                {displayOrder.map(teamId => {
-                                  const team = teams.find(t => t.id === teamId);
-                                  if (!team) return null;
-                                  
-                                  const lostForTeam = lostPicksForLabel.filter(lp => lp.teamId === teamId);
-                                  const successPick = picksForLabel.find(p => p.teamId === teamId);
-                                  
-                                  // この試行が抽選外れの場合
-                                  if (attempt < lostForTeam.length) {
-                                    return (
-                                      <TableCell key={team.id} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r w-28">
-                                        {lostForTeam[attempt].playerName}
-                                      </TableCell>
-                                    );
-                                  }
-                                  // 最後の試行（実際の指名）
-                                  else if (attempt === lostForTeam.length && successPick) {
-                                    const player = players.find(p => p.id === successPick.playerId);
-                                    return (
-                                      <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r w-28">
-                                        {player ? (
-                                          <div className="flex flex-col items-center gap-1">
-                                            <span>{player.name}</span>
-                                            {successPick.isContested && (
-                                              <Badge variant="destructive" className="text-[10px] px-1 py-0">
-                                                ⚡️競合
-                                              </Badge>
-                                            )}
-                                          </div>
-                                        ) : "―"}
-                                      </TableCell>
-                                    );
-                                  }
-                                  // 抽選がなかった球団
-                                  else {
-                                    return (
-                                      <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r w-28">
-                                        ―
-                                      </TableCell>
-                                    );
-                                  }
-                                })}
-                              </TableRow>
-                            );
-                          }
+                      // 1巡目は特別処理（全ての指名を「1位」で括る）
+                      if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
+                        // 各球団ごとの行数を計算（成功した指名 + 外れた指名）
+                        const rowsPerTeam = displayOrder.map(teamId => {
+                          const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
+                          const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
+                          return teamPicks.length + teamLostPicks.length;
                         });
+                        const maxRowsTotal = Math.max(...rowsPerTeam, 1);
+                        
+                        // 行を生成
+                        for (let rowIndex = 0; rowIndex < maxRowsTotal; rowIndex++) {
+                          rows.push(
+                            <TableRow key={`round-1-${rowIndex}`}>
+                              {rowIndex === 0 && (
+                                <TableCell 
+                                  rowSpan={maxRowsTotal}
+                                  className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r w-20"
+                                >
+                                  1位
+                                </TableCell>
+                              )}
+                              {displayOrder.map(teamId => {
+                                const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
+                                const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
+                                const allTeamItems = [...teamLostPicks.map(lp => ({ type: 'lost', data: lp })), ...teamPicks.map(p => ({ type: 'pick', data: p }))];
+                                
+                                if (rowIndex >= allTeamItems.length) {
+                                  return (
+                                    <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                      ―
+                                    </TableCell>
+                                  );
+                                }
+                                
+                                const item = allTeamItems[rowIndex];
+                                
+                                if (item.type === 'lost') {
+                                  return (
+                                    <TableCell key={teamId} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r w-28">
+                                      {item.data.playerName}
+                                    </TableCell>
+                                  );
+                                } else {
+                                  const player = players.find(p => p.id === item.data.playerId);
+                                  return (
+                                    <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                      {player ? player.name : "―"}
+                                    </TableCell>
+                                  );
+                                }
+                              })}
+                            </TableRow>
+                          );
+                        }
                       }
                       
                       // 2巡目以降は通常表示
@@ -1397,7 +1366,6 @@ export default function AIDraft() {
                                   <div className="space-y-1 py-2">
                                     <div className="font-medium text-sm">{player?.name || ''}</div>
                                     <div className="text-xs text-muted-foreground">{player?.team || ''}</div>
-                                    {hasContest && <Badge variant="destructive" className="text-xs">競合</Badge>}
                                   </div>
                                 ) : isLost ? (
                                   <div className="space-y-1 py-2">
