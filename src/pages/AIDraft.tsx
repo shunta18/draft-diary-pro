@@ -817,11 +817,13 @@ export default function AIDraft() {
                   再シミュレーション
                 </Button>
                 <Button onClick={() => {
-                  setSimulationResult(null);
-                  setCurrentSimulationRound(0);
-                  setSimulating(false);
-                  setShowPlayerSelection(false);
-                  setCurrentPickInfo(null);
+                  // シミュレーション結果を残しつつ、途中から再開できるようにする
+                  setSimulating(true);
+                  // 現在のラウンドから再開
+                  if (simulationResult) {
+                    const lastRound = Math.max(...simulationResult.picks.map(p => p.round));
+                    setCurrentSimulationRound(lastRound);
+                  }
                 }} variant="outline">
                   指名に戻る
                 </Button>
