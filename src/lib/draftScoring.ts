@@ -94,7 +94,10 @@ const evaluatePlayerRating = (evaluations: string[]): number => {
   // 複数の順位評価がある場合は平均値を計算
   const averageScore = foundScores.reduce((sum, score) => sum + score, 0) / foundScores.length;
   
-  return Math.round(averageScore);
+  // 30-100の範囲を0-100に正規化
+  const normalizedScore = ((averageScore - 30) / (100 - 30)) * 100;
+  
+  return Math.round(Math.max(0, Math.min(100, normalizedScore)));
 };
 
 // ポジションマッチングスコアを計算
@@ -181,11 +184,14 @@ export async function calculateDraftScores(
       teamNeedsScore = 50;
     }
     
+    // 0-100の範囲に正規化
+    teamNeedsScore = Math.max(0, Math.min(100, teamNeedsScore));
+    
     // レイヤー3: 選手評価スコア
     const playerRatingScore = evaluatePlayerRating(player.evaluations);
     
     // レイヤー4: 現実性調整スコア
-    let realismScore = 100;
+    let rawRealismScore = 100;
     
     // 同じチームが最近同じポジションを指名していないかチェック
     const recentPicks = draftHistory
@@ -202,15 +208,19 @@ export async function calculateDraftScores(
     );
     
     if (hasRecentSamePosition && recentPicks.length >= 2) {
-      realismScore -= 30; // 同じポジション連続指名でペナルティ
+      rawRealismScore -= 30; // 同じポジション連続指名でペナルティ
     }
+    
+    // 70-100の範囲を0-100に正規化
+    const realismScore = ((rawRealismScore - 70) / (100 - 70)) * 100;
+    const normalizedRealismScore = Math.max(0, Math.min(100, realismScore));
     
     // 総合スコア計算（重み付け）
     const totalScore = 
       (voteScore * weightConfig.voteWeight / 100) +
       (teamNeedsScore * weightConfig.teamNeedsWeight / 100) +
       (playerRatingScore * weightConfig.playerRatingWeight / 100) +
-      (realismScore * weightConfig.realismWeight / 100);
+      (normalizedRealismScore * weightConfig.realismWeight / 100);
     
     // 理由生成
     const reasons: string[] = [];
@@ -233,7 +243,7 @@ export async function calculateDraftScores(
         voteScore,
         teamNeedsScore,
         playerRating: playerRatingScore,
-        realismScore
+        realismScore: normalizedRealismScore
       },
       reason
     };
