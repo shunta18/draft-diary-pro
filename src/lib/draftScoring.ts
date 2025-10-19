@@ -4,14 +4,13 @@ export interface ScoringWeights {
   voteScore: number;      // 投票データスコア (0-100)
   teamNeedsScore: number; // チームニーズマッチングスコア (0-100)
   playerRating: number;   // 選手評価スコア (0-100)
-  realismScore: number;   // 現実性調整スコア (0-100)
+  realismAdjustment: number;   // 現実性調整 (-50 ~ +20)
 }
 
 export interface WeightConfig {
-  voteWeight: number;      // デフォルト 40%
+  voteWeight: number;      // デフォルト 50%
   teamNeedsWeight: number; // デフォルト 30%
   playerRatingWeight: number; // デフォルト 20%
-  realismWeight: number;   // デフォルト 10%
 }
 
 export interface DraftScore {
@@ -130,10 +129,9 @@ export async function calculateDraftScores(
   availablePlayers: NormalizedPlayer[],
   draftHistory: DraftPick[],
   weightConfig: WeightConfig = {
-    voteWeight: 40,
+    voteWeight: 50,
     teamNeedsWeight: 30,
-    playerRatingWeight: 20,
-    realismWeight: 10
+    playerRatingWeight: 20
   },
   draftYear: string = "2025",
   unfulfilled1stRoundNeeds?: Map<number, string[]>
@@ -208,8 +206,8 @@ export async function calculateDraftScores(
     // レイヤー3: 選手評価スコア
     const playerRatingScore = evaluatePlayerRating(player.evaluations);
     
-    // レイヤー4: 現実性調整スコア
-    let rawRealismScore = 100;
+    // 現実性調整ルール（スコアに直接加算/減算）
+    let realismAdjustment = 0;
     
     // 同じチームが最近同じポジションを指名していないかチェック
     const recentPicks = draftHistory
@@ -226,7 +224,7 @@ export async function calculateDraftScores(
     );
     
     if (hasRecentSamePosition && recentPicks.length >= 2) {
-      rawRealismScore -= 30; // 同じポジション連続指名でペナルティ
+      realismAdjustment -= 15; // 同じポジション連続指名でペナルティ
     }
     
     // 投手・野手バランス調整（1位から3位のみ）
@@ -254,22 +252,19 @@ export async function calculateDraftScores(
         if (allSameType) {
           const currentType = isCurrentPitcher ? 'pitcher' : 'fielder';
           if (currentType === pickedTypes[0]) {
-            rawRealismScore -= 40; // 3連続同じタイプでペナルティ
+            realismAdjustment -= 20; // 3連続同じタイプでペナルティ
           }
         }
       }
     }
     
-    // 70-100の範囲を0-100に正規化
-    const realismScore = ((rawRealismScore - 70) / (100 - 70)) * 100;
-    const normalizedRealismScore = Math.max(0, Math.min(100, realismScore));
-    
-    // 総合スコア計算（重み付け）
-    const totalScore = 
+    // 総合スコア計算（重み付け + 現実性調整）
+    const weightedScore = 
       (voteScore * weightConfig.voteWeight / 100) +
       (teamNeedsScore * weightConfig.teamNeedsWeight / 100) +
-      (playerRatingScore * weightConfig.playerRatingWeight / 100) +
-      (normalizedRealismScore * weightConfig.realismWeight / 100);
+      (playerRatingScore * weightConfig.playerRatingWeight / 100);
+    
+    const totalScore = Math.max(0, Math.min(100, weightedScore + realismAdjustment));
     
     // 理由生成
     const reasons: string[] = [];
@@ -292,7 +287,7 @@ export async function calculateDraftScores(
         voteScore,
         teamNeedsScore,
         playerRating: playerRatingScore,
-        realismScore: normalizedRealismScore
+        realismAdjustment
       },
       reason
     };
