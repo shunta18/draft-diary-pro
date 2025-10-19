@@ -38,6 +38,38 @@ const getWaiverOrder = (round: number) => {
   return round % 2 === 1 ? oddRoundOrder : evenRoundOrder;
 };
 
+// スコアに基づいて確率的に選手を選択する関数
+function selectPlayerProbabilistically(
+  scores: DraftScore[], 
+  topN: number = 10
+): number {
+  if (scores.length === 0) return scores[0]?.playerId || 0;
+  
+  // 上位N名を取得（利用可能な選手数がtopNより少ない場合は全員）
+  const topScores = scores.slice(0, Math.min(topN, scores.length));
+  
+  // スコアを重みとして正規化
+  const totalWeight = topScores.reduce((sum, s) => sum + s.totalScore, 0);
+  
+  // 重みが0の場合は最上位を返す
+  if (totalWeight === 0) return topScores[0].playerId;
+  
+  // 0-totalWeight の乱数を生成
+  const random = Math.random() * totalWeight;
+  
+  // 累積重みで選手を選択
+  let cumulativeWeight = 0;
+  for (const score of topScores) {
+    cumulativeWeight += score.totalScore;
+    if (random <= cumulativeWeight) {
+      return score.playerId;
+    }
+  }
+  
+  // フォールバック（通常ここには到達しない）
+  return topScores[0].playerId;
+}
+
 export async function runDraftSimulation(
   allPlayers: NormalizedPlayer[],
   maxRounds: number = 10,
@@ -75,7 +107,7 @@ export async function runDraftSimulation(
         );
         topScore = scores.find(s => s.playerId === selectedPlayerId) || scores[0];
       } else {
-        // AIが自動で選択
+        // AIが自動で選択（確率的選択）
         const scores = await calculateDraftScores(
           round,
           teamId,
@@ -87,8 +119,11 @@ export async function runDraftSimulation(
         
         if (scores.length === 0) break;
         
-        topScore = scores[0];
-        selectedPlayerId = topScore.playerId;
+        // スコアに基づいて確率的に選手を選択
+        selectedPlayerId = selectPlayerProbabilistically(scores, 10);
+        
+        // 選択された選手のスコア情報を取得
+        topScore = scores.find(s => s.playerId === selectedPlayerId) || scores[0];
       }
       
       const selectedPlayer = availablePlayers.find(p => p.id === selectedPlayerId);
