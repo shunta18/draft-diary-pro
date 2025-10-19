@@ -249,6 +249,16 @@ export default function Players() {
       return;
     }
 
+    // インポートした選手はアップロード不可
+    if (player.imported_from_public_player_id) {
+      toast({
+        title: "アップロードできません",
+        description: "インポートした選手はアップロードできません。自分で作成した選手のみアップロード可能です。",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!player.id) {
       toast({
         title: "エラー",
@@ -513,14 +523,29 @@ export default function Players() {
               {selectedPlayerIds.length > 0 && (
                 <>
                   <Button
-                    onClick={() => handleBulkUpload(selectedPlayerIds)}
+                    onClick={() => {
+                      // インポートした選手を除外してアップロード
+                      const uploadablePlayerIds = selectedPlayerIds.filter(id => {
+                        const player = players.find(p => p.id === id);
+                        return player && !player.imported_from_public_player_id;
+                      });
+                      if (uploadablePlayerIds.length === 0) {
+                        toast({
+                          title: "アップロード可能な選手がありません",
+                          description: "インポートした選手はアップロードできません。",
+                          variant: "destructive",
+                        });
+                        return;
+                      }
+                      handleBulkUpload(uploadablePlayerIds);
+                    }}
                     variant="secondary"
                     size="sm"
                     disabled={isUploadingBulk || players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length === 0}
                     className="gap-2 w-full sm:w-auto"
                   >
                     <Upload className="h-4 w-4" />
-                    {isUploadingBulk ? "アップロード中..." : `選択した${selectedPlayerIds.length}名をアップロード`}
+                    {isUploadingBulk ? "アップロード中..." : `選択した${players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length}名をアップロード`}
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -788,6 +813,11 @@ export default function Players() {
                           <Badge className="bg-green-500 text-white text-xs flex-shrink-0">
                             <CheckCircle2 className="h-3 w-3 mr-1" />
                             公開中
+                          </Badge>
+                        )}
+                        {player.imported_from_public_player_id && (
+                          <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-300 flex-shrink-0">
+                            インポート
                           </Badge>
                         )}
                         {player.id === 1 && (
