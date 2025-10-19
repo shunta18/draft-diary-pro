@@ -1176,13 +1176,18 @@ export default function AIDraft() {
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 max-h-96 overflow-y-auto p-2">
+            <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto p-2">
               {picksCompleteInfo?.picks.map((pick) => {
                 const team = teams.find(t => t.id === pick.teamId);
                 return (
-                  <div key={pick.teamId} className="flex flex-col items-center p-4 rounded-lg bg-card border shadow-sm">
-                    <span className="text-sm font-medium text-muted-foreground mb-1">{team?.name}</span>
-                    <span className="text-lg font-bold">{pick.playerName}</span>
+                  <div 
+                    key={pick.teamId} 
+                    className={`flex flex-col items-center p-4 rounded-lg border shadow-sm bg-gradient-to-r ${team?.color} opacity-20`}
+                  >
+                    <div className="relative z-10">
+                      <span className="text-sm font-medium text-foreground mb-1 block text-center">{team?.name}</span>
+                      <span className="text-lg font-bold text-foreground block text-center">{pick.playerName}</span>
+                    </div>
                   </div>
                 );
               })}
