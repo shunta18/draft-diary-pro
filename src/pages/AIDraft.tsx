@@ -148,6 +148,13 @@ export default function AIDraft() {
     loadPlayers();
     loadWeights();
     checkAdmin();
+  }, []);
+
+  // userが変更されたときに再読み込み
+  useEffect(() => {
+    if (user) {
+      loadWeights();
+    }
   }, [user]);
 
   // リアルタイム更新の監視
@@ -196,23 +203,36 @@ export default function AIDraft() {
 
   const loadWeights = async () => {
     try {
-      const { data, error } = await supabase
-        .from("draft_scoring_weights")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      
-      if (error) throw error;
-      
-      if (data) {
-        setWeights({
-          voteWeight: data.vote_weight,
-          teamNeedsWeight: data.team_needs_weight,
-          playerRatingWeight: data.player_rating_weight,
-          realismWeight: data.realism_weight
-        });
-        setWeightId(data.id);
+      // まずLocalStorageから読み込み
+      const savedWeights = localStorage.getItem('aiDraftWeights');
+      if (savedWeights) {
+        const parsed = JSON.parse(savedWeights);
+        setWeights(parsed);
+      }
+
+      // ログインユーザーの場合はSupabaseから読み込み（上書き）
+      if (user) {
+        const { data, error } = await supabase
+          .from("draft_scoring_weights")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (error) throw error;
+        
+        if (data) {
+          const dbWeights = {
+            voteWeight: data.vote_weight,
+            teamNeedsWeight: data.team_needs_weight,
+            playerRatingWeight: data.player_rating_weight,
+            realismWeight: data.realism_weight
+          };
+          setWeights(dbWeights);
+          setWeightId(data.id);
+          // LocalStorageにも保存
+          localStorage.setItem('aiDraftWeights', JSON.stringify(dbWeights));
+        }
       }
     } catch (error) {
       console.error("Error loading weights:", error);
@@ -304,8 +324,6 @@ export default function AIDraft() {
   });
 
   const saveWeights = async (newWeights: WeightConfig) => {
-    if (!isAdmin) return;
-    
     const sum = newWeights.voteWeight + newWeights.teamNeedsWeight + 
                 newWeights.playerRatingWeight + newWeights.realismWeight;
     
@@ -314,6 +332,18 @@ export default function AIDraft() {
         title: "エラー",
         description: "重みの合計が100%になるように調整してください",
         variant: "destructive",
+      });
+      return;
+    }
+    
+    // LocalStorageに保存（全ユーザー共通）
+    localStorage.setItem('aiDraftWeights', JSON.stringify(newWeights));
+    
+    // 管理者の場合はSupabaseにも保存
+    if (!isAdmin) {
+      toast({
+        title: "保存完了",
+        description: "設定を保存しました（ローカルのみ）",
       });
       return;
     }
@@ -358,7 +388,7 @@ export default function AIDraft() {
       console.error("Error saving weights:", error);
       toast({
         title: "エラー",
-        description: "重みの保存に失敗しました",
+        description: "重みの保存に失敗しました（ローカルには保存されています）",
         variant: "destructive",
       });
     }
