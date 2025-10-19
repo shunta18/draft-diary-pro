@@ -867,12 +867,7 @@ export default function AIDraft() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
-              <div className="flex gap-2 flex-wrap">
-                <Button onClick={() => setShowFullScreen(true)} variant="outline" size="sm" className="flex-1 sm:flex-none">
-                  <Maximize2 className="w-4 h-4 mr-2" />
-                  全画面表示
-                </Button>
-                <Button onClick={() => {
+              <Button onClick={() => {
                   if (!simulationResult) return;
                   
                   // シミュレーション結果から、最後にユーザーが指名した後の次のラウンドと球団を見つける
@@ -919,7 +914,6 @@ export default function AIDraft() {
                 }} variant="outline" size="sm" className="flex-1 sm:flex-none">
                   指名に戻る
                 </Button>
-              </div>
             </div>
 
             <Tabs defaultValue="overall" className="w-full">
@@ -929,6 +923,17 @@ export default function AIDraft() {
               </TabsList>
               
               <TabsContent value="overall">
+                <div className="flex justify-end mb-4">
+                  <Button
+                    onClick={() => setShowFullScreen(true)}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                  >
+                    <Maximize2 className="h-4 w-4" />
+                    📸 全画面で表示（スクショ用）
+                  </Button>
+                </div>
                 <Card>
                   <CardContent className="p-6 overflow-x-auto">
                     <Table>
