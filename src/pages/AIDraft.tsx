@@ -908,8 +908,80 @@ export default function AIDraft() {
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
               <Button 
                 onClick={() => {
+                  if (!simulationResult) return;
+                  
+                  // 現在の結果から続きを再開
                   setAnimationEnabled(true);
-                  handleStartSimulation();
+                  setSimulating(true);
+                  setShowSinglePickComplete(true);
+                  
+                  // 最後に指名された選手を取得して、次の指名情報を設定
+                  const allPicks = simulationResult.picks;
+                  const maxRoundPicked = Math.max(...allPicks.map(p => p.round));
+                  
+                  // 次のラウンドを計算
+                  let nextRound = maxRoundPicked;
+                  const picksInMaxRound = allPicks.filter(p => p.round === maxRoundPicked);
+                  
+                  if (picksInMaxRound.length >= 12) {
+                    // 全球団が指名済みなら次のラウンドへ
+                    nextRound = maxRoundPicked + 1;
+                  }
+                  
+                  if (nextRound > maxRounds) {
+                    toast({
+                      title: "シミュレーション完了",
+                      description: "すべての巡が完了しています",
+                    });
+                    return;
+                  }
+                  
+                  // ウェーバー順（最下位から）で次に指名する球団を見つける
+                  const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+                  const alreadyPickedTeams = allPicks.filter(p => p.round === nextRound).map(p => p.teamId);
+                  const nextTeamId = waiverOrder.find(teamId => !alreadyPickedTeams.includes(teamId));
+                  
+                  if (!nextTeamId) {
+                    toast({
+                      title: "エラー",
+                      description: "次の指名球団が見つかりません",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  // 既に指名された選手を除外
+                  const pickedPlayerIds = allPicks.map(p => p.playerId);
+                  const availablePlayers = players.filter(p => !pickedPlayerIds.includes(p.id));
+                  
+                  // 次の選手を選択（簡易的にAIが選択）
+                  const nextPlayer = availablePlayers[0];
+                  if (!nextPlayer) {
+                    toast({
+                      title: "エラー",
+                      description: "利用可能な選手がいません",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
+                  // ダイアログ情報を設定してシミュレーション続行の準備
+                  setSinglePickInfo({
+                    round: nextRound,
+                    teamId: nextTeamId,
+                    playerName: nextPlayer.name,
+                    playerTeam: nextPlayer.team,
+                    playerPosition: Array.isArray(nextPlayer.position) ? nextPlayer.position[0] : nextPlayer.position
+                  });
+                  
+                  // 続きからシミュレーションを再開するためのresolveを設定
+                  setSinglePickResolve(() => () => {
+                    // 次へボタンを押したときの処理を継続
+                    setShowSinglePickComplete(false);
+                    
+                    // ここから新しいシミュレーションを開始
+                    handleStartSimulation();
+                  });
                 }} 
                 variant="outline" 
                 size="sm" 
@@ -1129,8 +1201,18 @@ export default function AIDraft() {
       <Footer />
 
         {/* 2巡目以降の単一指名完了ダイアログ */}
-        <Dialog open={showSinglePickComplete} onOpenChange={setShowSinglePickComplete}>
-          <DialogContent className="max-w-md" hideCloseButton={true}>
+        <Dialog open={showSinglePickComplete} onOpenChange={(open) => {
+          if (!open) {
+            // ✕ボタンで閉じた場合、シミュレーションを中断して結果を表示
+            if (singlePickResolve) {
+              singlePickResolve();
+              setSinglePickResolve(null);
+            }
+            setShowSinglePickComplete(false);
+            setAnimationEnabled(false);
+          }
+        }}>
+          <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle className="text-xl font-bold">
               {singlePickInfo && `第${singlePickInfo.round}巡目`}
@@ -1161,34 +1243,18 @@ export default function AIDraft() {
                 </div>
               </div>
               
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    if (singlePickResolve) {
-                      singlePickResolve();
-                      setSinglePickResolve(null);
-                    }
-                    setShowSinglePickComplete(false);
-                    setAnimationEnabled(false);
-                  }}
-                  className="flex-1"
-                >
-                  中断して結果を表示
-                </Button>
-                <Button
-                  onClick={() => {
-                    if (singlePickResolve) {
-                      singlePickResolve();
-                      setSinglePickResolve(null);
-                    }
-                    setShowSinglePickComplete(false);
-                  }}
-                  className="flex-1"
-                >
-                  次へ
-                </Button>
-              </div>
+              <Button
+                onClick={() => {
+                  if (singlePickResolve) {
+                    singlePickResolve();
+                    setSinglePickResolve(null);
+                  }
+                  setShowSinglePickComplete(false);
+                }}
+                className="w-full"
+              >
+                次へ
+              </Button>
             </div>
           )}
         </DialogContent>
