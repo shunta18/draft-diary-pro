@@ -1512,169 +1512,171 @@ export default function AIDraft() {
       {/* 全画面表示ダイアログ */}
       <Dialog open={showFullScreen} onOpenChange={setShowFullScreen}>
         <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white" hideCloseButton>
-          <div className="h-full w-full flex flex-col relative">
-            {/* ズームコントロールボタン */}
-            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
-              <Button
-                onClick={handleZoomIn}
-                size="icon"
-                className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
-                disabled={zoomLevel >= 1.0}
-              >
-                <span className="text-xl font-bold">＋</span>
-              </Button>
-              <Button
-                onClick={handleZoomOut}
-                size="icon"
-                className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
-                disabled={zoomLevel <= 0.3}
-              >
-                <span className="text-xl font-bold">−</span>
-              </Button>
-              <Button
-                onClick={handleZoomReset}
-                size="sm"
-                className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
-              >
-                リセット
-              </Button>
-              <DialogClose asChild>
+          {simulationResult && (
+            <div className="h-full w-full flex flex-col relative">
+              {/* ズームコントロールボタン */}
+              <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
                 <Button
+                  onClick={handleZoomIn}
+                  size="icon"
+                  className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
+                  disabled={zoomLevel >= 1.0}
+                >
+                  <span className="text-xl font-bold">＋</span>
+                </Button>
+                <Button
+                  onClick={handleZoomOut}
+                  size="icon"
+                  className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
+                  disabled={zoomLevel <= 0.3}
+                >
+                  <span className="text-xl font-bold">−</span>
+                </Button>
+                <Button
+                  onClick={handleZoomReset}
                   size="sm"
                   className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
                 >
-                  閉じる
+                  リセット
                 </Button>
-              </DialogClose>
-            </div>
-            
-            <div className="flex-1 flex items-start justify-start py-16 px-0.5 md:p-4 overflow-auto w-full">
-              <div className="flex flex-col items-start w-full">
-                {/* ロゴとブランディング */}
-                <div className="mb-2 md:mb-3 w-full flex justify-start">
-                  <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
-                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-4 md:h-8 w-auto" />
-                    <span className="font-semibold text-sm md:text-lg text-black">BaaS 野球スカウトノート</span>
+                <DialogClose asChild>
+                  <Button
+                    size="sm"
+                    className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
+                  >
+                    閉じる
+                  </Button>
+                </DialogClose>
+              </div>
+              
+              <div className="flex-1 flex items-start justify-start py-16 px-0.5 md:p-4 overflow-auto w-full">
+                <div className="flex flex-col items-start w-full">
+                  {/* ロゴとブランディング */}
+                  <div className="mb-2 md:mb-3 w-full flex justify-start">
+                    <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
+                      <img src="/mustache-logo.png" alt="BaaS Logo" className="h-4 md:h-8 w-auto" />
+                      <span className="font-semibold text-sm md:text-lg text-black">BaaS 野球スカウトノート</span>
+                    </div>
                   </div>
-                </div>
-                
-                {/* テーブル */}
-                <div className="overflow-visible w-full">
-                  <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }} className="transition-transform duration-200">
-                    <Table className="border-collapse text-[9px]">
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="whitespace-nowrap bg-white text-black px-0.5 py-0.5 border border-gray-300 font-semibold w-8 text-center text-[9px]"></TableHead>
-                          {displayOrder.map(teamId => {
-                            const team = teams.find(t => t.id === teamId);
-                            if (!team) return null;
-                            return (
-                              <TableHead 
-                                key={team.id} 
-                                className="whitespace-nowrap text-center font-bold border border-gray-300 px-0.5 py-[3px] text-white min-w-[60px] w-[60px] text-[9px]"
-                                style={{
-                                  background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
-                                }}
-                              >
-                                {team.shortName}
-                              </TableHead>
-                            );
-                          })}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {(() => {
-                          const firstRoundPicks = simulationResult!.picks.filter(p => p.round === 1);
-                          const firstRoundLostPicks = simulationResult!.lostPicks?.filter(p => p.round === 1) || [];
-                          
-                          const maxRound = Math.max(...simulationResult!.picks.map(p => p.round));
-                          const rows = [];
-                          
-                          if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
-                            const rowsPerTeam = displayOrder.map(teamId => {
-                              const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
-                              const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
-                              return teamPicks.length + teamLostPicks.length;
-                            });
-                            const maxRowsTotal = Math.max(...rowsPerTeam, 1);
+                  
+                  {/* テーブル */}
+                  <div className="overflow-visible w-full">
+                    <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }} className="transition-transform duration-200">
+                      <Table className="border-collapse text-[9px]">
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="whitespace-nowrap bg-white text-black px-0.5 py-0.5 border border-gray-300 font-semibold w-8 text-center text-[9px]"></TableHead>
+                            {displayOrder.map(teamId => {
+                              const team = teams.find(t => t.id === teamId);
+                              if (!team) return null;
+                              return (
+                                <TableHead 
+                                  key={team.id} 
+                                  className="whitespace-nowrap text-center font-bold border border-gray-300 px-0.5 py-[3px] text-white min-w-[60px] w-[60px] text-[9px]"
+                                  style={{
+                                    background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
+                                  }}
+                                >
+                                  {team.shortName}
+                                </TableHead>
+                              );
+                            })}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {(() => {
+                            const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
+                            const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
                             
-                            for (let rowIndex = 0; rowIndex < maxRowsTotal; rowIndex++) {
+                            const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
+                            const rows = [];
+                            
+                            if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
+                              const rowsPerTeam = displayOrder.map(teamId => {
+                                const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
+                                const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
+                                return teamPicks.length + teamLostPicks.length;
+                              });
+                              const maxRowsTotal = Math.max(...rowsPerTeam, 1);
+                              
+                              for (let rowIndex = 0; rowIndex < maxRowsTotal; rowIndex++) {
+                                rows.push(
+                                  <TableRow key={`round-1-${rowIndex}`}>
+                                    {rowIndex === 0 && (
+                                      <TableCell 
+                                        rowSpan={maxRowsTotal}
+                                        className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]"
+                                      >
+                                        1位
+                                      </TableCell>
+                                    )}
+                                    {displayOrder.map(teamId => {
+                                      const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
+                                      const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
+                                      const allTeamItems = [...teamLostPicks.map(lp => ({ type: 'lost', data: lp })), ...teamPicks.map(p => ({ type: 'pick', data: p }))];
+                                      
+                                      if (rowIndex >= allTeamItems.length) {
+                                        return (
+                                          <TableCell key={teamId} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
+                                            ―
+                                          </TableCell>
+                                        );
+                                      }
+                                      
+                                      const item = allTeamItems[rowIndex];
+                                      
+                                      if (item.type === 'lost') {
+                                        return (
+                                          <TableCell key={teamId} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
+                                            {item.data.playerName}
+                                          </TableCell>
+                                        );
+                                      } else {
+                                        const player = players.find(p => p.id === item.data.playerId);
+                                        return (
+                                          <TableCell key={teamId} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
+                                            {player ? player.name : "―"}
+                                          </TableCell>
+                                        );
+                                      }
+                                    })}
+                                  </TableRow>
+                                );
+                              }
+                            }
+                            
+                            for (let round = 2; round <= maxRound; round++) {
                               rows.push(
-                                <TableRow key={`round-1-${rowIndex}`}>
-                                  {rowIndex === 0 && (
-                                    <TableCell 
-                                      rowSpan={maxRowsTotal}
-                                      className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]"
-                                    >
-                                      1位
-                                    </TableCell>
-                                  )}
+                                <TableRow key={`round-${round}`}>
+                                  <TableCell className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]">
+                                    {round}位
+                                  </TableCell>
                                   {displayOrder.map(teamId => {
-                                    const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
-                                    const teamLostPicks = firstRoundLostPicks.filter(lp => lp.teamId === teamId);
-                                    const allTeamItems = [...teamLostPicks.map(lp => ({ type: 'lost', data: lp })), ...teamPicks.map(p => ({ type: 'pick', data: p }))];
+                                    const team = teams.find(t => t.id === teamId);
+                                    if (!team) return null;
+                                    const pick = simulationResult.picks.find(p => p.teamId === teamId && p.round === round);
+                                    const player = pick ? players.find(p => p.id === pick.playerId) : null;
                                     
-                                    if (rowIndex >= allTeamItems.length) {
-                                      return (
-                                        <TableCell key={teamId} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
-                                          ―
-                                        </TableCell>
-                                      );
-                                    }
-                                    
-                                    const item = allTeamItems[rowIndex];
-                                    
-                                    if (item.type === 'lost') {
-                                      return (
-                                        <TableCell key={teamId} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
-                                          {item.data.playerName}
-                                        </TableCell>
-                                      );
-                                    } else {
-                                      const player = players.find(p => p.id === item.data.playerId);
-                                      return (
-                                        <TableCell key={teamId} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
-                                          {player ? player.name : "―"}
-                                        </TableCell>
-                                      );
-                                    }
+                                    return (
+                                      <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
+                                        {player ? player.name : "―"}
+                                      </TableCell>
+                                    );
                                   })}
                                 </TableRow>
                               );
                             }
-                          }
-                          
-                          for (let round = 2; round <= maxRound; round++) {
-                            rows.push(
-                              <TableRow key={`round-${round}`}>
-                                <TableCell className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]">
-                                  {round}位
-                                </TableCell>
-                                {displayOrder.map(teamId => {
-                                  const team = teams.find(t => t.id === teamId);
-                                  if (!team) return null;
-                                  const pick = simulationResult!.picks.find(p => p.teamId === teamId && p.round === round);
-                                  const player = pick ? players.find(p => p.id === pick.playerId) : null;
-                                  
-                                  return (
-                                    <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
-                                      {player ? player.name : "―"}
-                                    </TableCell>
-                                  );
-                                })}
-                              </TableRow>
-                            );
-                          }
-                          
-                          return rows;
-                        })()}
-                      </TableBody>
-                    </Table>
+                            
+                            return rows;
+                          })()}
+                        </TableBody>
+                      </Table>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
