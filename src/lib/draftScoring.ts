@@ -63,24 +63,38 @@ interface VoteData {
 const evaluatePlayerRating = (evaluations: string[]): number => {
   if (!evaluations || evaluations.length === 0) return 50;
   
-  let score = 50; // ベーススコア
+  // 順位評価の点数マッピング
+  const rankScores: { [key: string]: number } = {
+    '1位競合': 100,
+    '1位一本釣り': 95,
+    '外れ1位': 90,
+    '2位': 80,
+    '3位': 70,
+    '4位': 60,
+    '5位': 50,
+    '6位以下': 40,
+    '育成': 30
+  };
   
+  const foundScores: number[] = [];
+  
+  // 各評価文字列から順位評価を探す
   evaluations.forEach(evaluation => {
-    const lowerEval = evaluation.toLowerCase();
-    
-    // ポジティブキーワード
-    if (lowerEval.includes('最速') || lowerEval.includes('155') || lowerEval.includes('150')) score += 15;
-    if (lowerEval.includes('打率') || lowerEval.includes('.3')) score += 10;
-    if (lowerEval.includes('本塁打') || lowerEval.includes('ホームラン')) score += 10;
-    if (lowerEval.includes('好打')) score += 8;
-    if (lowerEval.includes('俊足') || lowerEval.includes('走力')) score += 8;
-    if (lowerEval.includes('強肩')) score += 7;
-    if (lowerEval.includes('守備') && lowerEval.includes('優れ')) score += 7;
-    if (lowerEval.includes('リーダーシップ') || lowerEval.includes('キャプテン')) score += 5;
-    if (lowerEval.includes('実績')) score += 5;
+    for (const [rank, score] of Object.entries(rankScores)) {
+      if (evaluation.includes(rank)) {
+        foundScores.push(score);
+        break; // 1つの評価文字列につき1つの順位評価のみ
+      }
+    }
   });
   
-  return Math.min(100, score);
+  // 順位評価が見つからない場合はデフォルト50点
+  if (foundScores.length === 0) return 50;
+  
+  // 複数の順位評価がある場合は平均値を計算
+  const averageScore = foundScores.reduce((sum, score) => sum + score, 0) / foundScores.length;
+  
+  return Math.round(averageScore);
 };
 
 // ポジションマッチングスコアを計算
