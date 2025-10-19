@@ -173,6 +173,7 @@ export default function AIDraft() {
     playerPosition: string;
   } | null>(null);
   const [singlePickResolve, setSinglePickResolve] = useState<(() => void) | null>(null);
+  const [shouldStopSimulation, setShouldStopSimulation] = useState(false);
   
   
   // スコアリング重み設定
@@ -538,17 +539,23 @@ export default function AIDraft() {
         },
         // 2巡目以降の各指名完了時
         animationEnabled ? async (round, teamId, pick) => {
-          return new Promise<void>((resolve) => {
-            setSinglePickInfo({
-              round,
-              teamId,
-              playerName: pick.playerName,
-              playerTeam: pick.playerTeam,
-              playerPosition: pick.playerPosition
-            });
-            setShowSinglePickComplete(true);
-            setSinglePickResolve(() => resolve);
+          if (!animationEnabled) return { shouldContinue: false };
+          
+          setSinglePickInfo({
+            round,
+            teamId,
+            playerName: pick.playerName,
+            playerTeam: pick.playerTeam,
+            playerPosition: pick.playerPosition
           });
+          
+          await new Promise<void>((resolve) => {
+            setSinglePickResolve(() => resolve);
+            setShowSinglePickComplete(true);
+          });
+          
+          // 中断フラグをチェック
+          return { shouldContinue: !shouldStopSimulation };
         } : undefined
       );
       
@@ -906,7 +913,7 @@ export default function AIDraft() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
-              <Button 
+               <Button 
                 onClick={() => {
                   if (!simulationResult) return;
                   
@@ -914,6 +921,7 @@ export default function AIDraft() {
                   setAnimationEnabled(true);
                   setSimulating(true);
                   setShowSinglePickComplete(true);
+                  setShouldStopSimulation(false);
                   
                   // 最後に指名された選手を取得して、次の指名情報を設定
                   const allPicks = simulationResult.picks;
@@ -1204,12 +1212,10 @@ export default function AIDraft() {
         <Dialog open={showSinglePickComplete} onOpenChange={(open) => {
           if (!open) {
             // ✕ボタンで閉じた場合、シミュレーションを中断
-            setAnimationEnabled(false); // 先にアニメーションを無効化
+            setShouldStopSimulation(true);
+            setAnimationEnabled(false);
             setShowSinglePickComplete(false);
-            if (singlePickResolve) {
-              singlePickResolve(); // Promiseを解決（次のコールバックは無効化されているので呼ばれない）
-              setSinglePickResolve(null);
-            }
+            // singlePickResolve()は呼ばない（シミュレーションを停止）
           }
         }}>
           <DialogContent className="max-w-md">
@@ -1245,7 +1251,8 @@ export default function AIDraft() {
               
               <Button
                 onClick={() => {
-                  if (singlePickResolve) {
+                  // shouldStopSimulationがtrueの場合は何もしない
+                  if (!shouldStopSimulation && singlePickResolve) {
                     singlePickResolve();
                     setSinglePickResolve(null);
                   }
