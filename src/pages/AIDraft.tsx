@@ -934,11 +934,13 @@ export default function AIDraft() {
                   
                   if (interruptedPickInfo) {
                     // 中断した位置の情報がある場合は、そこから再開
+                    console.log('中断位置から再開:', interruptedPickInfo);
                     nextRound = interruptedPickInfo.round;
                     nextTeamIndex = interruptedPickInfo.teamIndex;
                     setInterruptedPickInfo(null); // 使用後はクリア
                   } else {
                     // 中断情報がない場合は、従来通りpicksから計算
+                    console.log('中断情報なし - picksから計算');
                     const allPicks = simulationResult.picks;
                     const maxRoundPicked = Math.max(...allPicks.map(p => p.round));
                     
@@ -963,6 +965,8 @@ export default function AIDraft() {
                     const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
                     const alreadyPickedTeams = allPicks.filter(p => p.round === nextRound).map(p => p.teamId);
                     nextTeamIndex = waiverOrder.findIndex(teamId => !alreadyPickedTeams.includes(teamId));
+                    
+                    console.log('計算結果:', { nextRound, nextTeamIndex, alreadyPickedTeams });
                     
                     if (nextTeamIndex === -1) {
                       toast({
@@ -1262,10 +1266,16 @@ export default function AIDraft() {
 
         {/* 2巡目以降の単一指名完了ダイアログ */}
         <Dialog open={showSinglePickComplete} onOpenChange={(open) => {
-          if (!open && showSinglePickComplete && singlePickInfo) {
+          if (!open && singlePickInfo) {
             // 中断した位置を保存
             const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
             const teamIndex = waiverOrder.indexOf(singlePickInfo.teamId);
+            console.log('中断情報を保存:', {
+              round: singlePickInfo.round,
+              teamId: singlePickInfo.teamId,
+              teamIndex: teamIndex,
+              playerName: singlePickInfo.playerName
+            });
             setInterruptedPickInfo({
               round: singlePickInfo.round,
               teamIndex: teamIndex
