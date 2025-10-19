@@ -89,7 +89,7 @@ export async function runDraftSimulation(
     // 1巡目は抽選制（全球団が全選手から選択可能）
     if (round === 1) {
       let remainingTeams = [...waiverOrder]; // 指名する球団リスト
-      let pickLabel = 1; // 1位、外れ1位、外れ2位...のカウンター
+      let pickRound = 1; // 1位、外れ1位、外れ2位...のカウンター
       
       // 外れ1位、外れ2位...を繰り返し処理
       while (remainingTeams.length > 0) {
@@ -171,13 +171,22 @@ export async function runDraftSimulation(
           );
           const topScore = scores.find(s => s.playerId === playerId) || scores[0];
           
+          // ラベルを生成（1位、外れ1位、外れ2位...）
+          let label = "";
+          if (pickRound === 1) {
+            label = "1位";
+          } else {
+            label = `外れ${pickRound - 1}位`;
+          }
+          
           const newPick: DraftPick = {
             teamId: pickInfo.teamId,
             playerId: selectedPlayer.id,
             playerName: selectedPlayer.name,
             round,
             isContested: pickInfo.isContested,
-            contestedTeams: pickInfo.contestedTeams
+            contestedTeams: pickInfo.contestedTeams,
+            pickLabel: label
           };
           
           picks.push(newPick);
@@ -195,7 +204,7 @@ export async function runDraftSimulation(
         
         // 次のラウンドは外れた球団のみ
         remainingTeams = losingTeams;
-        pickLabel++;
+        pickRound++;
         
         // 選手がいなくなったら終了
         if (availablePlayers.length === 0) break;

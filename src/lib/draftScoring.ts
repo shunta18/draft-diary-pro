@@ -51,6 +51,7 @@ export interface DraftPick {
   isDevelopment?: boolean;
   isContested?: boolean; // 競合指名かどうか
   contestedTeams?: number[]; // 競合した球団のリスト
+  pickLabel?: string; // "1位", "外れ1位", "外れ2位" などのラベル
 }
 
 interface VoteData {

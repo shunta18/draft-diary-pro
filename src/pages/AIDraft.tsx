@@ -715,10 +715,49 @@ export default function AIDraft() {
                   </TableHeader>
                   <TableBody>
                     {(() => {
+                      // 1巡目の指名をpickLabelでグループ化
+                      const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
+                      const firstRoundLabels = [...new Set(firstRoundPicks.map(p => p.pickLabel || "1位"))];
+                      
                       const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
                       const rows = [];
                       
-                      for (let round = 1; round <= maxRound; round++) {
+                      // 1巡目は特別処理（1位、外れ1位、外れ2位...を表示）
+                      if (firstRoundLabels.length > 0) {
+                        firstRoundLabels.forEach(label => {
+                          rows.push(
+                            <TableRow key={`round-1-${label}`}>
+                              <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r">
+                                {label}
+                              </TableCell>
+                              {displayOrder.map(teamId => {
+                                const team = teams.find(t => t.id === teamId);
+                                if (!team) return null;
+                                const pick = firstRoundPicks.find(p => p.teamId === teamId && p.pickLabel === label);
+                                const player = pick ? players.find(p => p.id === pick.playerId) : null;
+                                
+                                return (
+                                  <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r">
+                                    {player ? (
+                                      <div className="flex flex-col items-center gap-1">
+                                        <span>{player.name}</span>
+                                        {pick?.isContested && (
+                                          <Badge variant="destructive" className="text-[10px] px-1 py-0">
+                                            ⚡️競合
+                                          </Badge>
+                                        )}
+                                      </div>
+                                    ) : "―"}
+                                  </TableCell>
+                                );
+                              })}
+                            </TableRow>
+                          );
+                        });
+                      }
+                      
+                      // 2巡目以降は通常表示
+                      for (let round = 2; round <= maxRound; round++) {
                         rows.push(
                           <TableRow key={`round-${round}`}>
                             <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r">
@@ -732,16 +771,7 @@ export default function AIDraft() {
                               
                               return (
                                 <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r">
-                                  {player ? (
-                                    <div className="flex flex-col items-center gap-1">
-                                      <span>{player.name}</span>
-                                      {pick?.isContested && (
-                                        <Badge variant="destructive" className="text-[10px] px-1 py-0">
-                                          ⚡️競合
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  ) : "―"}
+                                  {player ? player.name : "―"}
                                 </TableCell>
                               );
                             })}
