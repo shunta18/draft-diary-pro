@@ -28,6 +28,8 @@ export interface Player {
   videos?: string[];
   is_favorite?: boolean;
   imported_from_public_player_id?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface DiaryEntry {

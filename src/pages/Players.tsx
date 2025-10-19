@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { DuplicatePlayerChecker } from "@/components/DuplicatePlayerChecker";
 
 
 const evaluationColors = {
@@ -480,17 +481,25 @@ export default function Players() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 flex-wrap">
-            <Link to="/players/new" className="flex-1 sm:flex-none">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            <Link to="/players/new">
               <Button 
                 variant="secondary"
-                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth w-full h-10"
+                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth h-10"
               >
-                <Plus className="h-4 w-4 sm:mr-2" />
-                <span className="hidden sm:inline">新規選手追加</span>
-                <span className="sm:hidden">新規</span>
+                <Plus className="h-4 w-4 mr-2" />
+                新規選手追加
               </Button>
             </Link>
+            
+            {user && players.length > 0 && (
+              <div className="w-full sm:w-auto sm:max-w-sm">
+                <DuplicatePlayerChecker players={players} onPlayersUpdated={loadPlayers} />
+              </div>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2 flex-wrap mt-3">
           </div>
         </div>
       </div>
