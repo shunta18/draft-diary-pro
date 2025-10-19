@@ -86,7 +86,8 @@ export async function runDraftSimulation(
   draftYear: string = "2025",
   onRoundComplete?: (round: number, partialResult: SimulationResult | null) => void,
   userTeamIds?: number[],
-  onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>
+  onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>,
+  onLotteryFound?: (lotteries: Array<{ playerName: string; team: string; position: string; competingTeamIds: number[]; winnerId: number }>) => Promise<void>
 ): Promise<SimulationResult> {
   const picks: DraftPick[] = [];
   const lostPicks: LostPick[] = [];
@@ -146,6 +147,7 @@ export async function runDraftSimulation(
         // 当選した球団と外れた球団を記録
         const winningPicks = new Map<number, { teamId: number; isContested: boolean; contestedTeams: number[] }>();
         const losingTeams: number[] = [];
+        const currentLotteries: Array<{ playerName: string; team: string; position: string; competingTeamIds: number[]; winnerId: number }> = [];
         
         playerToTeams.forEach((teams, playerId) => {
           if (teams.length === 1) {
@@ -156,6 +158,19 @@ export async function runDraftSimulation(
             const winnerIndex = Math.floor(Math.random() * teams.length);
             const winner = teams[winnerIndex];
             winningPicks.set(playerId, { teamId: winner, isContested: true, contestedTeams: teams });
+            
+            // 抽選情報を記録
+            const player = availablePlayers.find(p => p.id === playerId);
+            if (player) {
+              const positionStr = Array.isArray(player.position) ? player.position.join("、") : player.position;
+              currentLotteries.push({
+                playerName: player.name,
+                team: player.team,
+                position: positionStr,
+                competingTeamIds: teams,
+                winnerId: winner
+              });
+            }
             
             // 外れた球団を記録（lostPicksに追加）
             teams.forEach((t, i) => {
@@ -177,6 +192,11 @@ export async function runDraftSimulation(
             });
           }
         });
+        
+        // 抽選アニメーションがある場合は表示
+        if (currentLotteries.length > 0 && onLotteryFound) {
+          await onLotteryFound(currentLotteries);
+        }
         
         // 当選した指名をpicksに追加し、選手をavailablePlayersから除外
         for (const [playerId, pickInfo] of winningPicks) {

@@ -132,6 +132,7 @@ export default function AIDraft() {
     winnerId: number;
   }>>>([]);
   const [currentLotteryIndex, setCurrentLotteryIndex] = useState(0);
+  const [lotteryResolve, setLotteryResolve] = useState<(() => void) | null>(null);
   const [showLottery, setShowLottery] = useState(false);
   const [animationEnabled, setAnimationEnabled] = useState(true);
   
@@ -429,69 +430,25 @@ export default function AIDraft() {
           return new Promise<number>((resolve) => {
             setPendingPickResolve(() => resolve);
           });
+        } : undefined,
+        animationEnabled ? async (lotteries) => {
+          // 抽選が発生したタイミングでアニメーションを表示
+          return new Promise<void>((resolve) => {
+            setLotteryQueue([lotteries]);
+            setCurrentLotteryIndex(0);
+            setShowLottery(true);
+            setLotteryResolve(() => resolve);
+          });
         } : undefined
       );
-      
-      // 競合した抽選をキューに追加
-      const lotteries: Array<Array<{
-        playerName: string;
-        team: string;
-        position: string;
-        competingTeamIds: number[];
-        winnerId: number;
-      }>> = [];
-      
-      // 同一ラウンドの競合をグループ化
-      const roundGroups = new Map<number, typeof lotteries[0]>();
-      
-      result.picks.forEach(pick => {
-        if (pick.isContested && pick.contestedTeams && pick.contestedTeams.length > 1) {
-          const player = players.find(p => p.id === pick.playerId);
-          if (player) {
-            const positionStr = Array.isArray(player.position) ? player.position.join("、") : player.position;
-            const lotteryItem = {
-              playerName: player.name,
-              team: player.team,
-              position: positionStr,
-              competingTeamIds: pick.contestedTeams,
-              winnerId: pick.teamId
-            };
-            
-            if (!roundGroups.has(pick.round)) {
-              roundGroups.set(pick.round, []);
-            }
-            roundGroups.get(pick.round)!.push(lotteryItem);
-          }
-        }
-      });
-      
-      // ラウンド順にソートして配列に変換
-      const sortedRounds = Array.from(roundGroups.keys()).sort((a, b) => a - b);
-      sortedRounds.forEach(round => {
-        const group = roundGroups.get(round);
-        if (group) {
-          lotteries.push(group);
-        }
-      });
       
       // 結果を必ずセット
       setSimulationResult(result);
       
-      // デバッグ情報
-      console.log('Lotteries found:', lotteries.length);
-      console.log('Animation enabled:', animationEnabled);
-      console.log('Lottery data:', lotteries);
-      
-      if (lotteries.length > 0 && animationEnabled) {
-        setLotteryQueue(lotteries);
-        setCurrentLotteryIndex(0);
-        setShowLottery(true);
-      } else {
-        toast({
-          title: "シミュレーション完了",
-          description: `${result.picks.length}名の指名が完了しました`,
-        });
-      }
+      toast({
+        title: "シミュレーション完了",
+        description: `${result.picks.length}名の指名が完了しました`,
+      });
     } catch (error) {
       console.error("Simulation error:", error);
       toast({
@@ -511,11 +468,11 @@ export default function AIDraft() {
     } else {
       // 全ての抽選が完了
       setShowLottery(false);
-      if (simulationResult) {
-        toast({
-          title: "シミュレーション完了",
-          description: `${simulationResult.picks.length}名の指名が完了しました`,
-        });
+      
+      // シミュレーション再開のためにresolveを呼び出す
+      if (lotteryResolve) {
+        lotteryResolve();
+        setLotteryResolve(null);
       }
     }
   };
