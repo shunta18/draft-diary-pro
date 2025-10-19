@@ -132,6 +132,7 @@ export default function AIDraft() {
   }>>>([]);
   const [currentLotteryIndex, setCurrentLotteryIndex] = useState(0);
   const [showLottery, setShowLottery] = useState(false);
+  const [animationEnabled, setAnimationEnabled] = useState(true);
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
@@ -445,7 +446,7 @@ export default function AIDraft() {
         }
       });
       
-      if (lotteries.length > 0) {
+      if (lotteries.length > 0 && animationEnabled) {
         setLotteryQueue(lotteries);
         setCurrentLotteryIndex(0);
         setShowLottery(true);
@@ -756,6 +757,20 @@ export default function AIDraft() {
               {simulating && (
                 <Progress value={(currentSimulationRound / maxRounds) * 100} className="w-64" />
               )}
+              <div className="flex items-center gap-2 pt-2">
+                <Checkbox
+                  id="animation-toggle"
+                  checked={animationEnabled}
+                  onCheckedChange={(checked) => setAnimationEnabled(checked as boolean)}
+                  disabled={simulating}
+                />
+                <Label 
+                  htmlFor="animation-toggle" 
+                  className="text-sm cursor-pointer"
+                >
+                  抽選アニメーションを表示
+                </Label>
+              </div>
             </CardContent>
           </Card>
         )}
