@@ -961,12 +961,14 @@ export default function AIDraft() {
                       return;
                     }
                     
-                    // ウェーバー順（最下位から）で次に指名する球団を見つける
-                    const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+                    // 実際のラウンドに応じた正しいウェーバー順を使用
+                    const oddRoundOrder = [6, 11, 1, 9, 5, 7, 2, 10, 3, 12, 4, 8];
+                    const evenRoundOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
+                    const waiverOrder = nextRound % 2 === 1 ? oddRoundOrder : evenRoundOrder;
                     const alreadyPickedTeams = allPicks.filter(p => p.round === nextRound).map(p => p.teamId);
                     nextTeamIndex = waiverOrder.findIndex(teamId => !alreadyPickedTeams.includes(teamId));
                     
-                    console.log('計算結果:', { nextRound, nextTeamIndex, alreadyPickedTeams });
+                    console.log('計算結果:', { nextRound, nextTeamIndex, waiverOrder, alreadyPickedTeams });
                     
                     if (nextTeamIndex === -1) {
                       toast({
@@ -1268,11 +1270,15 @@ export default function AIDraft() {
         <Dialog open={showSinglePickComplete} onOpenChange={(open) => {
           if (!open && singlePickInfo) {
             // 中断した位置を保存
-            const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
+            // 実際のラウンドに応じた正しいウェーバー順を使用
+            const oddRoundOrder = [6, 11, 1, 9, 5, 7, 2, 10, 3, 12, 4, 8];
+            const evenRoundOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
+            const waiverOrder = singlePickInfo.round % 2 === 1 ? oddRoundOrder : evenRoundOrder;
             const teamIndex = waiverOrder.indexOf(singlePickInfo.teamId);
             console.log('中断情報を保存:', {
               round: singlePickInfo.round,
               teamId: singlePickInfo.teamId,
+              waiverOrder,
               teamIndex: teamIndex,
               playerName: singlePickInfo.playerName
             });
