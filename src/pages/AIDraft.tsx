@@ -769,27 +769,29 @@ export default function AIDraft() {
                   </>
                 )}
               </Button>
-              {simulating && (
-                <Progress value={(currentSimulationRound / maxRounds) * 100} className="w-64" />
-              )}
               
-              {/* シミュレーション中で選手選択待ちの場合、球団ボタンを表示 */}
-              {simulating && currentPickInfo && !showPlayerSelection && (
-                <div className="w-full max-w-md">
-                  <p className="text-sm text-muted-foreground mb-3 text-center">
-                    第{currentPickInfo.round}巡目 - あなたの指名順です
-                  </p>
-                  <Button
-                    size="lg"
-                    onClick={handleReopenSelection}
-                    className={`w-full bg-gradient-to-r ${teams.find(t => t.id === currentPickInfo.teamId)?.color} text-white`}
-                  >
-                    {teams.find(t => t.id === currentPickInfo.teamId)?.name}
-                    <br />
-                    選手を指名する
-                  </Button>
+              {/* シミュレーション中で選手選択待ちの場合、球団ボタンを大きく表示 */}
+              {simulating && currentPickInfo && !showPlayerSelection ? (
+                <div className="w-full max-w-2xl mt-6 mb-4">
+                  <div className="bg-card border-2 border-primary rounded-lg p-6 shadow-lg animate-pulse">
+                    <p className="text-lg font-semibold text-center mb-4">
+                      第{currentPickInfo.round}巡目 - あなたの指名順です
+                    </p>
+                    <Button
+                      size="lg"
+                      onClick={handleReopenSelection}
+                      className={`w-full h-16 text-lg font-bold bg-gradient-to-r ${teams.find(t => t.id === currentPickInfo.teamId)?.color} text-white hover:opacity-90 transition-opacity`}
+                    >
+                      <div className="flex flex-col items-center">
+                        <span>{teams.find(t => t.id === currentPickInfo.teamId)?.name}</span>
+                        <span className="text-sm mt-1">👆 クリックして選手を指名する</span>
+                      </div>
+                    </Button>
+                  </div>
                 </div>
-              )}
+              ) : simulating ? (
+                <Progress value={(currentSimulationRound / maxRounds) * 100} className="w-64" />
+              ) : null}
               
               <div className="flex items-center justify-center gap-3 text-sm">
                 <span className="text-muted-foreground">抽選アニメーション</span>
