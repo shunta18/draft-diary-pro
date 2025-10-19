@@ -1,7 +1,16 @@
 import { calculateDraftScores, DraftScore, NormalizedPlayer, DraftPick, WeightConfig } from "./draftScoring";
 
+export interface LostPick {
+  teamId: number;
+  playerId: number;
+  playerName: string;
+  round: number;
+  pickLabel?: string;
+}
+
 export interface SimulationResult {
   picks: DraftPick[];
+  lostPicks: LostPick[];
   summary: {
     round: number;
     teamId: number;
@@ -80,6 +89,7 @@ export async function runDraftSimulation(
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>
 ): Promise<SimulationResult> {
   const picks: DraftPick[] = [];
+  const lostPicks: LostPick[] = [];
   const summary: SimulationResult["summary"] = [];
   let availablePlayers = [...allPlayers];
   
@@ -147,10 +157,22 @@ export async function runDraftSimulation(
             const winner = teams[winnerIndex];
             winningPicks.set(playerId, { teamId: winner, isContested: true, contestedTeams: teams });
             
-            // 外れた球団を記録
+            // 外れた球団を記録（lostPicksに追加）
             teams.forEach((t, i) => {
               if (i !== winnerIndex) {
                 losingTeams.push(t);
+                // 外れた選手として記録
+                const lostPlayer = availablePlayers.find(p => p.id === playerId);
+                if (lostPlayer) {
+                  const lostLabel = pickRound === 1 ? "1位" : `外れ${pickRound - 1}位`;
+                  lostPicks.push({
+                    teamId: t,
+                    playerId,
+                    playerName: lostPlayer.name,
+                    round,
+                    pickLabel: lostLabel
+                  });
+                }
               }
             });
           }
@@ -278,11 +300,11 @@ export async function runDraftSimulation(
     
     // ラウンド完了コールバック
     if (onRoundComplete) {
-      onRoundComplete(round, { picks, summary });
+      onRoundComplete(round, { picks, lostPicks, summary });
     }
     
     if (availablePlayers.length === 0) break;
   }
   
-  return { picks, summary };
+  return { picks, lostPicks, summary };
 }

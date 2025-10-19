@@ -717,44 +717,25 @@ export default function AIDraft() {
                     {(() => {
                       // 1巡目の指名をpickLabelでグループ化し、各球団の抽選外れも取得
                       const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
-                      
-                      // 各球団の1位指名での外れ選手を取得
-                      const getLostPlayersForTeam = (teamId: number) => {
-                        const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
-                        const contestedPicks = teamPicks.filter(p => p.isContested && p.contestedTeams);
-                        const lostPlayers: { playerName: string; pickLabel: string }[] = [];
-                        
-                        // 競合した指名から外れた選手を抽出
-                        contestedPicks.forEach(pick => {
-                          if (pick.contestedTeams && pick.contestedTeams.includes(teamId)) {
-                            // この球団が競合に参加したが獲得できなかった選手
-                            const allContestedForThisPlayer = firstRoundPicks.filter(
-                              p => p.playerId === pick.playerId && p.isContested
-                            );
-                            // 獲得できなかった場合（この球団のIDがpick.teamIdと異なる）
-                            if (pick.teamId !== teamId) {
-                              lostPlayers.push({
-                                playerName: pick.playerName,
-                                pickLabel: pick.pickLabel || "1位"
-                              });
-                            }
-                          }
-                        });
-                        
-                        return lostPlayers;
-                      };
+                      const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
                       
                       // 全てのラベルを取得（1位、外れ1位、外れ2位...）
-                      const allLabels = [...new Set(firstRoundPicks.map(p => p.pickLabel || "1位"))];
+                      const allLabels = [...new Set([
+                        ...firstRoundPicks.map(p => p.pickLabel || "1位"),
+                        ...firstRoundLostPicks.map(p => p.pickLabel || "1位")
+                      ])];
                       
                       // 各ラベルについて、最大の試行回数（抽選外れ + 成功）を計算
                       const maxAttemptsPerLabel = new Map<string, number>();
                       allLabels.forEach(label => {
-                        const picksForLabel = firstRoundPicks.filter(p => (p.pickLabel || "1位") === label);
                         displayOrder.forEach(teamId => {
-                          const lostPlayers = getLostPlayersForTeam(teamId).filter(lp => lp.pickLabel === label);
-                          const successPick = picksForLabel.find(p => p.teamId === teamId);
-                          const attempts = lostPlayers.length + (successPick ? 1 : 0);
+                          const lostForLabel = firstRoundLostPicks.filter(
+                            lp => lp.teamId === teamId && (lp.pickLabel || "1位") === label
+                          );
+                          const successPick = firstRoundPicks.find(
+                            p => p.teamId === teamId && (p.pickLabel || "1位") === label
+                          );
+                          const attempts = lostForLabel.length + (successPick ? 1 : 0);
                           maxAttemptsPerLabel.set(label, Math.max(maxAttemptsPerLabel.get(label) || 0, attempts));
                         });
                       });
@@ -767,6 +748,7 @@ export default function AIDraft() {
                         allLabels.forEach(label => {
                           const maxAttempts = maxAttemptsPerLabel.get(label) || 0;
                           const picksForLabel = firstRoundPicks.filter(p => (p.pickLabel || "1位") === label);
+                          const lostPicksForLabel = firstRoundLostPicks.filter(p => (p.pickLabel || "1位") === label);
                           
                           // 各試行（抽選外れ + 成功）を行として追加
                           for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -784,19 +766,19 @@ export default function AIDraft() {
                                   const team = teams.find(t => t.id === teamId);
                                   if (!team) return null;
                                   
-                                  const lostPlayers = getLostPlayersForTeam(teamId).filter(lp => lp.pickLabel === label);
+                                  const lostForTeam = lostPicksForLabel.filter(lp => lp.teamId === teamId);
                                   const successPick = picksForLabel.find(p => p.teamId === teamId);
                                   
                                   // この試行が抽選外れの場合
-                                  if (attempt < lostPlayers.length) {
+                                  if (attempt < lostForTeam.length) {
                                     return (
                                       <TableCell key={team.id} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r w-28">
-                                        {lostPlayers[attempt].playerName}
+                                        {lostForTeam[attempt].playerName}
                                       </TableCell>
                                     );
                                   }
                                   // 最後の試行（実際の指名）
-                                  else if (attempt === lostPlayers.length && successPick) {
+                                  else if (attempt === lostForTeam.length && successPick) {
                                     const player = players.find(p => p.id === successPick.playerId);
                                     return (
                                       <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r w-28">
