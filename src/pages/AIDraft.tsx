@@ -20,6 +20,10 @@ import { Progress } from "@/components/ui/progress";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Search, ChevronDown } from "lucide-react";
+import { PlayerFormDialog } from "@/components/PlayerFormDialog";
+import { Input } from "@/components/ui/input";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -52,6 +56,20 @@ const teams = [
 ];
 
 const displayOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
+
+// ポジションの順序を定義
+const positionOrder = [
+  "投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手", "指名打者"
+];
+
+// 評価の順序を定義
+const evaluationOrder = [
+  "1位競合", "1位一本釣り", "外れ1位", "2位", "3位", 
+  "4位", "5位", "6位以下", "育成"
+];
+
+// カテゴリの選択肢（固定）
+const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
 
 // データ正規化関数
 const normalizeSupabasePlayer = (player: RawSupabasePlayer): NormalizedPlayer => ({
@@ -94,6 +112,13 @@ export default function AIDraft() {
   const [availablePlayersForSelection, setAvailablePlayersForSelection] = useState<NormalizedPlayer[]>([]);
   const [pendingPickResolve, setPendingPickResolve] = useState<((playerId: number) => void) | null>(null);
   const [currentPickInfo, setCurrentPickInfo] = useState<{ round: number; teamId: number } | null>(null);
+  const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
+  
+  // フィルター用のstate
+  const [searchName, setSearchName] = useState("");
+  const [filterPositions, setFilterPositions] = useState<string[]>([]);
+  const [filterCategories, setFilterCategories] = useState<string[]>([]);
+  const [filterEvaluations, setFilterEvaluations] = useState<string[]>([]);
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
@@ -144,8 +169,52 @@ export default function AIDraft() {
       setPendingPickResolve(null);
       setShowPlayerSelection(false);
       setCurrentPickInfo(null);
+      clearFilters();
     }
   };
+
+  const clearFilters = () => {
+    setSearchName("");
+    setFilterPositions([]);
+    setFilterCategories([]);
+    setFilterEvaluations([]);
+  };
+
+  const getHighestEvaluationRank = (evaluations: string[] | undefined): number => {
+    if (!evaluations || evaluations.length === 0) return 999;
+    let highestRank = 999;
+    evaluations.forEach(evaluation => {
+      const rank = evaluationOrder.indexOf(evaluation);
+      if (rank !== -1 && rank < highestRank) {
+        highestRank = rank;
+      }
+    });
+    return highestRank;
+  };
+
+  const filteredAvailablePlayers = availablePlayersForSelection.filter(player => {
+    const matchesSearch = player.name.toLowerCase().includes(searchName.toLowerCase());
+    const matchesCategory = filterCategories.length === 0 || filterCategories.includes(player.category);
+    
+    const positionStr = Array.isArray(player.position) ? player.position.join("、") : player.position;
+    const playerPositions = positionStr.split(/[,、]/).map(p => p.trim()).filter(p => p);
+    const matchesPosition = filterPositions.length === 0 || 
+      playerPositions.some(pos => filterPositions.includes(pos));
+    
+    const matchesEvaluation = filterEvaluations.length === 0 || 
+      (player.evaluations && player.evaluations.some(evaluation => filterEvaluations.includes(evaluation)));
+    
+    return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation;
+  }).sort((a, b) => {
+    const rankA = getHighestEvaluationRank(a.evaluations);
+    const rankB = getHighestEvaluationRank(b.evaluations);
+    
+    if (rankA !== rankB) {
+      return rankA - rankB;
+    }
+    
+    return a.name.localeCompare(b.name, 'ja');
+  });
 
   const handleStartSimulation = async () => {
     if (players.length === 0) {
@@ -508,7 +577,7 @@ export default function AIDraft() {
 
       {/* 選手選択ダイアログ */}
       <Dialog open={showPlayerSelection} onOpenChange={setShowPlayerSelection}>
-        <DialogContent className="max-w-4xl max-h-[80vh]">
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>
               {currentPickInfo && (
@@ -518,30 +587,182 @@ export default function AIDraft() {
               )}
             </DialogTitle>
           </DialogHeader>
-          <ScrollArea className="max-h-[60vh]">
-            <div className="space-y-2 p-4">
-              {availablePlayersForSelection.map((player) => (
+          
+          <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
+            {/* Filters */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">選手名</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="選手名で検索"
+                    value={searchName}
+                    onChange={(e) => setSearchName(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">ポジション</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      <span className="truncate">
+                        {filterPositions.length === 0 ? "全ポジション" : `ポジション(${filterPositions.length})`}
+                      </span>
+                      <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                    <div className="space-y-2">
+                      {positionOrder.map((position) => (
+                        <div key={position} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`ai-position-${position}`}
+                            checked={filterPositions.includes(position)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFilterPositions([...filterPositions, position]);
+                              } else {
+                                setFilterPositions(filterPositions.filter(p => p !== position));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`ai-position-${position}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {position}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">カテゴリ</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      <span className="truncate">
+                        {filterCategories.length === 0 ? "全カテゴリ" : `カテゴリ(${filterCategories.length})`}
+                      </span>
+                      <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                    <div className="space-y-2">
+                      {categories.map((category) => (
+                        <div key={category} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`ai-category-${category}`}
+                            checked={filterCategories.includes(category)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFilterCategories([...filterCategories, category]);
+                              } else {
+                                setFilterCategories(filterCategories.filter(c => c !== category));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`ai-category-${category}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {category}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-medium">評価</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      <span className="truncate">
+                        {filterEvaluations.length === 0 ? "全評価" : `評価(${filterEvaluations.length})`}
+                      </span>
+                      <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                    <div className="space-y-2">
+                      {evaluationOrder.map((evaluation) => (
+                        <div key={evaluation} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`ai-evaluation-${evaluation}`}
+                            checked={filterEvaluations.includes(evaluation)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFilterEvaluations([...filterEvaluations, evaluation]);
+                              } else {
+                                setFilterEvaluations(filterEvaluations.filter(e => e !== evaluation));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`ai-evaluation-${evaluation}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {evaluation}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-muted-foreground">
+                {filteredAvailablePlayers.length}件の選手が見つかりました
+              </span>
+              <Button variant="outline" size="sm" onClick={clearFilters}>
+                フィルターをクリア
+              </Button>
+            </div>
+
+            {/* Player List */}
+            <div className="flex-1 overflow-y-auto space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start mb-2"
+                onClick={() => setIsPlayerFormOpen(true)}
+              >
+                選手を追加する
+              </Button>
+              
+              {filteredAvailablePlayers.map((player) => (
                 <Card 
                   key={player.id}
                   className="cursor-pointer transition-colors hover:bg-accent"
                   onClick={() => handlePlayerSelect(player.id)}
                 >
-                  <CardContent className="p-4">
+                  <CardContent className="p-3">
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
                       <div>
-                        <div className="font-medium text-base">{player.name}</div>
+                        <div className="font-medium">{player.name}</div>
                         <div className="text-muted-foreground text-xs">{player.category}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground text-xs">ポジション</div>
+                        <div className="text-muted-foreground">ポジション</div>
                         <div>{Array.isArray(player.position) ? player.position.join(", ") : player.position}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground text-xs">所属</div>
+                        <div className="text-muted-foreground">所属</div>
                         <div>{player.team}</div>
                       </div>
                       <div>
-                        <div className="text-muted-foreground text-xs">評価</div>
+                        <div className="text-muted-foreground">評価</div>
                         <div>{player.evaluations?.join(", ")}</div>
                       </div>
                     </div>
@@ -549,9 +770,17 @@ export default function AIDraft() {
                 </Card>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
+
+      <PlayerFormDialog 
+        isOpen={isPlayerFormOpen}
+        onOpenChange={setIsPlayerFormOpen}
+        onSuccess={() => {
+          loadPlayers();
+        }}
+      />
     </div>
   );
 }
