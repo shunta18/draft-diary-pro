@@ -1170,7 +1170,7 @@ export default function AIDraft() {
             <DialogTitle className="text-2xl">
               {picksCompleteInfo && (
                 picksCompleteInfo.pickRound === 1 
-                  ? "1位指名が出揃いました" 
+                  ? "1位指名" 
                   : `外れ${picksCompleteInfo.pickRound - 1}位指名が出揃いました`
               )}
             </DialogTitle>
@@ -1191,7 +1191,6 @@ export default function AIDraft() {
             {picksCompleteInfo?.hasContest && (
               <div className="pt-4 border-t">
                 <div className="text-center space-y-4 py-4">
-                  <p className="text-lg font-medium text-destructive">競合が発生しました</p>
                   <Button 
                     size="lg" 
                     className="w-full"
