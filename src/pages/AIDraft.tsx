@@ -797,7 +797,7 @@ export default function AIDraft() {
                     以下のルールに基づいてスコアを自動調整します：
                   </p>
                   <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>同ポジション連続指名：-15点</li>
+                    <li>同ポジション連続指名（投手除く）：-15点</li>
                     <li>投手/野手3連続指名：-20点</li>
                   </ul>
                 </div>

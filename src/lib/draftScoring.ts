@@ -209,7 +209,7 @@ export async function calculateDraftScores(
     // 現実性調整ルール（スコアに直接加算/減算）
     let realismAdjustment = 0;
     
-    // 同じチームが最近同じポジションを指名していないかチェック
+    // 同じチームが最近同じポジションを指名していないかチェック（投手を除く）
     const recentPicks = draftHistory
       .filter(pick => pick.teamId === teamId)
       .slice(-2); // 直近2指名をチェック
@@ -219,12 +219,17 @@ export async function calculateDraftScores(
       .filter(p => p !== undefined)
       .flatMap(p => p!.position);
     
-    const hasRecentSamePosition = player.position.some(pos => 
-      recentPositions.includes(pos)
-    );
+    // 現在の選手が投手でない場合のみ、同ポジション連続チェックを行う
+    const isCurrentPitcher = player.position.some(p => p === "投手" || p === "P");
     
-    if (hasRecentSamePosition && recentPicks.length >= 2) {
-      realismAdjustment -= 15; // 同じポジション連続指名でペナルティ
+    if (!isCurrentPitcher) {
+      const hasRecentSamePosition = player.position.some(pos => 
+        pos !== "投手" && pos !== "P" && recentPositions.includes(pos)
+      );
+      
+      if (hasRecentSamePosition && recentPicks.length >= 2) {
+        realismAdjustment -= 15; // 同じポジション連続指名でペナルティ（投手を除く）
+      }
     }
     
     // 投手・野手バランス調整（1位から3位のみ）
@@ -271,7 +276,7 @@ export async function calculateDraftScores(
     if (voteScore > 60) reasons.push("高い投票支持");
     if (teamNeedsScore > 70) reasons.push("チームニーズと一致");
     if (playerRatingScore > 70) reasons.push("高評価選手");
-    if (hasRecentSamePosition) reasons.push("同ポジション連続");
+    if (realismAdjustment < 0) reasons.push("現実性調整あり");
     
     const reason = reasons.length > 0 
       ? reasons.join("、") 
