@@ -136,6 +136,29 @@ export default function AIDraft() {
     checkAdmin();
   }, [user]);
 
+  // リアルタイム更新の監視
+  useEffect(() => {
+    const channel = supabase
+      .channel('draft-scoring-weights-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'draft_scoring_weights'
+        },
+        () => {
+          // 重み設定が変更されたら再読み込み
+          loadWeights();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const checkAdmin = async () => {
     if (!user) {
       setIsAdmin(false);
@@ -539,11 +562,8 @@ export default function AIDraft() {
                 <Label>投票データスコア: {weights.voteWeight}%</Label>
                 <Slider
                   value={[weights.voteWeight]}
-                  onValueChange={async ([value]) => {
-                    if (!isAdmin) return;
-                    const newWeights = { ...weights, voteWeight: value };
-                    setWeights(newWeights);
-                    await saveWeights(newWeights);
+                  onValueChange={([value]) => {
+                    setWeights(prev => ({ ...prev, voteWeight: value }));
                   }}
                   max={100}
                   step={5}
@@ -554,11 +574,8 @@ export default function AIDraft() {
                 <Label>チームニーズスコア: {weights.teamNeedsWeight}%</Label>
                 <Slider
                   value={[weights.teamNeedsWeight]}
-                  onValueChange={async ([value]) => {
-                    if (!isAdmin) return;
-                    const newWeights = { ...weights, teamNeedsWeight: value };
-                    setWeights(newWeights);
-                    await saveWeights(newWeights);
+                  onValueChange={([value]) => {
+                    setWeights(prev => ({ ...prev, teamNeedsWeight: value }));
                   }}
                   max={100}
                   step={5}
@@ -569,11 +586,8 @@ export default function AIDraft() {
                 <Label>選手評価スコア: {weights.playerRatingWeight}%</Label>
                 <Slider
                   value={[weights.playerRatingWeight]}
-                  onValueChange={async ([value]) => {
-                    if (!isAdmin) return;
-                    const newWeights = { ...weights, playerRatingWeight: value };
-                    setWeights(newWeights);
-                    await saveWeights(newWeights);
+                  onValueChange={([value]) => {
+                    setWeights(prev => ({ ...prev, playerRatingWeight: value }));
                   }}
                   max={100}
                   step={5}
@@ -584,11 +598,8 @@ export default function AIDraft() {
                 <Label>現実性調整スコア: {weights.realismWeight}%</Label>
                 <Slider
                   value={[weights.realismWeight]}
-                  onValueChange={async ([value]) => {
-                    if (!isAdmin) return;
-                    const newWeights = { ...weights, realismWeight: value };
-                    setWeights(newWeights);
-                    await saveWeights(newWeights);
+                  onValueChange={([value]) => {
+                    setWeights(prev => ({ ...prev, realismWeight: value }));
                   }}
                   max={100}
                   step={5}
@@ -605,11 +616,22 @@ export default function AIDraft() {
                   step={1}
                 />
               </div>
-              <div className="pt-4 text-sm text-muted-foreground">
-                <p>合計: {weights.voteWeight + weights.teamNeedsWeight + weights.playerRatingWeight + weights.realismWeight}%</p>
-                <p className="text-xs mt-1">※ 合計が100%になるように調整してください</p>
-                {!isAdmin && (
-                  <p className="text-xs mt-2 text-amber-600">※ スコアリング重みの変更は管理者のみ可能です</p>
+              <div className="pt-4 space-y-3">
+                <div className="text-sm text-muted-foreground">
+                  <p>合計: {weights.voteWeight + weights.teamNeedsWeight + weights.playerRatingWeight + weights.realismWeight}%</p>
+                  <p className="text-xs mt-1">※ 合計が100%になるように調整してください</p>
+                  {!isAdmin && (
+                    <p className="text-xs mt-2 text-amber-600">※ スコアリング重みの変更は管理者のみ可能です</p>
+                  )}
+                </div>
+                {isAdmin && (
+                  <Button 
+                    onClick={() => saveWeights(weights)} 
+                    className="w-full"
+                    disabled={weights.voteWeight + weights.teamNeedsWeight + weights.playerRatingWeight + weights.realismWeight !== 100}
+                  >
+                    設定を保存
+                  </Button>
                 )}
               </div>
             </CardContent>
