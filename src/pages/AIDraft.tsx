@@ -447,12 +447,19 @@ export default function AIDraft() {
         }
       });
       
+      // 結果を必ずセット
+      setSimulationResult(result);
+      
+      // デバッグ情報
+      console.log('Lotteries found:', lotteries.length);
+      console.log('Animation enabled:', animationEnabled);
+      console.log('Lottery data:', lotteries);
+      
       if (lotteries.length > 0 && animationEnabled) {
         setLotteryQueue(lotteries);
         setCurrentLotteryIndex(0);
         setShowLottery(true);
       } else {
-        setSimulationResult(result);
         toast({
           title: "シミュレーション完了",
           description: `${result.picks.length}名の指名が完了しました`,
