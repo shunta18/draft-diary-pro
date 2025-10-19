@@ -167,7 +167,6 @@ export type Database = {
           created_by: string | null
           id: string
           player_rating_weight: number
-          realism_weight: number
           team_needs_weight: number
           updated_at: string
           vote_weight: number
@@ -177,7 +176,6 @@ export type Database = {
           created_by?: string | null
           id?: string
           player_rating_weight?: number
-          realism_weight?: number
           team_needs_weight?: number
           updated_at?: string
           vote_weight?: number
@@ -187,7 +185,6 @@ export type Database = {
           created_by?: string | null
           id?: string
           player_rating_weight?: number
-          realism_weight?: number
           team_needs_weight?: number
           updated_at?: string
           vote_weight?: number
