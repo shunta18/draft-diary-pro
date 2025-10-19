@@ -161,6 +161,39 @@ export type Database = {
         }
         Relationships: []
       }
+      draft_scoring_weights: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          player_rating_weight: number
+          realism_weight: number
+          team_needs_weight: number
+          updated_at: string
+          vote_weight: number
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          player_rating_weight?: number
+          realism_weight?: number
+          team_needs_weight?: number
+          updated_at?: string
+          vote_weight?: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          player_rating_weight?: number
+          realism_weight?: number
+          team_needs_weight?: number
+          updated_at?: string
+          vote_weight?: number
+        }
+        Relationships: []
+      }
       draft_team_player_votes: {
         Row: {
           created_at: string

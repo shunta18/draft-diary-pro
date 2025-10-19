@@ -113,6 +113,7 @@ export default function AIDraft() {
   const [pendingPickResolve, setPendingPickResolve] = useState<((playerId: number) => void) | null>(null);
   const [currentPickInfo, setCurrentPickInfo] = useState<{ round: number; teamId: number } | null>(null);
   const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   
   // フィルター用のstate
   const [searchName, setSearchName] = useState("");
@@ -127,10 +128,59 @@ export default function AIDraft() {
     playerRatingWeight: 20,
     realismWeight: 10
   });
+  const [weightId, setWeightId] = useState<string | null>(null);
 
   useEffect(() => {
     loadPlayers();
+    loadWeights();
+    checkAdmin();
   }, [user]);
+
+  const checkAdmin = async () => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .maybeSingle();
+      
+      setIsAdmin(!!data);
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      setIsAdmin(false);
+    }
+  };
+
+  const loadWeights = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("draft_scoring_weights")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        setWeights({
+          voteWeight: data.vote_weight,
+          teamNeedsWeight: data.team_needs_weight,
+          playerRatingWeight: data.player_rating_weight,
+          realismWeight: data.realism_weight
+        });
+        setWeightId(data.id);
+      }
+    } catch (error) {
+      console.error("Error loading weights:", error);
+    }
+  };
 
   const loadPlayers = async () => {
     try {
@@ -215,6 +265,67 @@ export default function AIDraft() {
     
     return a.name.localeCompare(b.name, 'ja');
   });
+
+  const saveWeights = async (newWeights: WeightConfig) => {
+    if (!isAdmin) return;
+    
+    const sum = newWeights.voteWeight + newWeights.teamNeedsWeight + 
+                newWeights.playerRatingWeight + newWeights.realismWeight;
+    
+    if (sum !== 100) {
+      toast({
+        title: "エラー",
+        description: "重みの合計が100%になるように調整してください",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      if (weightId) {
+        // 既存の重み設定を更新
+        const { error } = await supabase
+          .from("draft_scoring_weights")
+          .update({
+            vote_weight: newWeights.voteWeight,
+            team_needs_weight: newWeights.teamNeedsWeight,
+            player_rating_weight: newWeights.playerRatingWeight,
+            realism_weight: newWeights.realismWeight
+          })
+          .eq("id", weightId);
+        
+        if (error) throw error;
+      } else {
+        // 新規作成
+        const { data, error } = await supabase
+          .from("draft_scoring_weights")
+          .insert({
+            vote_weight: newWeights.voteWeight,
+            team_needs_weight: newWeights.teamNeedsWeight,
+            player_rating_weight: newWeights.playerRatingWeight,
+            realism_weight: newWeights.realismWeight,
+            created_by: user?.id
+          })
+          .select()
+          .single();
+        
+        if (error) throw error;
+        if (data) setWeightId(data.id);
+      }
+      
+      toast({
+        title: "保存完了",
+        description: "スコアリング重みを更新しました",
+      });
+    } catch (error) {
+      console.error("Error saving weights:", error);
+      toast({
+        title: "エラー",
+        description: "重みの保存に失敗しました",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleStartSimulation = async () => {
     if (players.length === 0) {
@@ -416,43 +527,72 @@ export default function AIDraft() {
         {showSettings && (
           <Card>
             <CardHeader>
-              <CardTitle>スコアリング重み設定</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>スコアリング重み設定</CardTitle>
+                {!isAdmin && (
+                  <Badge variant="secondary">閲覧のみ</Badge>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label>投票データスコア: {weights.voteWeight}%</Label>
                 <Slider
                   value={[weights.voteWeight]}
-                  onValueChange={([value]) => setWeights(prev => ({ ...prev, voteWeight: value }))}
+                  onValueChange={async ([value]) => {
+                    if (!isAdmin) return;
+                    const newWeights = { ...weights, voteWeight: value };
+                    setWeights(newWeights);
+                    await saveWeights(newWeights);
+                  }}
                   max={100}
                   step={5}
+                  disabled={!isAdmin}
                 />
               </div>
               <div className="space-y-2">
                 <Label>チームニーズスコア: {weights.teamNeedsWeight}%</Label>
                 <Slider
                   value={[weights.teamNeedsWeight]}
-                  onValueChange={([value]) => setWeights(prev => ({ ...prev, teamNeedsWeight: value }))}
+                  onValueChange={async ([value]) => {
+                    if (!isAdmin) return;
+                    const newWeights = { ...weights, teamNeedsWeight: value };
+                    setWeights(newWeights);
+                    await saveWeights(newWeights);
+                  }}
                   max={100}
                   step={5}
+                  disabled={!isAdmin}
                 />
               </div>
               <div className="space-y-2">
                 <Label>選手評価スコア: {weights.playerRatingWeight}%</Label>
                 <Slider
                   value={[weights.playerRatingWeight]}
-                  onValueChange={([value]) => setWeights(prev => ({ ...prev, playerRatingWeight: value }))}
+                  onValueChange={async ([value]) => {
+                    if (!isAdmin) return;
+                    const newWeights = { ...weights, playerRatingWeight: value };
+                    setWeights(newWeights);
+                    await saveWeights(newWeights);
+                  }}
                   max={100}
                   step={5}
+                  disabled={!isAdmin}
                 />
               </div>
               <div className="space-y-2">
                 <Label>現実性調整スコア: {weights.realismWeight}%</Label>
                 <Slider
                   value={[weights.realismWeight]}
-                  onValueChange={([value]) => setWeights(prev => ({ ...prev, realismWeight: value }))}
+                  onValueChange={async ([value]) => {
+                    if (!isAdmin) return;
+                    const newWeights = { ...weights, realismWeight: value };
+                    setWeights(newWeights);
+                    await saveWeights(newWeights);
+                  }}
                   max={100}
                   step={5}
+                  disabled={!isAdmin}
                 />
               </div>
               <div className="space-y-2">
@@ -468,6 +608,9 @@ export default function AIDraft() {
               <div className="pt-4 text-sm text-muted-foreground">
                 <p>合計: {weights.voteWeight + weights.teamNeedsWeight + weights.playerRatingWeight + weights.realismWeight}%</p>
                 <p className="text-xs mt-1">※ 合計が100%になるように調整してください</p>
+                {!isAdmin && (
+                  <p className="text-xs mt-2 text-amber-600">※ スコアリング重みの変更は管理者のみ可能です</p>
+                )}
               </div>
             </CardContent>
           </Card>
