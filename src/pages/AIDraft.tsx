@@ -923,14 +923,16 @@ export default function AIDraft() {
             </div>
 
             <Tabs defaultValue="all" className="w-full">
-              <TabsList className="grid w-full grid-cols-13">
-                <TabsTrigger value="all">全体</TabsTrigger>
-                {teams.map(team => (
-                  <TabsTrigger key={team.id} value={team.id.toString()}>
-                    {team.shortName}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <ScrollArea className="w-full whitespace-nowrap">
+                <TabsList className="inline-flex w-auto">
+                  <TabsTrigger value="all">全体</TabsTrigger>
+                  {teams.map(team => (
+                    <TabsTrigger key={team.id} value={team.id.toString()}>
+                      {team.shortName}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </ScrollArea>
               
               <TabsContent value="all">
                 <Card>
@@ -1505,14 +1507,16 @@ export default function AIDraft() {
           
           {simulationResult && (
             <Tabs defaultValue="all" className="w-full flex-1 flex flex-col overflow-hidden">
-              <TabsList className="grid w-full grid-cols-13 shrink-0">
-                <TabsTrigger value="all">全体</TabsTrigger>
-                {teams.map(team => (
-                  <TabsTrigger key={team.id} value={team.id.toString()}>
-                    {team.shortName}
-                  </TabsTrigger>
-                ))}
-              </TabsList>
+              <ScrollArea className="w-full whitespace-nowrap shrink-0">
+                <TabsList className="inline-flex w-auto">
+                  <TabsTrigger value="all">全体</TabsTrigger>
+                  {teams.map(team => (
+                    <TabsTrigger key={team.id} value={team.id.toString()}>
+                      {team.shortName}
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </ScrollArea>
               
               <TabsContent value="all" className="flex-1 overflow-auto mt-2">
                 <Card className="h-full">
