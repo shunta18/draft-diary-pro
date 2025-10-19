@@ -35,7 +35,7 @@ export default function VirtualDraftSelection() {
                 </div>
                 <CardTitle className="text-2xl">手動ドラフト</CardTitle>
                 <CardDescription className="text-base">
-                  従来の仮想ドラフト方式で、各チームの指名選手を手動で選択します
+                  従来の仮想ドラフト方式。12球団すべてのチームを操作して、各チームの指名選手を手動で選択します
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -78,7 +78,7 @@ export default function VirtualDraftSelection() {
                 </div>
                 <CardTitle className="text-2xl">AIドラフト</CardTitle>
                 <CardDescription className="text-base">
-                  多層スコアリングシステムによる自動シミュレーションで、リアルなドラフトを再現
+                  多層スコアリングシステムによる自動シミュレーション。好きな球団だけ操作して、残りはAIが自動で指名します
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
