@@ -211,6 +211,37 @@ export async function calculateDraftScores(
       rawRealismScore -= 30; // 同じポジション連続指名でペナルティ
     }
     
+    // 投手・野手バランス調整（1位から3位のみ）
+    if (round >= 1 && round <= 3) {
+      const top3Picks = draftHistory
+        .filter(pick => pick.teamId === teamId && pick.round >= 1 && pick.round <= 3)
+        .map(pick => {
+          const p = availablePlayers.find(pl => pl.id === pick.playerId);
+          return p;
+        })
+        .filter(p => p !== undefined);
+      
+      // 現在の選手が投手か野手かを判定
+      const isCurrentPitcher = player.position.some(p => p === "投手" || p === "P");
+      
+      // 既に指名された選手のタイプをチェック
+      const pickedTypes = top3Picks.map(p => {
+        const isPitcher = p!.position.some(pos => pos === "投手" || pos === "P");
+        return isPitcher ? 'pitcher' : 'fielder';
+      });
+      
+      // 3連続同じタイプになるかチェック
+      if (pickedTypes.length === 2) {
+        const allSameType = pickedTypes.every(t => t === pickedTypes[0]);
+        if (allSameType) {
+          const currentType = isCurrentPitcher ? 'pitcher' : 'fielder';
+          if (currentType === pickedTypes[0]) {
+            rawRealismScore -= 40; // 3連続同じタイプでペナルティ
+          }
+        }
+      }
+    }
+    
     // 70-100の範囲を0-100に正規化
     const realismScore = ((rawRealismScore - 70) / (100 - 70)) * 100;
     const normalizedRealismScore = Math.max(0, Math.min(100, realismScore));
