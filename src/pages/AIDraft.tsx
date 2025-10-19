@@ -116,6 +116,7 @@ export default function AIDraft() {
   const [currentPickInfo, setCurrentPickInfo] = useState<{ round: number; teamId: number } | null>(null);
   const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [currentPicks, setCurrentPicks] = useState<DraftPick[]>([]);
   
   // フィルター用のstate
   const [searchName, setSearchName] = useState("");
@@ -421,6 +422,7 @@ export default function AIDraft() {
     setSimulating(true);
     setCurrentSimulationRound(0);
     setSimulationResult(null);
+    setCurrentPicks([]);
     setLotteryQueue([]);
     setCurrentLotteryIndex(0);
 
@@ -458,6 +460,29 @@ export default function AIDraft() {
         } : undefined,
         // 全球団の指名完了時（競合情報も含める）
         async (pickRound, picks, availablePlayers, hasContest) => {
+          // currentPicksに新しい指名を追加
+          setCurrentPicks(prev => {
+            const newPicks = picks.map(p => ({
+              teamId: p.teamId,
+              playerId: p.playerId,
+              playerName: p.playerName,
+              round: 1,
+              pickLabel: pickRound === 1 ? "1位" : `外れ${pickRound - 1}位`,
+              isContested: false,
+              contestedTeams: []
+            }));
+            
+            // 重複を避けるため、既存のpicksをフィルタリング
+            const filtered = prev.filter(existing => 
+              !newPicks.some(newPick => 
+                existing.teamId === newPick.teamId && 
+                existing.pickLabel === newPick.pickLabel
+              )
+            );
+            
+            return [...filtered, ...newPicks];
+          });
+          
           return new Promise<void>((resolve) => {
             setPicksCompleteInfo({ pickRound, picks, hasContest });
             setShowPicksComplete(true);
@@ -1261,7 +1286,7 @@ export default function AIDraft() {
           </DialogHeader>
           
           {/* 全てのpickRoundで結果テーブルを表示 */}
-          {picksCompleteInfo && simulationResult ? (
+          {picksCompleteInfo && currentPicks.length > 0 ? (
             <div className="flex-1 overflow-y-auto">
               <Table>
                 <TableHeader>
@@ -1284,7 +1309,7 @@ export default function AIDraft() {
                 <TableBody>
                   {(() => {
                     // 1巡目の指名をpickLabelでグループ化
-                    const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
+                    const firstRoundPicks = currentPicks.filter(p => p.round === 1);
                     const pickLabels = Array.from(new Set(firstRoundPicks.map(p => p.pickLabel)))
                       .sort((a, b) => {
                         if (a === "1位") return -1;
