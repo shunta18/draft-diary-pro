@@ -17,6 +17,9 @@ import { NormalizedPlayer, DraftPick, WeightConfig } from "@/lib/draftScoring";
 import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -86,6 +89,11 @@ export default function AIDraft() {
   const [currentSimulationRound, setCurrentSimulationRound] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [maxRounds, setMaxRounds] = useState(10);
+  const [userTeamId, setUserTeamId] = useState<number | null>(null);
+  const [showPlayerSelection, setShowPlayerSelection] = useState(false);
+  const [availablePlayersForSelection, setAvailablePlayersForSelection] = useState<NormalizedPlayer[]>([]);
+  const [pendingPickResolve, setPendingPickResolve] = useState<((playerId: number) => void) | null>(null);
+  const [currentPickInfo, setCurrentPickInfo] = useState<{ round: number; teamId: number } | null>(null);
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
@@ -130,6 +138,15 @@ export default function AIDraft() {
     }
   };
 
+  const handlePlayerSelect = (playerId: number) => {
+    if (pendingPickResolve) {
+      pendingPickResolve(playerId);
+      setPendingPickResolve(null);
+      setShowPlayerSelection(false);
+      setCurrentPickInfo(null);
+    }
+  };
+
   const handleStartSimulation = async () => {
     if (players.length === 0) {
       toast({
@@ -152,7 +169,17 @@ export default function AIDraft() {
         "2025",
         (round) => {
           setCurrentSimulationRound(round);
-        }
+        },
+        userTeamId || undefined,
+        userTeamId ? async (round, teamId, availablePlayers) => {
+          setCurrentPickInfo({ round, teamId });
+          setAvailablePlayersForSelection(availablePlayers);
+          setShowPlayerSelection(true);
+          
+          return new Promise<number>((resolve) => {
+            setPendingPickResolve(() => resolve);
+          });
+        } : undefined
       );
       
       setSimulationResult(result);
@@ -264,6 +291,34 @@ export default function AIDraft() {
             )}
           </div>
         </div>
+
+        {/* 操作球団選択 */}
+        <Card>
+          <CardHeader>
+            <CardTitle>操作球団選択</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <Label>操作する球団を選択してください（選択しない場合は全球団AI自動）</Label>
+              <Select 
+                value={userTeamId?.toString() || "auto"} 
+                onValueChange={(value) => setUserTeamId(value === "auto" ? null : parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="球団を選択" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="auto">全球団AI自動</SelectItem>
+                  {teams.map(team => (
+                    <SelectItem key={team.id} value={team.id.toString()}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* 設定パネル */}
         {showSettings && (
@@ -433,6 +488,53 @@ export default function AIDraft() {
       </main>
 
       <Footer />
+
+      {/* 選手選択ダイアログ */}
+      <Dialog open={showPlayerSelection} onOpenChange={setShowPlayerSelection}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>
+              {currentPickInfo && (
+                <>
+                  第{currentPickInfo.round}巡目 - {teams.find(t => t.id === currentPickInfo.teamId)?.name}の指名
+                </>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh]">
+            <div className="space-y-2 p-4">
+              {availablePlayersForSelection.map((player) => (
+                <Card 
+                  key={player.id}
+                  className="cursor-pointer transition-colors hover:bg-accent"
+                  onClick={() => handlePlayerSelect(player.id)}
+                >
+                  <CardContent className="p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                      <div>
+                        <div className="font-medium text-base">{player.name}</div>
+                        <div className="text-muted-foreground text-xs">{player.category}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground text-xs">ポジション</div>
+                        <div>{Array.isArray(player.position) ? player.position.join(", ") : player.position}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground text-xs">所属</div>
+                        <div>{player.team}</div>
+                      </div>
+                      <div>
+                        <div className="text-muted-foreground text-xs">評価</div>
+                        <div>{player.evaluations?.join(", ")}</div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

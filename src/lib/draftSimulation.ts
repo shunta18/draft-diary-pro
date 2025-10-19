@@ -43,7 +43,9 @@ export async function runDraftSimulation(
   maxRounds: number = 10,
   weightConfig: WeightConfig,
   draftYear: string = "2025",
-  onRoundComplete?: (round: number, picks: DraftPick[]) => void
+  onRoundComplete?: (round: number, picks: DraftPick[]) => void,
+  userTeamId?: number,
+  onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>
 ): Promise<SimulationResult> {
   const picks: DraftPick[] = [];
   const summary: SimulationResult["summary"] = [];
@@ -55,21 +57,41 @@ export async function runDraftSimulation(
     for (const teamId of waiverOrder) {
       if (availablePlayers.length === 0) break;
       
-      // 現在のチームに対してスコアを計算
-      const scores = await calculateDraftScores(
-        round,
-        teamId,
-        availablePlayers,
-        picks,
-        weightConfig,
-        draftYear
-      );
+      let selectedPlayerId: number;
+      let topScore: any;
       
-      if (scores.length === 0) break;
+      // ユーザーが操作する球団の場合
+      if (userTeamId && teamId === userTeamId && onUserTeamPick) {
+        selectedPlayerId = await onUserTeamPick(round, teamId, availablePlayers);
+        
+        // スコアを計算（表示用）
+        const scores = await calculateDraftScores(
+          round,
+          teamId,
+          availablePlayers,
+          picks,
+          weightConfig,
+          draftYear
+        );
+        topScore = scores.find(s => s.playerId === selectedPlayerId) || scores[0];
+      } else {
+        // AIが自動で選択
+        const scores = await calculateDraftScores(
+          round,
+          teamId,
+          availablePlayers,
+          picks,
+          weightConfig,
+          draftYear
+        );
+        
+        if (scores.length === 0) break;
+        
+        topScore = scores[0];
+        selectedPlayerId = topScore.playerId;
+      }
       
-      // 最高スコアの選手を指名
-      const topScore = scores[0];
-      const selectedPlayer = availablePlayers.find(p => p.id === topScore.playerId);
+      const selectedPlayer = availablePlayers.find(p => p.id === selectedPlayerId);
       
       if (!selectedPlayer) break;
       
