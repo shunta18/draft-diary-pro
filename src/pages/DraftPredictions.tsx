@@ -4,6 +4,7 @@ import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -85,7 +86,7 @@ export default function DraftPredictions() {
   const [selectedTeam, setSelectedTeam] = useState(1);
   const [players, setPlayers] = useState<NormalizedPlayer[]>([]);
   const [userPlayerVotes, setUserPlayerVotes] = useState<{ team_id: number; public_player_id: number }[]>([]);
-  const [userPositionVotes, setUserPositionVotes] = useState<{ team_id: number; position: string }[]>([]);
+  const [userPositionVotes, setUserPositionVotes] = useState<{ team_id: number; position: string; draft_round: number }[]>([]);
   const [playerVoteCounts, setPlayerVoteCounts] = useState<Record<string, number>>({});
   const [positionVoteCounts, setPositionVoteCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -200,8 +201,8 @@ export default function DraftPredictions() {
     setPlayerVoteCounts(voteCounts);
   };
 
-  const handlePositionVoteToggle = async (position: string, isChecked: boolean) => {
-    const { error } = await upsertPositionVote(selectedTeam, position, isChecked, selectedYear);
+  const handlePositionVoteChange = async (draftRound: number, position: string | null) => {
+    const { error } = await upsertPositionVote(selectedTeam, draftRound, position, selectedYear);
 
     if (error) {
       toast({
@@ -213,11 +214,21 @@ export default function DraftPredictions() {
     }
 
     // ローカル状態を更新
-    if (isChecked) {
-      setUserPositionVotes([...userPositionVotes, { team_id: selectedTeam, position }]);
+    if (position) {
+      const existingIndex = userPositionVotes.findIndex(
+        (v) => v.team_id === selectedTeam && v.draft_round === draftRound
+      );
+      
+      if (existingIndex >= 0) {
+        const newVotes = [...userPositionVotes];
+        newVotes[existingIndex] = { team_id: selectedTeam, position, draft_round: draftRound };
+        setUserPositionVotes(newVotes);
+      } else {
+        setUserPositionVotes([...userPositionVotes, { team_id: selectedTeam, position, draft_round: draftRound }]);
+      }
     } else {
       setUserPositionVotes(
-        userPositionVotes.filter((v) => !(v.team_id === selectedTeam && v.position === position))
+        userPositionVotes.filter((v) => !(v.team_id === selectedTeam && v.draft_round === draftRound))
       );
     }
 
@@ -230,16 +241,16 @@ export default function DraftPredictions() {
     return userPlayerVotes.some((v) => v.team_id === selectedTeam && v.public_player_id === playerId);
   };
 
-  const isPositionVoted = (position: string) => {
-    return userPositionVotes.some((v) => v.team_id === selectedTeam && v.position === position);
+  const getSelectedPosition = (draftRound: number): string | undefined => {
+    return userPositionVotes.find((v) => v.team_id === selectedTeam && v.draft_round === draftRound)?.position;
   };
 
   const getPlayerVoteCount = (playerId: number) => {
     return playerVoteCounts[`${selectedTeam}_${playerId}`] || 0;
   };
 
-  const getPositionVoteCount = (position: string) => {
-    return positionVoteCounts[`${selectedTeam}_${position}`] || 0;
+  const getPositionVoteCount = (draftRound: number, position: string) => {
+    return positionVoteCounts[`${selectedTeam}_${draftRound}_${position}`] || 0;
   };
 
   // ソート: 投票数の多い順
@@ -251,13 +262,18 @@ export default function DraftPredictions() {
 
   const maxPlayerVotes = Math.max(...sortedPlayers.map((p) => getPlayerVoteCount(p.id)), 1);
 
-  const sortedPositions = [...positions].sort((a, b) => {
-    const countA = getPositionVoteCount(a);
-    const countB = getPositionVoteCount(b);
-    return countB - countA;
-  });
+  // ドラフト順位ごとのソート済みポジション
+  const getSortedPositionsForRound = (draftRound: number) => {
+    return [...positions].sort((a, b) => {
+      const countA = getPositionVoteCount(draftRound, a);
+      const countB = getPositionVoteCount(draftRound, b);
+      return countB - countA;
+    });
+  };
 
-  const maxPositionVotes = Math.max(...sortedPositions.map((p) => getPositionVoteCount(p)), 1);
+  const getMaxPositionVotesForRound = (draftRound: number) => {
+    return Math.max(...positions.map((p) => getPositionVoteCount(draftRound, p)), 1);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background to-muted/20">
@@ -435,37 +451,61 @@ export default function DraftPredictions() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <TrendingUp className="h-5 w-5" />
-                    {teams.find((t) => t.id === selectedTeam)?.name}の補強ポジション
+                    {teams.find((t) => t.id === selectedTeam)?.name}のドラフト指名予想
                   </CardTitle>
                   <CardDescription>
-                    この球団が補強したいポジションにチェックを入れてください（複数選択可）
+                    各順位で指名したいポジションを選択してください
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid md:grid-cols-2 gap-3">
-                    {sortedPositions.map((position) => {
-                      const voteCount = getPositionVoteCount(position);
-                      const votePercentage = (voteCount / maxPositionVotes) * 100;
+                  <div className="space-y-6">
+                    {[1, 2, 3, 4, 5].map((round) => {
+                      const selectedPosition = getSelectedPosition(round);
+                      const sortedPositions = getSortedPositionsForRound(round);
+                      const maxVotes = getMaxPositionVotesForRound(round);
 
                       return (
-                        <div
-                          key={position}
-                          className="flex items-center gap-3 p-4 rounded-lg border hover:bg-accent/50 transition-colors"
-                        >
-                          <Checkbox
-                            checked={isPositionVoted(position)}
-                            onCheckedChange={(checked) =>
-                              handlePositionVoteToggle(position, checked as boolean)
-                            }
-                          />
-                          <div className="flex-1">
-                            <p className="font-semibold mb-2">{position}</p>
-                            <div className="flex items-center gap-2">
-                              <Progress value={votePercentage} className="h-2 flex-1" />
-                              <span className="text-sm text-muted-foreground whitespace-nowrap">
-                                {voteCount}票
-                              </span>
-                            </div>
+                        <div key={round} className="space-y-3">
+                          <div className="flex items-center gap-3">
+                            <div className="font-bold text-lg w-20">{round}位</div>
+                            <Select
+                              value={selectedPosition || ""}
+                              onValueChange={(value) => 
+                                handlePositionVoteChange(round, value === "" ? null : value)
+                              }
+                            >
+                              <SelectTrigger className="flex-1">
+                                <SelectValue placeholder="ポジションを選択" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="">選択なし</SelectItem>
+                                {positions.map((position) => (
+                                  <SelectItem key={position} value={position}>
+                                    {position}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          
+                          {/* 各ポジションの投票数を表示 */}
+                          <div className="ml-24 space-y-2">
+                            {sortedPositions.slice(0, 3).map((position) => {
+                              const voteCount = getPositionVoteCount(round, position);
+                              const votePercentage = maxVotes > 0 ? (voteCount / maxVotes) * 100 : 0;
+                              
+                              if (voteCount === 0) return null;
+
+                              return (
+                                <div key={position} className="flex items-center gap-2">
+                                  <span className="text-sm font-medium w-20">{position}</span>
+                                  <Progress value={votePercentage} className="h-2 flex-1" />
+                                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                    {voteCount}票
+                                  </span>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
                       );

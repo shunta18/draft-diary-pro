@@ -64,18 +64,18 @@ export const upsertPlayerVote = async (
   }
 };
 
-// ポジション投票の追加/削除
+// ポジション投票の追加/削除（ドラフト順位ごと）
 export const upsertPositionVote = async (
   teamId: number,
-  position: string,
-  isVoting: boolean,
+  draftRound: number,
+  position: string | null,
   draftYear: string = "2025"
 ): Promise<{ error: Error | null }> => {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     const sessionId = getOrCreateSessionId();
 
-    if (isVoting) {
+    if (position) {
       // 投票を追加（既存がある場合は更新）
       const { error } = await supabase
         .from("draft_team_position_votes")
@@ -84,19 +84,18 @@ export const upsertPositionVote = async (
           session_id: user ? null : sessionId,
           team_id: teamId,
           position: position,
+          draft_round: draftRound,
           draft_year: draftYear,
-        }, {
-          onConflict: user ? 'user_id,team_id,position,draft_year' : 'session_id,team_id,position,draft_year'
         });
 
       if (error) throw error;
     } else {
-      // 投票を削除
+      // 投票を削除（positionがnullの場合）
       const query = supabase
         .from("draft_team_position_votes")
         .delete()
         .eq("team_id", teamId)
-        .eq("position", position)
+        .eq("draft_round", draftRound)
         .eq("draft_year", draftYear);
 
       if (user) {
@@ -137,10 +136,10 @@ export const getUserVotes = async (draftYear: string = "2025") => {
     const { data: playerVotes, error: playerError } = await playerQuery;
     if (playerError) throw playerError;
 
-    // ポジション投票を取得
+    // ポジション投票を取得（ドラフト順位も含む）
     const positionQuery = supabase
       .from("draft_team_position_votes")
-      .select("team_id, position")
+      .select("team_id, position, draft_round")
       .eq("draft_year", draftYear);
 
     if (user) {
@@ -170,7 +169,7 @@ export const getUserVotes = async (draftYear: string = "2025") => {
 // 投票集計データの型
 export interface DraftPredictions {
   playerVotes: Map<number, { count: number; teamId: number }[]>; // playerId -> [{teamId, count}]
-  positionVotes: Map<string, { count: number; teamId: number }[]>; // position -> [{teamId, count}]
+  positionVotes: Map<string, { count: number; teamId: number; draftRound: number }[]>; // position -> [{teamId, count, draftRound}]
 }
 
 // 投票結果を集計
@@ -184,10 +183,10 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
 
     if (playerError) throw playerError;
 
-    // ポジション投票の集計
+    // ポジション投票の集計（ドラフト順位も含む）
     const { data: positionVotesData, error: positionError } = await supabase
       .from("draft_team_position_votes")
-      .select("team_id, position")
+      .select("team_id, position, draft_round")
       .eq("draft_year", draftYear);
 
     if (positionError) throw positionError;
@@ -205,15 +204,15 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
       playerVotesMap.set(vote.public_player_id, existing);
     });
 
-    // ポジション投票をMap形式に変換（position -> [{teamId, count}]）
-    const positionVotesMap = new Map<string, { count: number; teamId: number }[]>();
+    // ポジション投票をMap形式に変換（position -> [{teamId, count, draftRound}]）
+    const positionVotesMap = new Map<string, { count: number; teamId: number; draftRound: number }[]>();
     (positionVotesData || []).forEach((vote) => {
       const existing = positionVotesMap.get(vote.position) || [];
-      const teamVote = existing.find(v => v.teamId === vote.team_id);
+      const teamVote = existing.find(v => v.teamId === vote.team_id && v.draftRound === vote.draft_round);
       if (teamVote) {
         teamVote.count++;
       } else {
-        existing.push({ teamId: vote.team_id, count: 1 });
+        existing.push({ teamId: vote.team_id, count: 1, draftRound: vote.draft_round });
       }
       positionVotesMap.set(vote.position, existing);
     });
@@ -255,20 +254,20 @@ export const getPlayerVoteCounts = async (draftYear: string = "2025") => {
   }
 };
 
-// 全ポジションの投票数を取得（投票ページ表示用）
+// 全ポジションの投票数を取得（投票ページ表示用、ドラフト順位ごと）
 export const getPositionVoteCounts = async (draftYear: string = "2025") => {
   try {
     const { data, error } = await supabase
       .from("draft_team_position_votes")
-      .select("team_id, position")
+      .select("team_id, position, draft_round")
       .eq("draft_year", draftYear);
 
     if (error) throw error;
 
-    // team_id, position ごとに集計
+    // team_id, position, draft_round ごとに集計
     const voteCounts: Record<string, number> = {};
     (data || []).forEach((vote) => {
-      const key = `${vote.team_id}_${vote.position}`;
+      const key = `${vote.team_id}_${vote.draft_round}_${vote.position}`;
       voteCounts[key] = (voteCounts[key] || 0) + 1;
     });
 

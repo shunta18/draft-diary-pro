@@ -208,6 +208,7 @@ export type Database = {
       draft_team_position_votes: {
         Row: {
           created_at: string
+          draft_round: number
           draft_year: string
           id: string
           position: string
@@ -218,6 +219,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          draft_round?: number
           draft_year?: string
           id?: string
           position: string
@@ -228,6 +230,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          draft_round?: number
           draft_year?: string
           id?: string
           position?: string
