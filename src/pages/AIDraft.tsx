@@ -558,36 +558,41 @@ export default function AIDraft() {
       
       <main className="flex-1 container mx-auto px-4 py-8 space-y-6">
         {/* ヘッダー */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => navigate("/virtual-draft")}
+              className="shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">AIドラフト</h1>
-              <p className="text-muted-foreground">多層スコアリングシステムによる自動シミュレーション</p>
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold whitespace-nowrap">AIドラフト</h1>
+              <p className="text-xs sm:text-sm text-muted-foreground line-clamp-2">多層スコアリングシステムによる自動シミュレーション</p>
             </div>
           </div>
           
-          <div className="flex gap-2">
+          <div className="flex gap-2 ml-auto sm:ml-0">
             <Button
               variant="outline"
+              size="sm"
               onClick={() => setShowSettings(!showSettings)}
+              className="whitespace-nowrap"
             >
-              <Settings className="w-4 h-4 mr-2" />
-              設定
+              <Settings className="w-4 h-4 sm:mr-2" />
+              <span className="hidden sm:inline">設定</span>
             </Button>
             {simulationResult && (
               <Button
                 variant="outline"
+                size="sm"
                 onClick={handleExportCSV}
+                className="whitespace-nowrap"
               >
-                <Download className="w-4 h-4 mr-2" />
-                CSV出力
+                <Download className="w-4 h-4 sm:mr-2" />
+                <span className="hidden sm:inline">CSV出力</span>
               </Button>
             )}
           </div>
@@ -809,10 +814,10 @@ export default function AIDraft() {
         {/* シミュレーション結果 */}
         {simulationResult && (
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">シミュレーション結果</h2>
-              <div className="flex gap-2">
-                <Button onClick={handleStartSimulation} variant="outline">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
+              <div className="flex gap-2 flex-wrap">
+                <Button onClick={handleStartSimulation} variant="outline" size="sm" className="flex-1 sm:flex-none">
                   <Play className="w-4 h-4 mr-2" />
                   再シミュレーション
                 </Button>
@@ -860,7 +865,7 @@ export default function AIDraft() {
                     setSimulationResult(null);
                     setSimulating(true);
                   }
-                }} variant="outline">
+                }} variant="outline" size="sm" className="flex-1 sm:flex-none">
                   指名に戻る
                 </Button>
               </div>
