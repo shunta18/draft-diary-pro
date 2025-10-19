@@ -271,50 +271,52 @@ export function DuplicatePlayerChecker({ players, onPlayersUpdated }: DuplicateP
 
   return (
     <div className="w-full">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
+      <Card className="border-border/50">
+        <CardHeader className="pb-2 pt-3 px-4">
+          <CardTitle className="text-sm flex items-center gap-2">
             <Search className="h-4 w-4" />
             重複チェック
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
+        <CardContent className="space-y-2 px-4 pb-3">
           <Button
             onClick={scanForDuplicates}
             disabled={isScanning || players.length === 0}
-            className="w-full"
+            className="w-full h-9"
             variant="outline"
+            size="sm"
           >
-            {isScanning ? "スキャン中..." : "重複をスキャン"}
+            <Search className="h-3 w-3 mr-2" />
+            {isScanning ? "スキャン中..." : "スキャン"}
           </Button>
 
           {duplicateGroups.length > 0 && (
             <div className="space-y-2">
-              <div className="text-sm space-y-1">
+              <div className="text-xs space-y-1.5">
                 {idDuplicatesCount > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive" className="gap-1">
-                      <AlertTriangle className="h-3 w-3" />
-                      ID重複: {idDuplicatesCount}件
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge variant="destructive" className="gap-1 text-xs py-0 h-5">
+                      <AlertTriangle className="h-2.5 w-2.5" />
+                      ID重複: {idDuplicatesCount}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">（自動削除可能）</span>
+                    <span className="text-[10px] text-muted-foreground">自動削除可</span>
                   </div>
                 )}
                 {exactMatchesCount > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="destructive" className="gap-1">
-                      <AlertTriangle className="h-3 w-3" />
-                      完全一致: {exactMatchesCount}件
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="destructive" className="gap-1 text-xs py-0 h-5">
+                      <AlertTriangle className="h-2.5 w-2.5" />
+                      完全一致: {exactMatchesCount}
                     </Badge>
                   </div>
                 )}
                 {similarPlayersCount > 0 && (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="default" className="gap-1">
-                      <Info className="h-3 w-3" />
-                      類似選手: {similarPlayersCount}件
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <Badge variant="default" className="gap-1 text-xs py-0 h-5">
+                      <Info className="h-2.5 w-2.5" />
+                      類似: {similarPlayersCount}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">（要確認）</span>
+                    <span className="text-[10px] text-muted-foreground">要確認</span>
                   </div>
                 )}
               </div>
