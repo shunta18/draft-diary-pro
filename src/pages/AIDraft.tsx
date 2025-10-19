@@ -980,8 +980,13 @@ export default function AIDraft() {
 
       {/* 選手選択ダイアログ */}
       <Dialog open={showPlayerSelection} onOpenChange={(open) => {
-        // ダイアログを閉じるときも、currentPickInfoは保持する（後で再度開けるように）
-        setShowPlayerSelection(open);
+        // ✕ボタンでダイアログを閉じるときも、シミュレーションは継続し、currentPickInfoは保持する
+        if (!open) {
+          setShowPlayerSelection(false);
+          // simulatingとcurrentPickInfoは保持することで、再度選択ボタンを表示できる
+        } else {
+          setShowPlayerSelection(true);
+        }
       }}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
