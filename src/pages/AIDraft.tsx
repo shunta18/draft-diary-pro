@@ -574,28 +574,15 @@ export default function AIDraft() {
             </div>
           </div>
           
-          <div className="flex gap-2 ml-auto sm:ml-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowSettings(!showSettings)}
-              className="whitespace-nowrap"
-            >
-              <Settings className="w-4 h-4 sm:mr-2" />
-              <span className="hidden sm:inline">設定</span>
-            </Button>
-            {simulationResult && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportCSV}
-                className="whitespace-nowrap"
-              >
-                <Download className="w-4 h-4 sm:mr-2" />
-                <span className="hidden sm:inline">CSV出力</span>
-              </Button>
-            )}
-          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowSettings(!showSettings)}
+            className="whitespace-nowrap"
+          >
+            <Settings className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">設定</span>
+          </Button>
         </div>
 
         {/* 操作球団選択 */}
@@ -817,10 +804,6 @@ export default function AIDraft() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
               <div className="flex gap-2 flex-wrap">
-                <Button onClick={handleStartSimulation} variant="outline" size="sm" className="flex-1 sm:flex-none">
-                  <Play className="w-4 h-4 mr-2" />
-                  再シミュレーション
-                </Button>
                 <Button onClick={() => {
                   if (!simulationResult) return;
                   
