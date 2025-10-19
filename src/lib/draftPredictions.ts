@@ -79,14 +79,21 @@ export const upsertPositionVote = async (
       // 投票を追加（既存がある場合は更新）
       const { error } = await supabase
         .from("draft_team_position_votes")
-        .upsert({
-          user_id: user?.id || null,
-          session_id: user ? null : sessionId,
-          team_id: teamId,
-          position: position,
-          draft_round: draftRound,
-          draft_year: draftYear,
-        });
+        .upsert(
+          {
+            user_id: user?.id || null,
+            session_id: user ? null : sessionId,
+            team_id: teamId,
+            position: position,
+            draft_round: draftRound,
+            draft_year: draftYear,
+          },
+          {
+            onConflict: user 
+              ? 'user_id,team_id,draft_round,draft_year'
+              : 'session_id,team_id,draft_round,draft_year',
+          }
+        );
 
       if (error) throw error;
     } else {
