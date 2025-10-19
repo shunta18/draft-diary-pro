@@ -1203,13 +1203,13 @@ export default function AIDraft() {
         {/* 2巡目以降の単一指名完了ダイアログ */}
         <Dialog open={showSinglePickComplete} onOpenChange={(open) => {
           if (!open) {
-            // ✕ボタンで閉じた場合、シミュレーションを中断して結果を表示
+            // ✕ボタンで閉じた場合、シミュレーションを中断
+            setAnimationEnabled(false); // 先にアニメーションを無効化
+            setShowSinglePickComplete(false);
             if (singlePickResolve) {
-              singlePickResolve();
+              singlePickResolve(); // Promiseを解決（次のコールバックは無効化されているので呼ばれない）
               setSinglePickResolve(null);
             }
-            setShowSinglePickComplete(false);
-            setAnimationEnabled(false);
           }
         }}>
           <DialogContent className="max-w-md">
