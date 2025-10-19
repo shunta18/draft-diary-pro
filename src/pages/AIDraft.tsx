@@ -145,6 +145,11 @@ export default function AIDraft() {
   } | null>(null);
   const [picksCompleteResolve, setPicksCompleteResolve] = useState<(() => void) | null>(null);
   
+  // 1巡目完了後の表示用state
+  const [showFirstRoundResult, setShowFirstRoundResult] = useState(false);
+  const [firstRoundResolve, setFirstRoundResolve] = useState<(() => void) | null>(null);
+  
+  
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
     voteWeight: 40,
@@ -429,11 +434,19 @@ export default function AIDraft() {
         maxRounds,
         weights,
         "2025",
-        (round, partialResult) => {
+        async (round, partialResult) => {
           setCurrentSimulationRound(round);
           // 各ラウンド終了後に部分結果を更新
           if (partialResult) {
             setSimulationResult(partialResult);
+            
+            // 1巡目完了後に一時停止して結果を表示
+            if (round === 1) {
+              await new Promise<void>((resolve) => {
+                setShowFirstRoundResult(true);
+                setFirstRoundResolve(() => resolve);
+              });
+            }
           }
         },
         userTeamIds.length > 0 ? userTeamIds : undefined,
@@ -1311,6 +1324,73 @@ export default function AIDraft() {
                 次へ進む
               </Button>
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 1巡目完了後の結果表示ダイアログ */}
+      <Dialog open={showFirstRoundResult} onOpenChange={setShowFirstRoundResult}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">1巡目の結果</DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto">
+            {simulationResult && (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10"></TableHead>
+                    {displayOrder.map(teamId => {
+                      const team = teams.find(t => t.id === teamId);
+                      if (!team) return null;
+                      return (
+                        <TableHead 
+                          key={team.id} 
+                          className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white`}
+                        >
+                          {team.shortName}
+                        </TableHead>
+                      );
+                    })}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  <TableRow>
+                    <TableCell className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap">1位</TableCell>
+                    {displayOrder.map(teamId => {
+                      const pick = simulationResult.picks.find(p => p.teamId === teamId && p.round === 1);
+                      const player = players.find(p => p.id === pick?.playerId);
+                      return (
+                        <TableCell key={teamId} className="border-r text-center">
+                          {pick ? (
+                            <div className="space-y-1">
+                              <div className="font-medium text-sm">{player?.name || ''}</div>
+                              <div className="text-xs text-muted-foreground">{player?.team || ''}</div>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <div className="pt-4 border-t flex justify-end">
+            <Button 
+              size="lg"
+              onClick={() => {
+                setShowFirstRoundResult(false);
+                if (firstRoundResolve) {
+                  firstRoundResolve();
+                  setFirstRoundResolve(null);
+                }
+              }}
+            >
+              2巡目に進む
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
