@@ -223,7 +223,7 @@ export default function AIDraft() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
       <SEO 
-        title="スコアリングドラフト"
+        title="AIドラフト"
         description="多層スコアリングシステムによる自動ドラフトシミュレーション"
       />
       <Navigation />
@@ -240,7 +240,7 @@ export default function AIDraft() {
               <ArrowLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">スコアリングドラフト</h1>
+              <h1 className="text-3xl font-bold">AIドラフト</h1>
               <p className="text-muted-foreground">多層スコアリングシステムによる自動シミュレーション</p>
             </div>
           </div>
