@@ -194,41 +194,22 @@ export async function runDraftSimulation(
           }
         });
         
-        // pickRound === 1（最初の1位指名）の場合は、onPicksCompleteを呼ばずに抽選処理のみ実行
-        if (pickRound === 1) {
-          // 抽選アニメーションがある場合は表示
-          if (currentLotteries.length > 0 && onLotteryFound) {
-            await onLotteryFound(currentLotteries);
-          }
-          // 注意: ここでは onPicksComplete を呼ばない
-          // 当選した指名を確定してから、次のステップで表示する
-        } else {
-          // pickRound >= 2（外れ1位以降）の場合は従来通り
-          if (currentLotteries.length > 0 && onLotteryFound) {
-            await onLotteryFound(currentLotteries);
-            
-            if (onPicksComplete) {
-              const picksWithNames = currentRoundPicks.map(pick => {
-                const player = availablePlayers.find(p => p.id === pick.playerId);
-                return {
-                  teamId: pick.teamId,
-                  playerId: pick.playerId,
-                  playerName: player?.name || ""
-                };
-              });
-              await onPicksComplete(pickRound, picksWithNames, availablePlayers, currentLotteries.length > 0);
-            }
-          } else if (onPicksComplete) {
-            const picksWithNames = currentRoundPicks.map(pick => {
-              const player = availablePlayers.find(p => p.id === pick.playerId);
-              return {
-                teamId: pick.teamId,
-                playerId: pick.playerId,
-                playerName: player?.name || ""
-              };
-            });
-            await onPicksComplete(pickRound, picksWithNames, availablePlayers, false);
-          }
+        // 抽選アニメーションがある場合は表示
+        if (currentLotteries.length > 0 && onLotteryFound) {
+          await onLotteryFound(currentLotteries);
+        }
+        
+        // 全てのpickRoundで、確定後にシミュレーション結果を表示
+        if (onPicksComplete) {
+          const picksWithNames = currentRoundPicks.map(pick => {
+            const player = availablePlayers.find(p => p.id === pick.playerId);
+            return {
+              teamId: pick.teamId,
+              playerId: pick.playerId,
+              playerName: player?.name || ""
+            };
+          });
+          await onPicksComplete(pickRound, picksWithNames, availablePlayers, currentLotteries.length > 0);
         }
         
         // 当選した指名をpicksに追加し、選手をavailablePlayersから除外
@@ -277,18 +258,6 @@ export async function runDraftSimulation(
           availablePlayers = availablePlayers.filter(p => p.id !== selectedPlayer.id);
         }
         
-        // pickRound === 1 の場合、全ての当選が確定した後にシミュレーション結果を表示
-        if (pickRound === 1 && onPicksComplete) {
-          const confirmedPicks = picks
-            .filter(p => p.round === 1)
-            .map(p => ({
-              teamId: p.teamId,
-              playerId: p.playerId,
-              playerName: p.playerName
-            }));
-          
-          await onPicksComplete(1, confirmedPicks, availablePlayers, currentLotteries.length > 0);
-        }
         
         // 次のラウンドは外れた球団のみ
         remainingTeams = losingTeams;
