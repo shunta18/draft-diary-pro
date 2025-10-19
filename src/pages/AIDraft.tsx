@@ -1341,7 +1341,7 @@ export default function AIDraft() {
                   }
                 }}
               >
-                抽選に進む
+                {picksCompleteInfo.pickRound === 1 ? "抽選に進む" : "外れ1位の選択へ進む"}
               </Button>
             ) : (
               <Button 
