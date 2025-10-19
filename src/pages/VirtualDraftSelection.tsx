@@ -76,7 +76,7 @@ export default function VirtualDraftSelection() {
                 <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
                   <Sparkles className="w-8 h-8 text-primary-foreground" />
                 </div>
-                <CardTitle className="text-2xl">スコアリングドラフト</CardTitle>
+                <CardTitle className="text-2xl">AIドラフト</CardTitle>
                 <CardDescription className="text-base">
                   多層スコアリングシステムによる自動シミュレーションで、リアルなドラフトを再現
                 </CardDescription>
@@ -106,7 +106,7 @@ export default function VirtualDraftSelection() {
                   size="lg"
                   variant="default"
                 >
-                  スコアリングドラフトを開始
+                  AIドラフトを開始
                 </Button>
               </CardContent>
             </Card>
