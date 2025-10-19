@@ -108,7 +108,7 @@ export default function AIDraft() {
   const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null);
   const [currentSimulationRound, setCurrentSimulationRound] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
-  const [maxRounds, setMaxRounds] = useState(10);
+  const [maxRounds, setMaxRounds] = useState(3);
   const [userTeamIds, setUserTeamIds] = useState<number[]>([]);
   const [showPlayerSelection, setShowPlayerSelection] = useState(false);
   const [availablePlayersForSelection, setAvailablePlayersForSelection] = useState<NormalizedPlayer[]>([]);
@@ -574,15 +574,6 @@ export default function AIDraft() {
             </div>
           </div>
           
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowSettings(!showSettings)}
-            className="whitespace-nowrap"
-          >
-            <Settings className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">設定</span>
-          </Button>
         </div>
 
         {/* 操作球団選択 */}
@@ -658,11 +649,11 @@ export default function AIDraft() {
                   value={[maxRounds]}
                   onValueChange={([value]) => setMaxRounds(value)}
                   min={1}
-                  max={20}
+                  max={10}
                   step={1}
                 />
                 <p className="text-xs text-muted-foreground mt-2">
-                  各球団が指名する選手の人数を設定します（1〜20人）
+                  各球団が指名する選手の人数を設定します（1〜10人）
                 </p>
               </div>
             </CardContent>
@@ -799,14 +790,25 @@ export default function AIDraft() {
                 <Progress value={(currentSimulationRound / maxRounds) * 100} className="w-64" />
               ) : null}
               
-              <div className="flex items-center justify-center gap-3 text-sm">
-                <span className="text-muted-foreground">抽選アニメーション</span>
-                <Switch
-                  checked={animationEnabled}
-                  onCheckedChange={setAnimationEnabled}
-                  disabled={simulating}
-                />
-                <span className="text-muted-foreground">{animationEnabled ? 'ON' : 'OFF'}</span>
+              <div className="flex flex-col items-center gap-3">
+                <div className="flex items-center justify-center gap-3 text-sm">
+                  <span className="text-muted-foreground">抽選アニメーション</span>
+                  <Switch
+                    checked={animationEnabled}
+                    onCheckedChange={setAnimationEnabled}
+                    disabled={simulating}
+                  />
+                  <span className="text-muted-foreground">{animationEnabled ? 'ON' : 'OFF'}</span>
+                </div>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSettings(!showSettings)}
+                >
+                  <Settings className="w-4 h-4 mr-2" />
+                  設定
+                </Button>
               </div>
             </CardContent>
           </Card>
