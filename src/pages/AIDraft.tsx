@@ -930,6 +930,8 @@ export default function AIDraft() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
                <Button 
+                size="lg"
+                className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-white font-bold shadow-lg hover:shadow-xl transition-all duration-300 px-6 py-3 text-base"
                 onClick={async () => {
                   if (!simulationResult) return;
                   
@@ -1078,10 +1080,9 @@ export default function AIDraft() {
                     setSimulating(false);
                   }
                 }}
-                variant="outline" 
-                size="sm" 
-                className="flex-1 sm:flex-none"
+                disabled={simulating}
               >
+                <Play className="w-5 h-5 mr-2" />
                 シミュレーションを再開
               </Button>
             </div>
