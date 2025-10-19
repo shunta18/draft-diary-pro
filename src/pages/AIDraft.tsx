@@ -18,7 +18,8 @@ import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import mustacheLogo from "@/assets/mustache-logo.png";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -118,6 +119,19 @@ export default function AIDraft() {
   const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPicks, setCurrentPicks] = useState<DraftPick[]>([]);
+  const [zoomLevel, setZoomLevel] = useState(0.55);
+  
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.05, 1.0));
+  };
+  
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.05, 0.3));
+  };
+  
+  const handleZoomReset = () => {
+    setZoomLevel(0.55);
+  };
   const [currentLostPicks, setCurrentLostPicks] = useState<Array<{teamId: number; playerId: number; playerName: string; pickLabel: string}>>([]);
   const [showFullScreen, setShowFullScreen] = useState(false);
   
@@ -1497,32 +1511,70 @@ export default function AIDraft() {
 
       {/* 全画面表示ダイアログ */}
       <Dialog open={showFullScreen} onOpenChange={setShowFullScreen}>
-        <DialogContent className="max-w-[98vw] w-full max-h-[98vh] overflow-hidden flex flex-col p-2">
-          <DialogHeader className="pb-2">
-            <DialogTitle className="text-xl">シミュレーション結果 - 全画面表示</DialogTitle>
-          </DialogHeader>
-          
-          {simulationResult && (
-            <Tabs defaultValue="overall" className="w-full flex-1 flex flex-col overflow-hidden">
-              <TabsList className="grid w-full grid-cols-2 mb-4 shrink-0">
-                <TabsTrigger value="overall">全体</TabsTrigger>
-                <TabsTrigger value="by-team">球団ごと</TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="overall" className="flex-1 overflow-auto mt-2">
-                <Card className="h-full">
-                  <CardContent className="p-4 overflow-x-auto">
-                    <Table>
+        <DialogContent className="max-w-[100vw] w-screen h-screen p-0 overflow-hidden bg-white" hideCloseButton>
+          <div className="h-full w-full flex flex-col relative">
+            {/* ズームコントロールボタン */}
+            <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+              <Button
+                onClick={handleZoomIn}
+                size="icon"
+                className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
+                disabled={zoomLevel >= 1.0}
+              >
+                <span className="text-xl font-bold">＋</span>
+              </Button>
+              <Button
+                onClick={handleZoomOut}
+                size="icon"
+                className="h-10 w-10 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg"
+                disabled={zoomLevel <= 0.3}
+              >
+                <span className="text-xl font-bold">−</span>
+              </Button>
+              <Button
+                onClick={handleZoomReset}
+                size="sm"
+                className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
+              >
+                リセット
+              </Button>
+              <DialogClose asChild>
+                <Button
+                  size="sm"
+                  className="h-8 px-2 bg-white/90 hover:bg-white text-black border border-gray-300 shadow-lg text-xs"
+                >
+                  閉じる
+                </Button>
+              </DialogClose>
+            </div>
+            
+            <div className="flex-1 flex items-start justify-start py-16 px-0.5 md:p-4 overflow-auto w-full">
+              <div className="flex flex-col items-start w-full">
+                {/* ロゴとブランディング */}
+                <div className="mb-2 md:mb-3 w-full flex justify-start">
+                  <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
+                    <img src="/mustache-logo.png" alt="BaaS Logo" className="h-4 md:h-8 w-auto" />
+                    <span className="font-semibold text-sm md:text-lg text-black">BaaS 野球スカウトノート</span>
+                  </div>
+                </div>
+                
+                {/* テーブル */}
+                <div className="overflow-visible w-full">
+                  <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }} className="transition-transform duration-200">
+                    <Table className="border-collapse text-[9px]">
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10 w-20"></TableHead>
+                          <TableHead className="whitespace-nowrap bg-white text-black px-0.5 py-0.5 border border-gray-300 font-semibold w-8 text-center text-[9px]"></TableHead>
                           {displayOrder.map(teamId => {
                             const team = teams.find(t => t.id === teamId);
                             if (!team) return null;
                             return (
                               <TableHead 
                                 key={team.id} 
-                                className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white w-28`}
+                                className="whitespace-nowrap text-center font-bold border border-gray-300 px-0.5 py-[3px] text-white min-w-[60px] w-[60px] text-[9px]"
+                                style={{
+                                  background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
+                                }}
                               >
                                 {team.shortName}
                               </TableHead>
@@ -1532,10 +1584,10 @@ export default function AIDraft() {
                       </TableHeader>
                       <TableBody>
                         {(() => {
-                          const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
-                          const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
+                          const firstRoundPicks = simulationResult!.picks.filter(p => p.round === 1);
+                          const firstRoundLostPicks = simulationResult!.lostPicks?.filter(p => p.round === 1) || [];
                           
-                          const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
+                          const maxRound = Math.max(...simulationResult!.picks.map(p => p.round));
                           const rows = [];
                           
                           if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
@@ -1552,7 +1604,7 @@ export default function AIDraft() {
                                   {rowIndex === 0 && (
                                     <TableCell 
                                       rowSpan={maxRowsTotal}
-                                      className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-sm align-middle border-r w-20"
+                                      className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]"
                                     >
                                       1位
                                     </TableCell>
@@ -1564,7 +1616,7 @@ export default function AIDraft() {
                                     
                                     if (rowIndex >= allTeamItems.length) {
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-sm border-r w-28">
+                                        <TableCell key={teamId} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
                                           ―
                                         </TableCell>
                                       );
@@ -1574,14 +1626,14 @@ export default function AIDraft() {
                                     
                                     if (item.type === 'lost') {
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-sm text-muted-foreground/50 border-r w-28">
+                                        <TableCell key={teamId} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                           {item.data.playerName}
                                         </TableCell>
                                       );
                                     } else {
                                       const player = players.find(p => p.id === item.data.playerId);
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-sm border-r w-28">
+                                        <TableCell key={teamId} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                           {player ? player.name : "―"}
                                         </TableCell>
                                       );
@@ -1595,17 +1647,17 @@ export default function AIDraft() {
                           for (let round = 2; round <= maxRound; round++) {
                             rows.push(
                               <TableRow key={`round-${round}`}>
-                                <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-sm align-middle border-r w-20">
+                                <TableCell className="font-semibold whitespace-nowrap bg-white text-black align-middle border border-gray-300 px-0.5 py-0.5 text-center text-[9px]">
                                   {round}位
                                 </TableCell>
                                 {displayOrder.map(teamId => {
                                   const team = teams.find(t => t.id === teamId);
                                   if (!team) return null;
-                                  const pick = simulationResult.picks.find(p => p.teamId === teamId && p.round === round);
+                                  const pick = simulationResult!.picks.find(p => p.teamId === teamId && p.round === round);
                                   const player = pick ? players.find(p => p.id === pick.playerId) : null;
                                   
                                   return (
-                                    <TableCell key={team.id} className="whitespace-nowrap text-center text-sm border-r w-28">
+                                    <TableCell key={team.id} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap overflow-hidden text-ellipsis text-[9px]">
                                       {player ? player.name : "―"}
                                     </TableCell>
                                   );
@@ -1618,81 +1670,11 @@ export default function AIDraft() {
                         })()}
                       </TableBody>
                     </Table>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="by-team" className="flex-1 overflow-auto mt-2 space-y-3 px-2">
-                {displayOrder.map(teamId => {
-                  const team = teams.find(t => t.id === teamId);
-                  if (!team) return null;
-                  
-                  const teamPicks = simulationResult.picks.filter(p => p.teamId === team.id);
-                  const teamLostPicks = simulationResult.lostPicks?.filter(lp => lp.teamId === team.id) || [];
-                  
-                  return (
-                    <Card 
-                      key={team.id}
-                      className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden border-0"
-                      style={{
-                        background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
-                      }}
-                      onClick={() => {
-                        const dialog = document.createElement('div');
-                        dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
-                        dialog.innerHTML = `
-                          <div class="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))">
-                              <h3 class="font-bold text-lg">${team.name}</h3>
-                            </div>
-                            <div class="p-4 space-y-3">
-                              <div>
-                                <p class="text-sm text-muted-foreground mb-2">指名選手</p>
-                                ${teamLostPicks.length > 0 ? teamLostPicks.map(lp => `
-                                  <p class="text-sm mb-1 text-muted-foreground/70">
-                                    ${lp.round}位: ${lp.playerName} <span class="text-xs">(抽選外れ)</span>
-                                  </p>
-                                `).join('') : ''}
-                                ${teamPicks.length > 0 ? teamPicks.sort((a, b) => a.round - b.round).map(pick => `
-                                  <p class="text-sm mb-1">
-                                    ${pick.round}位: ${pick.playerName}
-                                  </p>
-                                `).join('') : '<p class="text-sm text-muted-foreground">指名選手なし</p>'}
-                              </div>
-                            </div>
-                            <div class="p-4 border-t flex flex-col items-center gap-3">
-                              <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                                <img src="/mustache-logo.png" alt="BaaS Logo" class="h-6 w-auto" />
-                                <span>BaaS 野球スカウトノート</span>
-                              </div>
-                              <button class="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md" onclick="this.closest('.fixed').remove()">
-                                閉じる
-                              </button>
-                            </div>
-                          </div>
-                        `;
-                        dialog.addEventListener('click', (e) => {
-                          if (e.target === dialog) dialog.remove();
-                        });
-                        document.body.appendChild(dialog);
-                      }}
-                    >
-                      <div className="p-4">
-                        <div className="flex items-center justify-between text-white">
-                          <div>
-                            <p className="font-semibold text-lg">{team.shortName}</p>
-                            <p className="text-sm text-white/90">
-                              {teamPicks.length}名指名
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  );
-                })}
-              </TabsContent>
-            </Tabs>
-          )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
