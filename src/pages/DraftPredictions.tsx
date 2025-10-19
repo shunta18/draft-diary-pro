@@ -38,12 +38,7 @@ const teams = [
   { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800" },
 ];
 
-const positions = [
-  { value: "投手", label: "投手" },
-  { value: "捕手", label: "捕手" },
-  { value: "内野手", label: "内野手" },
-  { value: "外野手", label: "外野手" },
-];
+const positions = ["投手", "捕手", "内野手", "外野手"];
 
 interface RawSupabasePlayer {
   id: number;
@@ -95,6 +90,7 @@ export default function DraftPredictions() {
   const [playerVoteCounts, setPlayerVoteCounts] = useState<Record<string, number>>({});
   const [positionVoteCounts, setPositionVoteCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [tempPositionSelections, setTempPositionSelections] = useState<Record<number, string>>({});
   const { toast } = useToast();
   const { user } = useAuth();
 
@@ -281,14 +277,68 @@ export default function DraftPredictions() {
   // ドラフト順位ごとのソート済みポジション
   const getSortedPositionsForRound = (draftRound: number) => {
     return [...positions].sort((a, b) => {
-      const countA = getPositionVoteCount(draftRound, a.value);
-      const countB = getPositionVoteCount(draftRound, b.value);
+      const countA = getPositionVoteCount(draftRound, a);
+      const countB = getPositionVoteCount(draftRound, b);
       return countB - countA;
     });
   };
 
   const getMaxPositionVotesForRound = (draftRound: number) => {
-    return Math.max(...positions.map((p) => getPositionVoteCount(draftRound, p.value)), 1);
+    return Math.max(...positions.map((p) => getPositionVoteCount(draftRound, p)), 1);
+  };
+
+  const handleBulkPositionVote = async () => {
+    const selections = Object.entries(tempPositionSelections);
+    
+    if (selections.length === 0) {
+      toast({
+        title: "エラー",
+        description: "少なくとも1つのポジションを選択してください",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    let hasError = false;
+    for (const [round, position] of selections) {
+      const { error } = await upsertPositionVote(selectedTeam, parseInt(round), position, selectedYear);
+      if (error) {
+        hasError = true;
+        break;
+      }
+    }
+
+    if (hasError) {
+      toast({
+        title: "エラー",
+        description: "投票の更新に失敗しました",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // ローカル状態を更新
+    const newVotes = selections.map(([round, position]) => ({
+      team_id: selectedTeam,
+      position,
+      draft_round: parseInt(round),
+    }));
+    
+    setUserPositionVotes([
+      ...userPositionVotes.filter((v) => v.team_id !== selectedTeam),
+      ...newVotes,
+    ]);
+
+    setTempPositionSelections({});
+
+    toast({
+      title: "投票完了",
+      description: "補強ポジションの投票が完了しました",
+    });
+
+    // 投票数を再読み込み
+    const { voteCounts } = await getPositionVoteCounts(selectedYear);
+    setPositionVoteCounts(voteCounts);
   };
 
   return (
@@ -470,13 +520,24 @@ export default function DraftPredictions() {
                     {teams.find((t) => t.id === selectedTeam)?.name}のドラフト指名予想
                   </CardTitle>
                   <CardDescription>
-                    各順位で指名したいポジションを選択してください
+                    各順位で指名したいポジションを選択してから、投票ボタンを押してください
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-6">
+                    {/* 投票ボタン */}
+                    <Button 
+                      onClick={handleBulkPositionVote}
+                      size="lg"
+                      className="w-full"
+                      disabled={Object.keys(tempPositionSelections).length === 0}
+                    >
+                      <Vote className="h-5 w-5 mr-2" />
+                      投票する
+                    </Button>
+
                     {[1, 2, 3, 4, 5].map((round) => {
-                      const selectedPosition = getSelectedPosition(round);
+                      const selectedPosition = tempPositionSelections[round] || getSelectedPosition(round);
                       const sortedPositions = getSortedPositionsForRound(round);
                       const maxVotes = getMaxPositionVotesForRound(round);
 
@@ -484,42 +545,39 @@ export default function DraftPredictions() {
                         <div key={round} className="space-y-3">
                           <div className="space-y-2">
                             <div className="font-bold text-lg">{round}位</div>
-                            <div className="flex flex-wrap gap-2">
-                              {positions.map((position) => {
-                                const isSelected = selectedPosition === position.value;
-                                const voteCount = getPositionVoteCount(round, position.value);
-                                
-                                return (
-                                  <Button
-                                    key={position.value}
-                                    variant={isSelected ? "default" : "outline"}
-                                    size="lg"
-                                    onClick={() => handlePositionVoteChange(round, isSelected ? null : position.value)}
-                                    className="flex-1 min-w-[120px]"
-                                  >
-                                    <div className="flex flex-col items-center gap-1">
-                                      <span>{position.label}</span>
-                                      {voteCount > 0 && (
-                                        <span className="text-xs opacity-70">{voteCount}票</span>
-                                      )}
-                                    </div>
-                                  </Button>
-                                );
-                              })}
-                            </div>
+                            <Select
+                              value={selectedPosition}
+                              onValueChange={(value) => {
+                                setTempPositionSelections({
+                                  ...tempPositionSelections,
+                                  [round]: value,
+                                });
+                              }}
+                            >
+                              <SelectTrigger className={selectedPosition ? "bg-accent/50 border-primary" : ""}>
+                                <SelectValue placeholder="ポジションを選択" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {positions.map((position) => (
+                                  <SelectItem key={position} value={position}>
+                                    {position}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                           </div>
                           
                           {/* トップ3のポジション投票数を表示 */}
                           <div className="space-y-2">
                             {sortedPositions.slice(0, 3).map((position) => {
-                              const voteCount = getPositionVoteCount(round, position.value);
+                              const voteCount = getPositionVoteCount(round, position);
                               const votePercentage = maxVotes > 0 ? (voteCount / maxVotes) * 100 : 0;
                               
                               if (voteCount === 0) return null;
 
                               return (
-                                <div key={position.value} className="flex items-center gap-2">
-                                  <span className="text-sm font-medium w-20">{position.label}</span>
+                                <div key={position} className="flex items-center gap-2">
+                                  <span className="text-sm font-medium w-20">{position}</span>
                                   <Progress value={votePercentage} className="h-2 flex-1" />
                                   <span className="text-sm text-muted-foreground whitespace-nowrap">
                                     {voteCount}票
