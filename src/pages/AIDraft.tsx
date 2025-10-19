@@ -150,13 +150,6 @@ export default function AIDraft() {
     checkAdmin();
   }, []);
 
-  // userが変更されたときに再読み込み
-  useEffect(() => {
-    if (user) {
-      loadWeights();
-    }
-  }, [user]);
-
   // リアルタイム更新の監視
   useEffect(() => {
     const channel = supabase
@@ -203,39 +196,43 @@ export default function AIDraft() {
 
   const loadWeights = async () => {
     try {
-      // まずLocalStorageから読み込み
+      // Supabaseから最新の設定を読み込み（全ユーザー対象）
+      const { data, error } = await supabase
+        .from("draft_scoring_weights")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (data) {
+        const dbWeights = {
+          voteWeight: data.vote_weight,
+          teamNeedsWeight: data.team_needs_weight,
+          playerRatingWeight: data.player_rating_weight,
+          realismWeight: data.realism_weight
+        };
+        setWeights(dbWeights);
+        setWeightId(data.id);
+        // LocalStorageにも保存（オフライン時用）
+        localStorage.setItem('aiDraftWeights', JSON.stringify(dbWeights));
+      } else {
+        // データがない場合のみLocalStorageから読み込み
+        const savedWeights = localStorage.getItem('aiDraftWeights');
+        if (savedWeights) {
+          const parsed = JSON.parse(savedWeights);
+          setWeights(parsed);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading weights:", error);
+      // エラー時はLocalStorageから読み込み
       const savedWeights = localStorage.getItem('aiDraftWeights');
       if (savedWeights) {
         const parsed = JSON.parse(savedWeights);
         setWeights(parsed);
       }
-
-      // ログインユーザーの場合はSupabaseから読み込み（上書き）
-      if (user) {
-        const { data, error } = await supabase
-          .from("draft_scoring_weights")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        if (error) throw error;
-        
-        if (data) {
-          const dbWeights = {
-            voteWeight: data.vote_weight,
-            teamNeedsWeight: data.team_needs_weight,
-            playerRatingWeight: data.player_rating_weight,
-            realismWeight: data.realism_weight
-          };
-          setWeights(dbWeights);
-          setWeightId(data.id);
-          // LocalStorageにも保存
-          localStorage.setItem('aiDraftWeights', JSON.stringify(dbWeights));
-        }
-      }
-    } catch (error) {
-      console.error("Error loading weights:", error);
     }
   };
 
