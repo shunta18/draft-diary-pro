@@ -978,23 +978,21 @@ export default function AIDraft() {
                           setShowPlayerSelection(true);
                         });
                       } : undefined,
-                      animationEnabled ? async (lotteries) => {
+                      async (lotteries) => {
                         return new Promise<void>((resolve) => {
                           setLotteryQueue(prev => [...prev, lotteries]);
                           setLotteryResolve(() => resolve);
                           setShowLottery(true);
                         });
-                      } : undefined,
-                      async (pickRound, picks, lostPicks, availablePlayers, hasContest) => {
-                        if (animationEnabled) {
-                          return new Promise<void>((resolve) => {
-                            setPicksCompleteInfo({ pickRound, picks, hasContest });
-                            setPicksCompleteResolve(() => resolve);
-                            setShowPicksComplete(true);
-                          });
-                        }
                       },
-                      animationEnabled ? async (round, teamId, pick) => {
+                      async (pickRound, picks, lostPicks, availablePlayers, hasContest) => {
+                        return new Promise<void>((resolve) => {
+                          setPicksCompleteInfo({ pickRound, picks, hasContest });
+                          setPicksCompleteResolve(() => resolve);
+                          setShowPicksComplete(true);
+                        });
+                      },
+                      async (round, teamId, pick) => {
                         return new Promise<{ shouldContinue: boolean }>((resolve) => {
                           setSinglePickInfo({
                             round,
@@ -1008,7 +1006,7 @@ export default function AIDraft() {
                           });
                           setShowSinglePickComplete(true);
                         });
-                      } : undefined,
+                      },
                       nextRound,
                       allPicks,
                       allLostPicks,
