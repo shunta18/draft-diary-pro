@@ -922,19 +922,13 @@ export default function AIDraft() {
               </div>
             </div>
 
-            <Tabs defaultValue="all" className="w-full">
-              <ScrollArea className="w-full whitespace-nowrap">
-                <TabsList className="inline-flex w-auto">
-                  <TabsTrigger value="all">全体</TabsTrigger>
-                  {teams.map(team => (
-                    <TabsTrigger key={team.id} value={team.id.toString()}>
-                      {team.shortName}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </ScrollArea>
+            <Tabs defaultValue="overall" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-4">
+                <TabsTrigger value="overall">全体</TabsTrigger>
+                <TabsTrigger value="by-team">球団ごと</TabsTrigger>
+              </TabsList>
               
-              <TabsContent value="all">
+              <TabsContent value="overall">
                 <Card>
                   <CardContent className="p-6 overflow-x-auto">
                     <Table>
@@ -1050,77 +1044,75 @@ export default function AIDraft() {
                 </Card>
               </TabsContent>
               
-              {teams.map(team => (
-                <TabsContent key={team.id} value={team.id.toString()}>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className={`bg-gradient-to-br ${team.color} text-white p-4 rounded-lg`}>
-                        {team.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <div className="space-y-4">
-                        {(() => {
-                          const teamPicks = simulationResult.picks.filter(p => p.teamId === team.id);
-                          const teamLostPicks = simulationResult.lostPicks?.filter(lp => lp.teamId === team.id) || [];
-                          const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
-                          
-                          return (
-                            <>
-                              {/* 1巡目 */}
-                              {teamPicks.filter(p => p.round === 1).length > 0 || teamLostPicks.filter(lp => lp.round === 1).length > 0 ? (
-                                <div className="space-y-2">
-                                  <h3 className="font-semibold text-lg">1位</h3>
-                                  <div className="space-y-1">
-                                    {teamLostPicks.filter(lp => lp.round === 1).map((lp, idx) => {
-                                      const player = players.find(p => p.id === lp.playerId);
-                                      return (
-                                        <div key={`lost-${idx}`} className="p-3 bg-muted/30 rounded-lg text-muted-foreground/50">
-                                          <div className="font-medium">{lp.playerName}</div>
-                                          <div className="text-sm">{player?.team || ''}</div>
-                                          <div className="text-xs">{player?.position || ''}</div>
-                                        </div>
-                                      );
-                                    })}
-                                    {teamPicks.filter(p => p.round === 1).map(pick => {
-                                      const player = players.find(p => p.id === pick.playerId);
-                                      return (
-                                        <div key={pick.playerId} className="p-3 bg-primary/5 rounded-lg border-2 border-primary/20">
-                                          <div className="font-bold text-lg">{player?.name || ''}</div>
-                                          <div className="text-sm text-muted-foreground">{player?.team || ''}</div>
-                                          <div className="text-sm text-muted-foreground">{player?.position || ''}</div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              ) : null}
-                              
-                              {/* 2巡目以降 */}
-                              {Array.from({ length: maxRound - 1 }, (_, i) => i + 2).map(round => {
-                                const pick = teamPicks.find(p => p.round === round);
-                                if (!pick) return null;
-                                const player = players.find(p => p.id === pick.playerId);
-                                
-                                return (
-                                  <div key={round} className="space-y-2">
-                                    <h3 className="font-semibold text-lg">{round}位</h3>
-                                    <div className="p-3 bg-primary/5 rounded-lg border-2 border-primary/20">
-                                      <div className="font-bold text-lg">{player?.name || ''}</div>
-                                      <div className="text-sm text-muted-foreground">{player?.team || ''}</div>
-                                      <div className="text-sm text-muted-foreground">{player?.position || ''}</div>
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </>
-                          );
-                        })()}
+              <TabsContent value="by-team" className="space-y-3">
+                {displayOrder.map(teamId => {
+                  const team = teams.find(t => t.id === teamId);
+                  if (!team) return null;
+                  
+                  const teamPicks = simulationResult.picks.filter(p => p.teamId === team.id);
+                  const teamLostPicks = simulationResult.lostPicks?.filter(lp => lp.teamId === team.id) || [];
+                  
+                  return (
+                    <Card 
+                      key={team.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden border-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${team.color.split(' ')[0].replace('from-', '')}, ${team.color.split(' ')[1].replace('to-', '')})`
+                      }}
+                      onClick={() => {
+                        const dialog = document.createElement('div');
+                        dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
+                        dialog.innerHTML = `
+                          <div class="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, ${team.color.split(' ')[0].replace('from-', '')}, ${team.color.split(' ')[1].replace('to-', '')})">
+                              <h3 class="font-bold text-lg">${team.name}</h3>
+                            </div>
+                            <div class="p-4 space-y-3">
+                              <div>
+                                <p class="text-sm text-muted-foreground mb-2">指名選手</p>
+                                ${teamLostPicks.length > 0 ? teamLostPicks.map(lp => `
+                                  <p class="text-sm mb-1 text-muted-foreground/70">
+                                    ${lp.round}位: ${lp.playerName} <span class="text-xs">(抽選外れ)</span>
+                                  </p>
+                                `).join('') : ''}
+                                ${teamPicks.length > 0 ? teamPicks.sort((a, b) => a.round - b.round).map(pick => `
+                                  <p class="text-sm mb-1">
+                                    ${pick.round}位: ${pick.playerName}
+                                  </p>
+                                `).join('') : '<p class="text-sm text-muted-foreground">指名選手なし</p>'}
+                              </div>
+                            </div>
+                            <div class="p-4 border-t flex flex-col items-center gap-3">
+                              <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                                <img src="/mustache-logo.png" alt="BaaS Logo" class="h-6 w-auto" />
+                                <span>BaaS 野球スカウトノート</span>
+                              </div>
+                              <button class="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md" onclick="this.closest('.fixed').remove()">
+                                閉じる
+                              </button>
+                            </div>
+                          </div>
+                        `;
+                        dialog.addEventListener('click', (e) => {
+                          if (e.target === dialog) dialog.remove();
+                        });
+                        document.body.appendChild(dialog);
+                      }}
+                    >
+                      <div className="p-4">
+                        <div className="flex items-center justify-between text-white">
+                          <div>
+                            <p className="font-semibold text-lg">{team.shortName}</p>
+                            <p className="text-sm text-white/90">
+                              {teamPicks.length}名指名
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              ))}
+                    </Card>
+                  );
+                })}
+              </TabsContent>
             </Tabs>
           </div>
         )}
@@ -1506,19 +1498,13 @@ export default function AIDraft() {
           </DialogHeader>
           
           {simulationResult && (
-            <Tabs defaultValue="all" className="w-full flex-1 flex flex-col overflow-hidden">
-              <ScrollArea className="w-full whitespace-nowrap shrink-0">
-                <TabsList className="inline-flex w-auto">
-                  <TabsTrigger value="all">全体</TabsTrigger>
-                  {teams.map(team => (
-                    <TabsTrigger key={team.id} value={team.id.toString()}>
-                      {team.shortName}
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </ScrollArea>
+            <Tabs defaultValue="overall" className="w-full flex-1 flex flex-col overflow-hidden">
+              <TabsList className="grid w-full grid-cols-2 mb-4 shrink-0">
+                <TabsTrigger value="overall">全体</TabsTrigger>
+                <TabsTrigger value="by-team">球団ごと</TabsTrigger>
+              </TabsList>
               
-              <TabsContent value="all" className="flex-1 overflow-auto mt-2">
+              <TabsContent value="overall" className="flex-1 overflow-auto mt-2">
                 <Card className="h-full">
                   <CardContent className="p-4 overflow-x-auto">
                     <Table>
@@ -1631,77 +1617,75 @@ export default function AIDraft() {
                 </Card>
               </TabsContent>
               
-              {teams.map(team => (
-                <TabsContent key={team.id} value={team.id.toString()} className="flex-1 overflow-auto mt-2">
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className={`bg-gradient-to-br ${team.color} text-white p-4 rounded-lg`}>
-                        {team.name}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                      <ScrollArea className="h-full">
-                        <div className="space-y-4">
-                          {(() => {
-                            const teamPicks = simulationResult.picks.filter(p => p.teamId === team.id);
-                            const teamLostPicks = simulationResult.lostPicks?.filter(lp => lp.teamId === team.id) || [];
-                            const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
-                            
-                            return (
-                              <>
-                                {teamPicks.filter(p => p.round === 1).length > 0 || teamLostPicks.filter(lp => lp.round === 1).length > 0 ? (
-                                  <div className="space-y-2">
-                                    <h3 className="font-semibold text-lg">1位</h3>
-                                    <div className="space-y-1">
-                                      {teamLostPicks.filter(lp => lp.round === 1).map((lp, idx) => {
-                                        const player = players.find(p => p.id === lp.playerId);
-                                        return (
-                                          <div key={`lost-${idx}`} className="p-3 bg-muted/30 rounded-lg text-muted-foreground/50">
-                                            <div className="font-medium">{lp.playerName}</div>
-                                            <div className="text-sm">{player?.team || ''}</div>
-                                            <div className="text-xs">{player?.position || ''}</div>
-                                          </div>
-                                        );
-                                      })}
-                                      {teamPicks.filter(p => p.round === 1).map(pick => {
-                                        const player = players.find(p => p.id === pick.playerId);
-                                        return (
-                                          <div key={pick.playerId} className="p-3 bg-primary/5 rounded-lg border-2 border-primary/20">
-                                            <div className="font-bold text-lg">{player?.name || ''}</div>
-                                            <div className="text-sm text-muted-foreground">{player?.team || ''}</div>
-                                            <div className="text-sm text-muted-foreground">{player?.position || ''}</div>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                  </div>
-                                ) : null}
-                                
-                                {Array.from({ length: maxRound - 1 }, (_, i) => i + 2).map(round => {
-                                  const pick = teamPicks.find(p => p.round === round);
-                                  if (!pick) return null;
-                                  const player = players.find(p => p.id === pick.playerId);
-                                  
-                                  return (
-                                    <div key={round} className="space-y-2">
-                                      <h3 className="font-semibold text-lg">{round}位</h3>
-                                      <div className="p-3 bg-primary/5 rounded-lg border-2 border-primary/20">
-                                        <div className="font-bold text-lg">{player?.name || ''}</div>
-                                        <div className="text-sm text-muted-foreground">{player?.team || ''}</div>
-                                        <div className="text-sm text-muted-foreground">{player?.position || ''}</div>
-                                      </div>
-                                    </div>
-                                  );
-                                })}
-                              </>
-                            );
-                          })()}
+              <TabsContent value="by-team" className="flex-1 overflow-auto mt-2 space-y-3 px-2">
+                {displayOrder.map(teamId => {
+                  const team = teams.find(t => t.id === teamId);
+                  if (!team) return null;
+                  
+                  const teamPicks = simulationResult.picks.filter(p => p.teamId === team.id);
+                  const teamLostPicks = simulationResult.lostPicks?.filter(lp => lp.teamId === team.id) || [];
+                  
+                  return (
+                    <Card 
+                      key={team.id}
+                      className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden border-0"
+                      style={{
+                        background: `linear-gradient(135deg, ${team.color.split(' ')[0].replace('from-', '')}, ${team.color.split(' ')[1].replace('to-', '')})`
+                      }}
+                      onClick={() => {
+                        const dialog = document.createElement('div');
+                        dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
+                        dialog.innerHTML = `
+                          <div class="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
+                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, ${team.color.split(' ')[0].replace('from-', '')}, ${team.color.split(' ')[1].replace('to-', '')})">
+                              <h3 class="font-bold text-lg">${team.name}</h3>
+                            </div>
+                            <div class="p-4 space-y-3">
+                              <div>
+                                <p class="text-sm text-muted-foreground mb-2">指名選手</p>
+                                ${teamLostPicks.length > 0 ? teamLostPicks.map(lp => `
+                                  <p class="text-sm mb-1 text-muted-foreground/70">
+                                    ${lp.round}位: ${lp.playerName} <span class="text-xs">(抽選外れ)</span>
+                                  </p>
+                                `).join('') : ''}
+                                ${teamPicks.length > 0 ? teamPicks.sort((a, b) => a.round - b.round).map(pick => `
+                                  <p class="text-sm mb-1">
+                                    ${pick.round}位: ${pick.playerName}
+                                  </p>
+                                `).join('') : '<p class="text-sm text-muted-foreground">指名選手なし</p>'}
+                              </div>
+                            </div>
+                            <div class="p-4 border-t flex flex-col items-center gap-3">
+                              <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                                <img src="/mustache-logo.png" alt="BaaS Logo" class="h-6 w-auto" />
+                                <span>BaaS 野球スカウトノート</span>
+                              </div>
+                              <button class="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md" onclick="this.closest('.fixed').remove()">
+                                閉じる
+                              </button>
+                            </div>
+                          </div>
+                        `;
+                        dialog.addEventListener('click', (e) => {
+                          if (e.target === dialog) dialog.remove();
+                        });
+                        document.body.appendChild(dialog);
+                      }}
+                    >
+                      <div className="p-4">
+                        <div className="flex items-center justify-between text-white">
+                          <div>
+                            <p className="font-semibold text-lg">{team.shortName}</p>
+                            <p className="text-sm text-white/90">
+                              {teamPicks.length}名指名
+                            </p>
+                          </div>
                         </div>
-                      </ScrollArea>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              ))}
+                      </div>
+                    </Card>
+                  );
+                })}
+              </TabsContent>
             </Tabs>
           )}
         </DialogContent>
