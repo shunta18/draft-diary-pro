@@ -88,7 +88,8 @@ export async function runDraftSimulation(
   userTeamIds?: number[],
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>,
   onLotteryFound?: (lotteries: Array<{ playerName: string; team: string; position: string; competingTeamIds: number[]; winnerId: number }>) => Promise<void>,
-  onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, lostPicks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[], hasContest: boolean) => Promise<void>
+  onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, lostPicks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[], hasContest: boolean) => Promise<void>,
+  onSinglePickComplete?: (round: number, teamId: number, pick: { playerId: number; playerName: string }) => Promise<void>
 ): Promise<SimulationResult> {
   const picks: DraftPick[] = [];
   const lostPicks: LostPick[] = [];
@@ -337,6 +338,14 @@ export async function runDraftSimulation(
         
         // 指名済み選手を除外
         availablePlayers = availablePlayers.filter(p => p.id !== selectedPlayer.id);
+        
+        // 2巡目以降の各指名後にコールバックを呼び出し
+        if (onSinglePickComplete) {
+          await onSinglePickComplete(round, teamId, {
+            playerId: selectedPlayer.id,
+            playerName: selectedPlayer.name
+          });
+        }
       }
     }
     

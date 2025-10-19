@@ -163,6 +163,15 @@ export default function AIDraft() {
   } | null>(null);
   const [picksCompleteResolve, setPicksCompleteResolve] = useState<(() => void) | null>(null);
   
+  // 2巡目以降の単一指名完了用のstate
+  const [showSinglePickComplete, setShowSinglePickComplete] = useState(false);
+  const [singlePickInfo, setSinglePickInfo] = useState<{
+    round: number;
+    teamId: number;
+    playerName: string;
+  } | null>(null);
+  const [singlePickResolve, setSinglePickResolve] = useState<(() => void) | null>(null);
+  
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
@@ -524,7 +533,19 @@ export default function AIDraft() {
             setShowPicksComplete(true);
             setPicksCompleteResolve(() => resolve);
           });
-        }
+        },
+        // 2巡目以降の各指名完了時
+        animationEnabled ? async (round, teamId, pick) => {
+          return new Promise<void>((resolve) => {
+            setSinglePickInfo({
+              round,
+              teamId,
+              playerName: pick.playerName
+            });
+            setShowSinglePickComplete(true);
+            setSinglePickResolve(() => resolve);
+          });
+        } : undefined
       );
       
       // 結果を必ずセット
@@ -1138,6 +1159,51 @@ export default function AIDraft() {
       </main>
 
       <Footer />
+
+      {/* 2巡目以降の単一指名完了ダイアログ */}
+      <Dialog open={showSinglePickComplete} onOpenChange={setShowSinglePickComplete}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              {singlePickInfo && `第${singlePickInfo.round}巡目`}
+            </DialogTitle>
+          </DialogHeader>
+          
+          {singlePickInfo && (
+            <div className="space-y-4">
+              <div className="text-center">
+                <div className="inline-block px-6 py-3 rounded-lg"
+                     style={{
+                       background: `linear-gradient(135deg, hsl(${teams.find(t => t.id === singlePickInfo.teamId)?.colors.primary}), hsl(${teams.find(t => t.id === singlePickInfo.teamId)?.colors.secondary}))`
+                     }}>
+                  <p className="font-bold text-white text-lg">
+                    {teams.find(t => t.id === singlePickInfo.teamId)?.name}
+                  </p>
+                </div>
+                
+                <div className="mt-6">
+                  <p className="text-2xl font-bold text-primary">
+                    {singlePickInfo.playerName}
+                  </p>
+                </div>
+              </div>
+              
+              <Button
+                onClick={() => {
+                  if (singlePickResolve) {
+                    singlePickResolve();
+                    setSinglePickResolve(null);
+                  }
+                  setShowSinglePickComplete(false);
+                }}
+                className="w-full"
+              >
+                次へ
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* 抽選アニメーション */}
       {showLottery && lotteryQueue.length > 0 && currentLotteryIndex < lotteryQueue.length && (
