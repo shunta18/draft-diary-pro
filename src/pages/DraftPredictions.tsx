@@ -94,6 +94,11 @@ export default function DraftPredictions() {
   const { toast } = useToast();
   const { user } = useAuth();
 
+  // 球団変更時に一時選択をクリア
+  useEffect(() => {
+    setTempPositionSelections({});
+  }, [selectedTeam]);
+
   // データ読み込み
   useEffect(() => {
     loadData();
