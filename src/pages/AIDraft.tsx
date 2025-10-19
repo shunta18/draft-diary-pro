@@ -1029,8 +1029,13 @@ export default function AIDraft() {
                           setShowPicksComplete(true);
                         });
                       },
-                      async (round, teamId, pick) => {
+                      async (round, teamId, pick, partialResult) => {
                         return new Promise<{ shouldContinue: boolean }>((resolve) => {
+                          // 部分結果を即座に反映
+                          if (partialResult) {
+                            setSimulationResult(partialResult);
+                          }
+                          
                           setSinglePickInfo({
                             round,
                             teamId,

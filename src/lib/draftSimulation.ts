@@ -89,7 +89,7 @@ export async function runDraftSimulation(
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>,
   onLotteryFound?: (lotteries: Array<{ playerName: string; team: string; position: string; competingTeamIds: number[]; winnerId: number }>) => Promise<void>,
   onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, lostPicks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[], hasContest: boolean) => Promise<void>,
-  onSinglePickComplete?: (round: number, teamId: number, pick: { playerId: number; playerName: string; playerTeam: string; playerPosition: string }) => Promise<{ shouldContinue: boolean }>,
+  onSinglePickComplete?: (round: number, teamId: number, pick: { playerId: number; playerName: string; playerTeam: string; playerPosition: string }, partialResult: SimulationResult) => Promise<{ shouldContinue: boolean }>,
   startFromRound: number = 1,
   existingPicks: DraftPick[] = [],
   existingLostPicks: LostPick[] = [],
@@ -354,7 +354,7 @@ export async function runDraftSimulation(
             playerName: selectedPlayer.name,
             playerTeam: selectedPlayer.team,
             playerPosition: Array.isArray(selectedPlayer.position) ? selectedPlayer.position[0] : selectedPlayer.position
-          });
+          }, { picks, lostPicks, summary });
           
           // shouldContinueがfalseの場合、シミュレーションを中断
           if (result && !result.shouldContinue) {
