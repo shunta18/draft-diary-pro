@@ -117,6 +117,7 @@ export default function AIDraft() {
   const [isPlayerFormOpen, setIsPlayerFormOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPicks, setCurrentPicks] = useState<DraftPick[]>([]);
+  const [currentLostPicks, setCurrentLostPicks] = useState<Array<{teamId: number; playerId: number; playerName: string}>>([]);
   
   // フィルター用のstate
   const [searchName, setSearchName] = useState("");
@@ -423,6 +424,7 @@ export default function AIDraft() {
     setCurrentSimulationRound(0);
     setSimulationResult(null);
     setCurrentPicks([]);
+    setCurrentLostPicks([]);
     setLotteryQueue([]);
     setCurrentLotteryIndex(0);
 
@@ -459,7 +461,7 @@ export default function AIDraft() {
           });
         } : undefined,
         // 全球団の指名完了時（競合情報も含める）
-        async (pickRound, picks, availablePlayers, hasContest) => {
+        async (pickRound, picks, lostPicks, availablePlayers, hasContest) => {
           // currentPicksに新しい指名を追加
           setCurrentPicks(prev => {
             const newPicks = picks.map(p => ({
@@ -481,6 +483,17 @@ export default function AIDraft() {
             );
             
             return [...filtered, ...newPicks];
+          });
+          
+          // currentLostPicksに外れた指名を追加
+          setCurrentLostPicks(prev => {
+            const filtered = prev.filter(existing =>
+              !lostPicks.some(lp =>
+                existing.teamId === lp.teamId &&
+                existing.playerId === lp.playerId
+              )
+            );
+            return [...filtered, ...lostPicks];
           });
           
           return new Promise<void>((resolve) => {
@@ -1327,8 +1340,11 @@ export default function AIDraft() {
                         <TableCell className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap">{label}</TableCell>
                         {displayOrder.map(teamId => {
                           const pick = firstRoundPicks.find(p => p.teamId === teamId && p.pickLabel === label);
-                          const player = players.find(p => p.id === pick?.playerId);
+                          const lostPick = currentLostPicks.find(lp => lp.teamId === teamId);
+                          const player = players.find(p => p.id === (pick?.playerId || lostPick?.playerId));
                           const hasContest = label.includes('1位') && firstRoundPicks.filter(p => p.playerId === pick?.playerId).length > 1;
+                          const isLost = !pick && lostPick;
+                          
                           return (
                             <TableCell key={teamId} className="border-r text-center">
                               {pick ? (
@@ -1336,6 +1352,11 @@ export default function AIDraft() {
                                   <div className="font-medium text-sm">{player?.name || ''}</div>
                                   <div className="text-xs text-muted-foreground">{player?.team || ''}</div>
                                   {hasContest && <Badge variant="destructive" className="text-xs">競合</Badge>}
+                                </div>
+                              ) : isLost ? (
+                                <div className="space-y-1 py-2">
+                                  <div className="font-medium text-sm text-muted-foreground/50">{player?.name || ''}</div>
+                                  <div className="text-xs text-muted-foreground/40">{player?.team || ''}</div>
                                 </div>
                               ) : (
                                 <span className="text-muted-foreground">—</span>

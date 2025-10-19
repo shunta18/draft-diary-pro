@@ -88,7 +88,7 @@ export async function runDraftSimulation(
   userTeamIds?: number[],
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>,
   onLotteryFound?: (lotteries: Array<{ playerName: string; team: string; position: string; competingTeamIds: number[]; winnerId: number }>) => Promise<void>,
-  onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[], hasContest: boolean) => Promise<void>
+  onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, lostPicks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[], hasContest: boolean) => Promise<void>
 ): Promise<SimulationResult> {
   const picks: DraftPick[] = [];
   const lostPicks: LostPick[] = [];
@@ -255,7 +255,15 @@ export async function runDraftSimulation(
               playerName: p.playerName
             }));
           
-          await onPicksComplete(pickRound, confirmedPicks, availablePlayers, currentLotteries.length > 0);
+          const confirmedLostPicks = lostPicks
+            .filter(p => p.round === round && p.pickLabel === (pickRound === 1 ? "1位" : `外れ${pickRound - 1}位`))
+            .map(p => ({
+              teamId: p.teamId,
+              playerId: p.playerId,
+              playerName: p.playerName
+            }));
+          
+          await onPicksComplete(pickRound, confirmedPicks, confirmedLostPicks, availablePlayers, currentLotteries.length > 0);
         }
         
         // 次のラウンドは外れた球団のみ
