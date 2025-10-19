@@ -636,32 +636,8 @@ export default function AIDraft() {
           </Card>
         )}
 
-        {/* 各球団の指名人数設定 */}
-        {!simulating && !simulationResult && (
-          <Card>
-            <CardHeader>
-              <CardTitle>各球団の指名人数</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label>指名人数: {maxRounds}人</Label>
-                <Slider
-                  value={[maxRounds]}
-                  onValueChange={([value]) => setMaxRounds(value)}
-                  min={1}
-                  max={10}
-                  step={1}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  各球団が指名する選手の人数を設定します（1〜10人）
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* 設定パネル */}
-        {showSettings && (
+        {/* 設定パネル（各球団の指名人数の上に表示）*/}
+        {showSettings && !simulating && !simulationResult && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
@@ -685,7 +661,7 @@ export default function AIDraft() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>チームニーズスコア: {weights.teamNeedsWeight}%</Label>
+                <Label>球団ニーズスコア: {weights.teamNeedsWeight}%</Label>
                 <Slider
                   value={[weights.teamNeedsWeight]}
                   onValueChange={([value]) => {
@@ -737,6 +713,30 @@ export default function AIDraft() {
                     設定を保存
                   </Button>
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 各球団の指名人数設定 */}
+        {!simulating && !simulationResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle>各球団の指名人数</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label>指名人数: {maxRounds}人</Label>
+                <Slider
+                  value={[maxRounds]}
+                  onValueChange={([value]) => setMaxRounds(value)}
+                  min={1}
+                  max={10}
+                  step={1}
+                />
+                <p className="text-xs text-muted-foreground mt-2">
+                  各球団が指名する選手の人数を設定します（1〜10人）
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -1050,11 +1050,6 @@ export default function AIDraft() {
                 </>
               )}
             </DialogTitle>
-            {currentPickInfo && currentPickInfo.round === 1 && (
-              <p className="text-sm text-muted-foreground mt-2">
-                ⚡️ 1巡目は抽選制です。他球団と競合する可能性があります。
-              </p>
-            )}
           </DialogHeader>
           
           <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
