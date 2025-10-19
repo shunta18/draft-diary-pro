@@ -136,6 +136,17 @@ export default function AIDraft() {
   const [showLottery, setShowLottery] = useState(false);
   const [animationEnabled, setAnimationEnabled] = useState(true);
   
+  // 指名完了アナウンス用のstate
+  const [showPicksComplete, setShowPicksComplete] = useState(false);
+  const [picksCompleteInfo, setPicksCompleteInfo] = useState<{
+    pickRound: number;
+    picks: Array<{teamId: number; playerId: number; playerName: string}>;
+  } | null>(null);
+  
+  // 抽選アナウンス用のstate
+  const [showLotteryAnnouncement, setShowLotteryAnnouncement] = useState(false);
+  const [contestedCount, setContestedCount] = useState(0);
+  
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
     voteWeight: 40,
@@ -439,7 +450,31 @@ export default function AIDraft() {
             setShowLottery(true);
             setLotteryResolve(() => resolve);
           });
-        } : undefined
+        } : undefined,
+        // 全球団の指名完了時
+        async (pickRound, picks, availablePlayers) => {
+          return new Promise<void>((resolve) => {
+            setPicksCompleteInfo({ pickRound, picks });
+            setShowPicksComplete(true);
+            // 3秒後に自動で次へ
+            setTimeout(() => {
+              setShowPicksComplete(false);
+              resolve();
+            }, 3000);
+          });
+        },
+        // 抽選アナウンス
+        async (contestedCount) => {
+          return new Promise<void>((resolve) => {
+            setContestedCount(contestedCount);
+            setShowLotteryAnnouncement(true);
+            // 2秒後に自動で次へ
+            setTimeout(() => {
+              setShowLotteryAnnouncement(false);
+              resolve();
+            }, 2000);
+          });
+        }
       );
       
       // 結果を必ずセット
@@ -1145,6 +1180,47 @@ export default function AIDraft() {
           loadPlayers();
         }}
       />
+
+      {/* 指名完了アナウンスダイアログ */}
+      <Dialog open={showPicksComplete} onOpenChange={setShowPicksComplete}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              {picksCompleteInfo && (
+                picksCompleteInfo.pickRound === 1 
+                  ? "1位指名が出揃いました" 
+                  : `外れ${picksCompleteInfo.pickRound - 1}位指名が出揃いました`
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2 max-h-96 overflow-y-auto">
+            {picksCompleteInfo?.picks.map((pick) => {
+              const team = teams.find(t => t.id === pick.teamId);
+              return (
+                <div key={pick.teamId} className="flex justify-between items-center p-3 rounded-lg bg-muted/30">
+                  <span className="font-medium">{team?.name}</span>
+                  <span className="text-lg">{pick.playerName}</span>
+                </div>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 抽選アナウンスダイアログ */}
+      <Dialog open={showLotteryAnnouncement} onOpenChange={setShowLotteryAnnouncement}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-2xl text-center">⚡️ 抽選に入ります</DialogTitle>
+          </DialogHeader>
+          <div className="text-center space-y-4 py-6">
+            <p className="text-lg">
+              {contestedCount}名の選手が競合しています
+            </p>
+            <div className="animate-pulse text-4xl">🎰</div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
