@@ -544,7 +544,7 @@ export default function DraftPredictions() {
                       return (
                         <div key={round} className="space-y-3">
                           <div className="space-y-2">
-                            <div className="font-bold text-lg">{round}位</div>
+                            <div className="font-bold text-lg">ドラフト{round}位</div>
                             <Select
                               value={selectedPosition}
                               onValueChange={(value) => {
