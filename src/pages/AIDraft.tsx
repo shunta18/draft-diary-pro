@@ -1297,13 +1297,10 @@ export default function AIDraft() {
         <DialogContent className="max-w-[95vw] w-full max-h-[95vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-2xl">
-              {picksCompleteInfo && (
-                picksCompleteInfo.pickRound === 1 
-                  ? "1位指名結果" 
-                  : picksCompleteInfo.pickRound === 2
-                  ? "第二次指名結果"
-                  : `第${picksCompleteInfo.pickRound}次指名結果`
-              )}
+              {picksCompleteInfo && (() => {
+                const roundNames = ["", "1位指名結果", "第二次指名結果", "第三次指名結果", "第四次指名結果", "第五次指名結果", "第六次指名結果", "第七次指名結果"];
+                return roundNames[picksCompleteInfo.pickRound] || `第${picksCompleteInfo.pickRound}次指名結果`;
+              })()}
             </DialogTitle>
           </DialogHeader>
           
@@ -1344,37 +1341,80 @@ export default function AIDraft() {
                     // picksCompleteInfo.pickRoundに応じて表示する行を決定
                     const displayLabels = pickLabels.slice(0, picksCompleteInfo.pickRound);
                     
-                    return displayLabels.map(label => (
-                      <TableRow key={label}>
-                        <TableCell className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap">{label}</TableCell>
-                        {displayOrder.map(teamId => {
-                          const pick = firstRoundPicks.find(p => p.teamId === teamId && p.pickLabel === label);
-                          const lostPick = currentLostPicks.find(lp => lp.teamId === teamId && lp.pickLabel === label);
-                          const player = players.find(p => p.id === (pick?.playerId || lostPick?.playerId));
-                          const hasContest = label.includes('1位') && firstRoundPicks.filter(p => p.playerId === pick?.playerId).length > 1;
-                          const isLost = !pick && lostPick;
-                          
-                          return (
-                            <TableCell key={teamId} className="border-r text-center">
-                              {pick ? (
-                                <div className="space-y-1 py-2">
-                                  <div className="font-medium text-sm">{player?.name || ''}</div>
-                                  <div className="text-xs text-muted-foreground">{player?.team || ''}</div>
-                                  {hasContest && <Badge variant="destructive" className="text-xs">競合</Badge>}
-                                </div>
-                              ) : isLost ? (
-                                <div className="space-y-1 py-2">
-                                  <div className="font-medium text-sm text-muted-foreground/50">{player?.name || ''}</div>
-                                  <div className="text-xs text-muted-foreground/40">{player?.team || ''}</div>
-                                </div>
-                              ) : (
-                                <span className="text-muted-foreground">—</span>
-                              )}
+                    // 各球団ごとの行数を計算（成功した指名 + 外れた指名）
+                    const rowsPerTeam = displayOrder.map(teamId => {
+                      let maxRows = 0;
+                      displayLabels.forEach(label => {
+                        const hasPick = firstRoundPicks.some(p => p.teamId === teamId && p.pickLabel === label);
+                        const hasLostPick = currentLostPicks.some(lp => lp.teamId === teamId && lp.pickLabel === label);
+                        if (hasPick || hasLostPick) {
+                          maxRows++;
+                        }
+                      });
+                      return maxRows || 1;
+                    });
+                    const maxRowsTotal = Math.max(...rowsPerTeam);
+                    
+                    // 行を生成
+                    const rows = [];
+                    for (let rowIndex = 0; rowIndex < maxRowsTotal; rowIndex++) {
+                      rows.push(
+                        <TableRow key={rowIndex}>
+                          {rowIndex === 0 && (
+                            <TableCell 
+                              rowSpan={maxRowsTotal}
+                              className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap align-middle"
+                            >
+                              1位
                             </TableCell>
-                          );
-                        })}
-                      </TableRow>
-                    ));
+                          )}
+                          {displayOrder.map(teamId => {
+                            // この球団のこの行に表示する内容を決定
+                            const teamLabels = displayLabels.filter(label => {
+                              const hasPick = firstRoundPicks.some(p => p.teamId === teamId && p.pickLabel === label);
+                              const hasLostPick = currentLostPicks.some(lp => lp.teamId === teamId && lp.pickLabel === label);
+                              return hasPick || hasLostPick;
+                            });
+                            
+                            if (rowIndex >= teamLabels.length) {
+                              return (
+                                <TableCell key={teamId} className="border-r text-center">
+                                  <span className="text-muted-foreground">—</span>
+                                </TableCell>
+                              );
+                            }
+                            
+                            const label = teamLabels[rowIndex];
+                            const pick = firstRoundPicks.find(p => p.teamId === teamId && p.pickLabel === label);
+                            const lostPick = currentLostPicks.find(lp => lp.teamId === teamId && lp.pickLabel === label);
+                            const player = players.find(p => p.id === (pick?.playerId || lostPick?.playerId));
+                            const hasContest = label.includes('1位') && firstRoundPicks.filter(p => p.playerId === pick?.playerId).length > 1;
+                            const isLost = !pick && lostPick;
+                            
+                            return (
+                              <TableCell key={teamId} className="border-r text-center">
+                                {pick ? (
+                                  <div className="space-y-1 py-2">
+                                    <div className="font-medium text-sm">{player?.name || ''}</div>
+                                    <div className="text-xs text-muted-foreground">{player?.team || ''}</div>
+                                    {hasContest && <Badge variant="destructive" className="text-xs">競合</Badge>}
+                                  </div>
+                                ) : isLost ? (
+                                  <div className="space-y-1 py-2">
+                                    <div className="font-medium text-sm text-muted-foreground/50">{player?.name || ''}</div>
+                                    <div className="text-xs text-muted-foreground/40">{player?.team || ''}</div>
+                                  </div>
+                                ) : (
+                                  <span className="text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+                            );
+                          })}
+                        </TableRow>
+                      );
+                    }
+                    
+                    return rows;
                   })()}
                 </TableBody>
               </Table>
