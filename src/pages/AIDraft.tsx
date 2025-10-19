@@ -44,18 +44,18 @@ interface RawSupabasePlayer {
 }
 
 const teams = [
-  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800" },
-  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900" },
-  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武", color: "from-blue-500 to-blue-700" },
-  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ", color: "from-gray-800 to-black" },
-  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス", color: "from-blue-600 to-gray-800" },
-  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク", color: "from-yellow-500 to-yellow-700" },
-  { id: 7, name: "読売ジャイアンツ", shortName: "巨人", color: "from-orange-500 to-orange-700" },
-  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト", color: "from-green-600 to-green-800" },
-  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA", color: "from-blue-500 to-blue-700" },
-  { id: 10, name: "中日ドラゴンズ", shortName: "中日", color: "from-blue-700 to-blue-900" },
-  { id: 11, name: "阪神タイガース", shortName: "阪神", color: "from-yellow-500 to-yellow-700" },
-  { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800" },
+  { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800", colors: { primary: "220 100% 50%", secondary: "220 100% 30%" } },
+  { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900", colors: { primary: "350 70% 35%", secondary: "350 70% 25%" } },
+  { id: 3, name: "埼玉西武ライオンズ", shortName: "西武", color: "from-blue-500 to-blue-700", colors: { primary: "220 100% 50%", secondary: "220 100% 30%" } },
+  { id: 4, name: "千葉ロッテマリーンズ", shortName: "ロッテ", color: "from-gray-800 to-black", colors: { primary: "0 0% 20%", secondary: "0 0% 0%" } },
+  { id: 5, name: "オリックス・バファローズ", shortName: "オリックス", color: "from-blue-600 to-gray-800", colors: { primary: "220 100% 50%", secondary: "0 0% 25%" } },
+  { id: 6, name: "福岡ソフトバンクホークス", shortName: "ソフトバンク", color: "from-yellow-500 to-yellow-700", colors: { primary: "48 100% 50%", secondary: "48 100% 35%" } },
+  { id: 7, name: "読売ジャイアンツ", shortName: "巨人", color: "from-orange-500 to-orange-700", colors: { primary: "25 100% 50%", secondary: "25 100% 35%" } },
+  { id: 8, name: "東京ヤクルトスワローズ", shortName: "ヤクルト", color: "from-green-600 to-green-800", colors: { primary: "142 70% 35%", secondary: "142 70% 25%" } },
+  { id: 9, name: "横浜DeNAベイスターズ", shortName: "DeNA", color: "from-blue-500 to-blue-700", colors: { primary: "220 100% 50%", secondary: "220 100% 35%" } },
+  { id: 10, name: "中日ドラゴンズ", shortName: "中日", color: "from-blue-700 to-blue-900", colors: { primary: "220 100% 35%", secondary: "220 100% 20%" } },
+  { id: 11, name: "阪神タイガース", shortName: "阪神", color: "from-yellow-500 to-yellow-700", colors: { primary: "48 100% 50%", secondary: "48 100% 35%" } },
+  { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800", colors: { primary: "0 84% 50%", secondary: "0 84% 35%" } },
 ];
 
 const displayOrder = [8, 4, 12, 3, 10, 2, 7, 5, 9, 1, 11, 6];
@@ -1057,14 +1057,14 @@ export default function AIDraft() {
                       key={team.id}
                       className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden border-0"
                       style={{
-                        background: `linear-gradient(135deg, ${team.color.split(' ')[0].replace('from-', '')}, ${team.color.split(' ')[1].replace('to-', '')})`
+                        background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
                       }}
                       onClick={() => {
                         const dialog = document.createElement('div');
                         dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
                         dialog.innerHTML = `
                           <div class="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, ${team.color.split(' ')[0].replace('from-', '')}, ${team.color.split(' ')[1].replace('to-', '')})">
+                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))">
                               <h3 class="font-bold text-lg">${team.name}</h3>
                             </div>
                             <div class="p-4 space-y-3">
@@ -1630,14 +1630,14 @@ export default function AIDraft() {
                       key={team.id}
                       className="cursor-pointer hover:shadow-md transition-shadow overflow-hidden border-0"
                       style={{
-                        background: `linear-gradient(135deg, ${team.color.split(' ')[0].replace('from-', '')}, ${team.color.split(' ')[1].replace('to-', '')})`
+                        background: `linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))`
                       }}
                       onClick={() => {
                         const dialog = document.createElement('div');
                         dialog.className = 'fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4';
                         dialog.innerHTML = `
                           <div class="bg-background rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto">
-                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, ${team.color.split(' ')[0].replace('from-', '')}, ${team.color.split(' ')[1].replace('to-', '')})">
+                            <div class="text-white p-4 rounded-t-lg sticky top-0" style="background: linear-gradient(135deg, hsl(${team.colors.primary}), hsl(${team.colors.secondary}))">
                               <h3 class="font-bold text-lg">${team.name}</h3>
                             </div>
                             <div class="p-4 space-y-3">
