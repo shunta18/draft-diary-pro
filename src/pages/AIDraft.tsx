@@ -508,38 +508,51 @@ export default function AIDraft() {
             <CardContent>
               <div className="space-y-3">
                 <Label>操作する球団を選択してください（複数選択可能）</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  {teams.map(team => (
-                    <div 
-                      key={team.id} 
-                      className="flex items-center space-x-3 p-3 rounded-lg border hover:bg-accent/50 transition-colors"
-                    >
-                      <Checkbox
-                        id={`team-${team.id}`}
-                        checked={userTeamIds.includes(team.id)}
-                        onCheckedChange={(checked) => {
-                          if (checked) {
-                            setUserTeamIds([...userTeamIds, team.id]);
-                          } else {
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {teams.map(team => {
+                    const isSelected = userTeamIds.includes(team.id);
+                    return (
+                      <div
+                        key={team.id}
+                        onClick={() => {
+                          if (isSelected) {
                             setUserTeamIds(userTeamIds.filter(id => id !== team.id));
+                          } else {
+                            setUserTeamIds([...userTeamIds, team.id]);
                           }
                         }}
-                      />
-                      <label
-                        htmlFor={`team-${team.id}`}
-                        className="flex-1 cursor-pointer"
+                        className={`
+                          relative cursor-pointer rounded-lg border-2 transition-all duration-200
+                          ${isSelected 
+                            ? 'border-primary shadow-lg scale-[1.02]' 
+                            : 'border-border hover:border-primary/50 hover:shadow-md'
+                          }
+                        `}
                       >
-                        <div className={`px-3 py-1.5 rounded text-sm font-medium text-white bg-gradient-to-r ${team.color}`}>
+                        <div className={`
+                          px-4 py-3 rounded-md text-center font-bold text-white
+                          bg-gradient-to-r ${team.color}
+                          ${isSelected ? 'shadow-inner' : ''}
+                        `}>
                           {team.name}
                         </div>
-                      </label>
-                    </div>
-                  ))}
+                        {isSelected && (
+                          <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center shadow-lg">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                            </svg>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
                 {userTeamIds.length > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {userTeamIds.length}球団を選択中
-                  </p>
+                  <div className="flex items-center gap-2 pt-2">
+                    <Badge variant="secondary" className="text-sm">
+                      {userTeamIds.length}球団を選択中
+                    </Badge>
+                  </div>
                 )}
               </div>
             </CardContent>
