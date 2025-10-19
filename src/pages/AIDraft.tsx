@@ -1191,8 +1191,7 @@ export default function AIDraft() {
             {picksCompleteInfo?.hasContest && (
               <div className="pt-4 border-t">
                 <div className="text-center space-y-4 py-4">
-                  <p className="text-lg font-medium">⚡️ 競合が発生しました</p>
-                  <div className="animate-pulse text-4xl">🎰</div>
+                  <p className="text-lg font-medium text-destructive">競合が発生しました</p>
                   <Button 
                     size="lg" 
                     className="w-full"
