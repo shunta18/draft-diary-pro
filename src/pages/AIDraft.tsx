@@ -906,53 +906,17 @@ export default function AIDraft() {
           <div className="space-y-4">
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
-              <Button onClick={() => {
-                  if (!simulationResult) return;
-                  
-                  // シミュレーション結果から、最後にユーザーが指名した後の次のラウンドと球団を見つける
-                  const userPicks = simulationResult.picks.filter(p => 
-                    userTeamIds.includes(p.teamId)
-                  );
-                  
-                  if (userPicks.length === 0) {
-                    // ユーザーがまだ指名していない場合、1巡目から開始
-                    const firstUserTeamId = userTeamIds[0];
-                    const firstRound = 1;
-                    
-                    // 利用可能な選手を取得（既に指名された選手を除外）
-                    const pickedPlayerIds = simulationResult.picks.map(p => p.playerId);
-                    const availablePlayers = players.filter(p => !pickedPlayerIds.includes(p.id));
-                    
-                    setCurrentPickInfo({ round: firstRound, teamId: firstUserTeamId });
-                    setAvailablePlayersForSelection(availablePlayers);
-                    setShowPlayerSelection(true);
-                    setSimulationResult(null);
-                    setSimulating(true);
-                  } else {
-                    // 最後にユーザーが指名したラウンドを見つける
-                    const lastUserPick = userPicks[userPicks.length - 1];
-                    const nextRound = lastUserPick.round < maxRounds ? lastUserPick.round + 1 : lastUserPick.round;
-                    
-                    // 次に指名する球団を見つける（ユーザーの球団のうち、まだ次のラウンドで指名していない球団）
-                    const nextUserTeamId = userTeamIds.find(teamId => {
-                      return !simulationResult.picks.some(p => 
-                        p.teamId === teamId && p.round === nextRound
-                      );
-                    }) || userTeamIds[0];
-                    
-                    // 利用可能な選手を取得
-                    const pickedPlayerIds = simulationResult.picks.map(p => p.playerId);
-                    const availablePlayers = players.filter(p => !pickedPlayerIds.includes(p.id));
-                    
-                    setCurrentPickInfo({ round: nextRound, teamId: nextUserTeamId });
-                    setAvailablePlayersForSelection(availablePlayers);
-                    setShowPlayerSelection(true);
-                    setSimulationResult(null);
-                    setSimulating(true);
-                  }
-                }} variant="outline" size="sm" className="flex-1 sm:flex-none">
-                  指名に戻る
-                </Button>
+              <Button 
+                onClick={() => {
+                  setAnimationEnabled(true);
+                  handleStartSimulation();
+                }} 
+                variant="outline" 
+                size="sm" 
+                className="flex-1 sm:flex-none"
+              >
+                シミュレーションを再開
+              </Button>
             </div>
 
             <Tabs defaultValue="overall" className="w-full">
