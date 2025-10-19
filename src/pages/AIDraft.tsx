@@ -287,6 +287,12 @@ export default function AIDraft() {
     }
   };
 
+  const handleReopenSelection = () => {
+    if (currentPickInfo && !showPlayerSelection) {
+      setShowPlayerSelection(true);
+    }
+  };
+
   const clearFilters = () => {
     setSearchName("");
     setFilterPositions([]);
@@ -766,6 +772,25 @@ export default function AIDraft() {
               {simulating && (
                 <Progress value={(currentSimulationRound / maxRounds) * 100} className="w-64" />
               )}
+              
+              {/* シミュレーション中で選手選択待ちの場合、球団ボタンを表示 */}
+              {simulating && currentPickInfo && !showPlayerSelection && (
+                <div className="w-full max-w-md">
+                  <p className="text-sm text-muted-foreground mb-3 text-center">
+                    第{currentPickInfo.round}巡目 - あなたの指名順です
+                  </p>
+                  <Button
+                    size="lg"
+                    onClick={handleReopenSelection}
+                    className={`w-full bg-gradient-to-r ${teams.find(t => t.id === currentPickInfo.teamId)?.color} text-white`}
+                  >
+                    {teams.find(t => t.id === currentPickInfo.teamId)?.name}
+                    <br />
+                    選手を指名する
+                  </Button>
+                </div>
+              )}
+              
               <div className="flex items-center justify-center gap-3 text-sm">
                 <span className="text-muted-foreground">抽選アニメーション</span>
                 <Switch
@@ -952,7 +977,10 @@ export default function AIDraft() {
       )}
 
       {/* 選手選択ダイアログ */}
-      <Dialog open={showPlayerSelection} onOpenChange={setShowPlayerSelection}>
+      <Dialog open={showPlayerSelection} onOpenChange={(open) => {
+        // ダイアログを閉じるときも、currentPickInfoは保持する（後で再度開けるように）
+        setShowPlayerSelection(open);
+      }}>
         <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>
