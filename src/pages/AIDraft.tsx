@@ -1001,6 +1001,10 @@ export default function AIDraft() {
                       "2025",
                       (round, partialResult) => {
                         setCurrentSimulationRound(round);
+                        // 部分結果を即座に反映
+                        if (partialResult) {
+                          setSimulationResult(partialResult);
+                        }
                       },
                       userTeamIds.length > 0 ? userTeamIds : undefined,
                       userTeamIds.length > 0 ? async (round, teamId, availablePlayers) => {
