@@ -199,19 +199,6 @@ export async function runDraftSimulation(
           await onLotteryFound(currentLotteries);
         }
         
-        // 全てのpickRoundで、確定後にシミュレーション結果を表示
-        if (onPicksComplete) {
-          const picksWithNames = currentRoundPicks.map(pick => {
-            const player = availablePlayers.find(p => p.id === pick.playerId);
-            return {
-              teamId: pick.teamId,
-              playerId: pick.playerId,
-              playerName: player?.name || ""
-            };
-          });
-          await onPicksComplete(pickRound, picksWithNames, availablePlayers, currentLotteries.length > 0);
-        }
-        
         // 当選した指名をpicksに追加し、選手をavailablePlayersから除外
         for (const [playerId, pickInfo] of winningPicks) {
           const selectedPlayer = availablePlayers.find(p => p.id === playerId);
@@ -258,6 +245,18 @@ export async function runDraftSimulation(
           availablePlayers = availablePlayers.filter(p => p.id !== selectedPlayer.id);
         }
         
+        // picksへの追加が完了した後にシミュレーション結果を表示
+        if (onPicksComplete) {
+          const confirmedPicks = picks
+            .filter(p => p.round === round && p.pickLabel === (pickRound === 1 ? "1位" : `外れ${pickRound - 1}位`))
+            .map(p => ({
+              teamId: p.teamId,
+              playerId: p.playerId,
+              playerName: p.playerName
+            }));
+          
+          await onPicksComplete(pickRound, confirmedPicks, availablePlayers, currentLotteries.length > 0);
+        }
         
         // 次のラウンドは外れた球団のみ
         remainingTeams = losingTeams;
