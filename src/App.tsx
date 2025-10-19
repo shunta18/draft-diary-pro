@@ -11,7 +11,9 @@ import PlayerForm from "./pages/PlayerForm";
 import PublicPlayers from "./pages/PublicPlayers";
 import UserPublicPlayers from "./pages/UserPublicPlayers";
 import Draft from "./pages/Draft";
-import VirtualDraft from "./pages/VirtualDraft";
+import VirtualDraftSelection from "./pages/VirtualDraftSelection";
+import VirtualDraftManual from "./pages/VirtualDraftManual";
+import AIDraft from "./pages/AIDraft";
 import DraftPredictions from "./pages/DraftPredictions";
 import Diary from "./pages/Diary";
 import DiaryForm from "./pages/DiaryForm";
@@ -44,7 +46,9 @@ const AppContent = () => {
           <Route path="/public-players/:id/edit" element={<PlayerForm />} />
           <Route path="/public-players/users/:userId" element={<UserPublicPlayers />} />
           <Route path="/draft" element={<Draft />} />
-          <Route path="/virtual-draft" element={<VirtualDraft />} />
+          <Route path="/virtual-draft" element={<VirtualDraftSelection />} />
+          <Route path="/virtual-draft/manual" element={<VirtualDraftManual />} />
+          <Route path="/virtual-draft/ai" element={<AIDraft />} />
           <Route path="/draft-predictions" element={<DraftPredictions />} />
           <Route path="/diary" element={<Diary />} />
           <Route path="/diary/form" element={<DiaryForm />} />

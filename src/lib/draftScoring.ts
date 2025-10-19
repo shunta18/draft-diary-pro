@@ -1,0 +1,227 @@
+import { fetchDraftPredictions } from "./draftPredictions";
+
+export interface ScoringWeights {
+  voteScore: number;      // 投票データスコア (0-100)
+  teamNeedsScore: number; // チームニーズマッチングスコア (0-100)
+  playerRating: number;   // 選手評価スコア (0-100)
+  realismScore: number;   // 現実性調整スコア (0-100)
+}
+
+export interface WeightConfig {
+  voteWeight: number;      // デフォルト 40%
+  teamNeedsWeight: number; // デフォルト 30%
+  playerRatingWeight: number; // デフォルト 20%
+  realismWeight: number;   // デフォルト 10%
+}
+
+export interface DraftScore {
+  playerId: number;
+  playerName: string;
+  teamId: number;
+  round: number;
+  totalScore: number;
+  breakdown: ScoringWeights;
+  reason: string;
+}
+
+export interface NormalizedPlayer {
+  id: number;
+  name: string;
+  team: string;
+  position: string[];
+  category: string;
+  evaluations: string[];
+  year?: number;
+  draftYear: string;
+  batting_hand?: string;
+  throwing_hand?: string;
+  battingThrowing?: string;
+  hometown?: string;
+  age?: number;
+  usage?: string;
+  memo?: string;
+  videoLinks: string[];
+}
+
+export interface DraftPick {
+  teamId: number;
+  playerId: number;
+  playerName: string;
+  round: number;
+  isDevelopment?: boolean;
+}
+
+interface VoteData {
+  playerVotes: Map<string, number>; // key: "teamId_playerId"
+  positionVotes: Map<string, number>; // key: "teamId_round_position"
+}
+
+// 評価文字列からスコアを計算
+const evaluatePlayerRating = (evaluations: string[]): number => {
+  if (!evaluations || evaluations.length === 0) return 50;
+  
+  let score = 50; // ベーススコア
+  
+  evaluations.forEach(evaluation => {
+    const lowerEval = evaluation.toLowerCase();
+    
+    // ポジティブキーワード
+    if (lowerEval.includes('最速') || lowerEval.includes('155') || lowerEval.includes('150')) score += 15;
+    if (lowerEval.includes('打率') || lowerEval.includes('.3')) score += 10;
+    if (lowerEval.includes('本塁打') || lowerEval.includes('ホームラン')) score += 10;
+    if (lowerEval.includes('好打')) score += 8;
+    if (lowerEval.includes('俊足') || lowerEval.includes('走力')) score += 8;
+    if (lowerEval.includes('強肩')) score += 7;
+    if (lowerEval.includes('守備') && lowerEval.includes('優れ')) score += 7;
+    if (lowerEval.includes('リーダーシップ') || lowerEval.includes('キャプテン')) score += 5;
+    if (lowerEval.includes('実績')) score += 5;
+  });
+  
+  return Math.min(100, score);
+};
+
+// ポジションマッチングスコアを計算
+const calculatePositionMatch = (playerPositions: string[], requestedPosition: string): number => {
+  if (requestedPosition === "全ポジション" || requestedPosition === "指定なし") return 50;
+  
+  // 投手・野手の大分類マッチング
+  const isPitcher = playerPositions.some(p => p === "投手" || p === "P");
+  const isFielder = playerPositions.some(p => p !== "投手" && p !== "P");
+  
+  if (requestedPosition === "投手" && isPitcher) return 100;
+  if (requestedPosition === "野手" && isFielder) return 100;
+  
+  // 具体的なポジションマッチング
+  if (playerPositions.includes(requestedPosition)) return 100;
+  
+  // 部分マッチング
+  const partialMatch = playerPositions.some(p => 
+    p.includes(requestedPosition) || requestedPosition.includes(p)
+  );
+  if (partialMatch) return 70;
+  
+  return 30;
+};
+
+// メイン関数: 各チーム・各ラウンドごとに最適な選手を計算
+export async function calculateDraftScores(
+  round: number,
+  teamId: number,
+  availablePlayers: NormalizedPlayer[],
+  draftHistory: DraftPick[],
+  weightConfig: WeightConfig = {
+    voteWeight: 40,
+    teamNeedsWeight: 30,
+    playerRatingWeight: 20,
+    realismWeight: 10
+  },
+  draftYear: string = "2025"
+): Promise<DraftScore[]> {
+  // 投票データを取得
+  const predictions = await fetchDraftPredictions(draftYear);
+  
+  const voteData: VoteData = {
+    playerVotes: new Map(),
+    positionVotes: new Map()
+  };
+  
+  // 選手投票データを変換
+  Object.entries(predictions.playerVotes).forEach(([key, votes]) => {
+    voteData.playerVotes.set(key, votes.length);
+  });
+  
+  // ポジション投票データを変換
+  Object.entries(predictions.positionVotes).forEach(([key, votes]) => {
+    voteData.positionVotes.set(key, votes.length);
+  });
+  
+  // 最大投票数を計算
+  const maxPlayerVotes = Math.max(...Array.from(voteData.playerVotes.values()), 1);
+  const maxPositionVotes = Math.max(...Array.from(voteData.positionVotes.values()), 1);
+  
+  // スコア計算
+  const scores: DraftScore[] = availablePlayers.map(player => {
+    // レイヤー1: 投票データスコア
+    const playerVoteKey = `${teamId}_${player.id}`;
+    const playerVoteCount = voteData.playerVotes.get(playerVoteKey) || 0;
+    const voteScore = (playerVoteCount / maxPlayerVotes) * 100;
+    
+    // レイヤー2: チームニーズマッチングスコア
+    let teamNeedsScore = 0;
+    const positionVoteKeys = Array.from(voteData.positionVotes.keys())
+      .filter(key => key.startsWith(`${teamId}_${round}_`));
+    
+    if (positionVoteKeys.length > 0) {
+      const positionScores = positionVoteKeys.map(key => {
+        const position = key.split('_')[2];
+        const votes = voteData.positionVotes.get(key) || 0;
+        const matchScore = calculatePositionMatch(player.position, position);
+        return (votes / maxPositionVotes) * matchScore;
+      });
+      teamNeedsScore = Math.max(...positionScores, 0);
+    } else {
+      // 投票データがない場合はデフォルト値
+      teamNeedsScore = 50;
+    }
+    
+    // レイヤー3: 選手評価スコア
+    const playerRatingScore = evaluatePlayerRating(player.evaluations);
+    
+    // レイヤー4: 現実性調整スコア
+    let realismScore = 100;
+    
+    // 同じチームが最近同じポジションを指名していないかチェック
+    const recentPicks = draftHistory
+      .filter(pick => pick.teamId === teamId)
+      .slice(-2); // 直近2指名をチェック
+    
+    const recentPositions = recentPicks
+      .map(pick => availablePlayers.find(p => p.id === pick.playerId))
+      .filter(p => p !== undefined)
+      .flatMap(p => p!.position);
+    
+    const hasRecentSamePosition = player.position.some(pos => 
+      recentPositions.includes(pos)
+    );
+    
+    if (hasRecentSamePosition && recentPicks.length >= 2) {
+      realismScore -= 30; // 同じポジション連続指名でペナルティ
+    }
+    
+    // 総合スコア計算（重み付け）
+    const totalScore = 
+      (voteScore * weightConfig.voteWeight / 100) +
+      (teamNeedsScore * weightConfig.teamNeedsWeight / 100) +
+      (playerRatingScore * weightConfig.playerRatingWeight / 100) +
+      (realismScore * weightConfig.realismWeight / 100);
+    
+    // 理由生成
+    const reasons: string[] = [];
+    if (voteScore > 60) reasons.push("高い投票支持");
+    if (teamNeedsScore > 70) reasons.push("チームニーズと一致");
+    if (playerRatingScore > 70) reasons.push("高評価選手");
+    if (hasRecentSamePosition) reasons.push("同ポジション連続");
+    
+    const reason = reasons.length > 0 
+      ? reasons.join("、") 
+      : "バランス型選手";
+    
+    return {
+      playerId: player.id,
+      playerName: player.name,
+      teamId,
+      round,
+      totalScore,
+      breakdown: {
+        voteScore,
+        teamNeedsScore,
+        playerRating: playerRatingScore,
+        realismScore
+      },
+      reason
+    };
+  });
+  
+  // スコアの高い順にソート
+  return scores.sort((a, b) => b.totalScore - a.totalScore);
+}
