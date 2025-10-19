@@ -146,6 +146,7 @@ export default function AIDraft() {
   // 抽選アナウンス用のstate
   const [showLotteryAnnouncement, setShowLotteryAnnouncement] = useState(false);
   const [contestedCount, setContestedCount] = useState(0);
+  const [lotteryAnnouncementResolve, setLotteryAnnouncementResolve] = useState<(() => void) | null>(null);
   
   // スコアリング重み設定
   const [weights, setWeights] = useState<WeightConfig>({
@@ -468,11 +469,7 @@ export default function AIDraft() {
           return new Promise<void>((resolve) => {
             setContestedCount(contestedCount);
             setShowLotteryAnnouncement(true);
-            // 2秒後に自動で次へ
-            setTimeout(() => {
-              setShowLotteryAnnouncement(false);
-              resolve();
-            }, 2000);
+            setLotteryAnnouncementResolve(() => resolve);
           });
         }
       );
@@ -1213,11 +1210,24 @@ export default function AIDraft() {
           <DialogHeader>
             <DialogTitle className="text-2xl text-center">⚡️ 抽選に入ります</DialogTitle>
           </DialogHeader>
-          <div className="text-center space-y-4 py-6">
+          <div className="text-center space-y-6 py-6">
             <p className="text-lg">
               {contestedCount}名の選手が競合しています
             </p>
             <div className="animate-pulse text-4xl">🎰</div>
+            <Button 
+              size="lg" 
+              className="w-full"
+              onClick={() => {
+                setShowLotteryAnnouncement(false);
+                if (lotteryAnnouncementResolve) {
+                  lotteryAnnouncementResolve();
+                  setLotteryAnnouncementResolve(null);
+                }
+              }}
+            >
+              抽選に進む
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
