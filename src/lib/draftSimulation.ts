@@ -43,7 +43,7 @@ export async function runDraftSimulation(
   maxRounds: number = 10,
   weightConfig: WeightConfig,
   draftYear: string = "2025",
-  onRoundComplete?: (round: number, picks: DraftPick[]) => void,
+  onRoundComplete?: (round: number, partialResult: SimulationResult | null) => void,
   userTeamIds?: number[],
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>
 ): Promise<SimulationResult> {
@@ -117,7 +117,7 @@ export async function runDraftSimulation(
     
     // ラウンド完了コールバック
     if (onRoundComplete) {
-      onRoundComplete(round, picks.filter(p => p.round === round));
+      onRoundComplete(round, { picks, summary });
     }
     
     if (availablePlayers.length === 0) break;

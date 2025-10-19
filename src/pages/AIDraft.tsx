@@ -236,8 +236,12 @@ export default function AIDraft() {
         maxRounds,
         weights,
         "2025",
-        (round) => {
+        (round, partialResult) => {
           setCurrentSimulationRound(round);
+          // 各ラウンド終了後に部分結果を更新
+          if (partialResult) {
+            setSimulationResult(partialResult);
+          }
         },
         userTeamIds.length > 0 ? userTeamIds : undefined,
         userTeamIds.length > 0 ? async (round, teamId, availablePlayers) => {
