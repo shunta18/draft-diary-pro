@@ -1272,9 +1272,9 @@ export default function AIDraft() {
         }}
       />
 
-      {/* 指名完了アナウンスダイアログ */}
+      {/* 指名完了アナウンスダイアログ - 全画面表示 */}
       <Dialog open={showPicksComplete} onOpenChange={setShowPicksComplete}>
-        <DialogContent className="max-w-4xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogContent className="max-w-[95vw] w-full max-h-[95vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle className="text-2xl">
               {picksCompleteInfo && (
@@ -1352,35 +1352,19 @@ export default function AIDraft() {
           ) : null}
           
           <div className="pt-4 border-t flex justify-end">
-            {picksCompleteInfo?.hasContest ? (
-              <Button 
-                size="lg" 
-                className="w-full"
-                onClick={() => {
-                  setShowPicksComplete(false);
-                  if (picksCompleteResolve) {
-                    picksCompleteResolve();
-                    setPicksCompleteResolve(null);
-                  }
-                }}
-              >
-                {picksCompleteInfo.pickRound === 1 ? "抽選に進む" : "外れ1位の選択へ進む"}
-              </Button>
-            ) : (
-              <Button 
-                size="lg" 
-                className="w-full"
-                onClick={() => {
-                  setShowPicksComplete(false);
-                  if (picksCompleteResolve) {
-                    picksCompleteResolve();
-                    setPicksCompleteResolve(null);
-                  }
-                }}
-              >
-                次へ進む
-              </Button>
-            )}
+            <Button 
+              size="lg" 
+              className="w-full"
+              onClick={() => {
+                setShowPicksComplete(false);
+                if (picksCompleteResolve) {
+                  picksCompleteResolve();
+                  setPicksCompleteResolve(null);
+                }
+              }}
+            >
+              次へ進む
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
