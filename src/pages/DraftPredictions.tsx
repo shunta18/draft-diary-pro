@@ -226,10 +226,21 @@ export default function DraftPredictions() {
       } else {
         setUserPositionVotes([...userPositionVotes, { team_id: selectedTeam, position, draft_round: draftRound }]);
       }
+      
+      // 投票完了のフィードバック
+      toast({
+        title: "投票完了",
+        description: `${draftRound}位: ${position}に投票しました`,
+      });
     } else {
       setUserPositionVotes(
         userPositionVotes.filter((v) => !(v.team_id === selectedTeam && v.draft_round === draftRound))
       );
+      
+      toast({
+        title: "投票取消",
+        description: `${draftRound}位の投票を取り消しました`,
+      });
     }
 
     // 投票数を再読み込み
@@ -474,7 +485,7 @@ export default function DraftPredictions() {
                                 handlePositionVoteChange(round, value === "__none__" ? null : value)
                               }
                             >
-                              <SelectTrigger className="flex-1">
+                              <SelectTrigger className={selectedPosition ? "flex-1 bg-accent/50 border-primary" : "flex-1"}>
                                 <SelectValue placeholder="ポジションを選択" />
                               </SelectTrigger>
                               <SelectContent>
