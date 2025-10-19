@@ -811,10 +811,21 @@ export default function AIDraft() {
           <div className="space-y-4">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">シミュレーション結果</h2>
-              <Button onClick={handleStartSimulation} variant="outline">
-                <Play className="w-4 h-4 mr-2" />
-                再シミュレーション
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleStartSimulation} variant="outline">
+                  <Play className="w-4 h-4 mr-2" />
+                  再シミュレーション
+                </Button>
+                <Button onClick={() => {
+                  setSimulationResult(null);
+                  setCurrentSimulationRound(0);
+                  setSimulating(false);
+                  setShowPlayerSelection(false);
+                  setCurrentPickInfo(null);
+                }} variant="outline">
+                  指名に戻る
+                </Button>
+              </div>
             </div>
 
             <Card>
