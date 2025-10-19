@@ -1040,6 +1040,14 @@ export default function AIDraft() {
                       nextTeamIndex
                     );
                     
+                    console.log('再開後の結果:', {
+                      totalPicks: result.picks.length,
+                      totalLostPicks: result.lostPicks.length,
+                      rounds: [...new Set(result.picks.map(p => p.round))],
+                      previousPicks: allPicks.length,
+                      newPicks: result.picks.length - allPicks.length
+                    });
+                    
                     setSimulationResult(result);
                   } catch (error) {
                     console.error("Simulation error:", error);
