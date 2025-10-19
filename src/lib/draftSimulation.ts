@@ -44,7 +44,7 @@ export async function runDraftSimulation(
   weightConfig: WeightConfig,
   draftYear: string = "2025",
   onRoundComplete?: (round: number, picks: DraftPick[]) => void,
-  userTeamId?: number,
+  userTeamIds?: number[],
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>
 ): Promise<SimulationResult> {
   const picks: DraftPick[] = [];
@@ -61,7 +61,7 @@ export async function runDraftSimulation(
       let topScore: any;
       
       // ユーザーが操作する球団の場合
-      if (userTeamId && teamId === userTeamId && onUserTeamPick) {
+      if (userTeamIds && userTeamIds.includes(teamId) && onUserTeamPick) {
         selectedPlayerId = await onUserTeamPick(round, teamId, availablePlayers);
         
         // スコアを計算（表示用）
