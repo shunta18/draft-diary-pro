@@ -38,7 +38,7 @@ const teams = [
   { id: 12, name: "広島東洋カープ", shortName: "広島", color: "from-red-600 to-red-800" },
 ];
 
-const positions = ["投手", "捕手", "内野手", "外野手"];
+const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手"];
 
 interface RawSupabasePlayer {
   id: number;
