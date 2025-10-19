@@ -1260,8 +1260,8 @@ export default function AIDraft() {
             </DialogTitle>
           </DialogHeader>
           
-          {/* 1位指名の場合は結果テーブルを表示 */}
-          {picksCompleteInfo?.pickRound === 1 && simulationResult ? (
+          {/* 全てのpickRoundで結果テーブルを表示 */}
+          {picksCompleteInfo && simulationResult ? (
             <div className="flex-1 overflow-y-auto">
               <Table>
                 <TableHeader>
@@ -1282,51 +1282,49 @@ export default function AIDraft() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap">1位</TableCell>
-                    {displayOrder.map(teamId => {
-                      const pick = simulationResult.picks.find(p => p.teamId === teamId && p.round === 1);
-                      const player = players.find(p => p.id === pick?.playerId);
-                      const hasContest = pick?.pickLabel?.includes('1位');
-                      return (
-                        <TableCell key={teamId} className="border-r text-center">
-                          {pick ? (
-                            <div className="space-y-1 py-2">
-                              <div className="font-medium text-sm">{player?.name || ''}</div>
-                              <div className="text-xs text-muted-foreground">{player?.team || ''}</div>
-                              {hasContest && <Badge variant="destructive" className="text-xs">競合</Badge>}
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
+                  {(() => {
+                    // 1巡目の指名をpickLabelでグループ化
+                    const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
+                    const pickLabels = Array.from(new Set(firstRoundPicks.map(p => p.pickLabel)))
+                      .sort((a, b) => {
+                        if (a === "1位") return -1;
+                        if (b === "1位") return 1;
+                        const aNum = parseInt(a.match(/\d+/)?.[0] || "0");
+                        const bNum = parseInt(b.match(/\d+/)?.[0] || "0");
+                        return aNum - bNum;
+                      });
+                    
+                    // picksCompleteInfo.pickRoundに応じて表示する行を決定
+                    const displayLabels = pickLabels.slice(0, picksCompleteInfo.pickRound);
+                    
+                    return displayLabels.map(label => (
+                      <TableRow key={label}>
+                        <TableCell className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap">{label}</TableCell>
+                        {displayOrder.map(teamId => {
+                          const pick = firstRoundPicks.find(p => p.teamId === teamId && p.pickLabel === label);
+                          const player = players.find(p => p.id === pick?.playerId);
+                          const hasContest = label.includes('1位') && firstRoundPicks.filter(p => p.playerId === pick?.playerId).length > 1;
+                          return (
+                            <TableCell key={teamId} className="border-r text-center">
+                              {pick ? (
+                                <div className="space-y-1 py-2">
+                                  <div className="font-medium text-sm">{player?.name || ''}</div>
+                                  <div className="text-xs text-muted-foreground">{player?.team || ''}</div>
+                                  {hasContest && <Badge variant="destructive" className="text-xs">競合</Badge>}
+                                </div>
+                              ) : (
+                                <span className="text-muted-foreground">—</span>
+                              )}
+                            </TableCell>
+                          );
+                        })}
+                      </TableRow>
+                    ));
+                  })()}
                 </TableBody>
               </Table>
             </div>
-          ) : (
-            /* 外れ1位以降は従来通りカード表示 */
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto p-2">
-                {picksCompleteInfo?.picks.map((pick) => {
-                  const team = teams.find(t => t.id === pick.teamId);
-                  const player = players.find(p => p.name === pick.playerName);
-                  return (
-                    <div 
-                      key={pick.teamId} 
-                      className={`flex flex-col items-center justify-center py-6 px-4 rounded-lg border shadow-sm bg-gradient-to-r ${team?.color} min-h-[100px]`}
-                    >
-                      <span className="text-sm font-medium text-white/90 mb-2">{team?.name}</span>
-                      <span className="text-xl font-bold text-white mb-1">{pick.playerName}</span>
-                      <span className="text-sm text-white/80">{player?.team || ''}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+          ) : null}
           
           <div className="pt-4 border-t flex justify-end">
             {picksCompleteInfo?.hasContest ? (
