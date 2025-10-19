@@ -1329,21 +1329,7 @@ export default function AIDraft() {
           )}
           
           <div className="pt-4 border-t flex justify-end">
-            {picksCompleteInfo?.hasContest && picksCompleteInfo.pickRound === 1 ? (
-              <Button 
-                size="lg" 
-                className="w-full"
-                onClick={() => {
-                  setShowPicksComplete(false);
-                  if (picksCompleteResolve) {
-                    picksCompleteResolve();
-                    setPicksCompleteResolve(null);
-                  }
-                }}
-              >
-                第二次選択に進む
-              </Button>
-            ) : picksCompleteInfo?.hasContest ? (
+            {picksCompleteInfo?.hasContest ? (
               <Button 
                 size="lg" 
                 className="w-full"
