@@ -455,6 +455,7 @@ export default function AIDraft() {
     setCurrentLostPicks([]);
     setLotteryQueue([]);
     setCurrentLotteryIndex(0);
+    setShouldStopSimulation(false);
 
     try {
       const result = await runDraftSimulation(
@@ -914,17 +915,17 @@ export default function AIDraft() {
             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-xl sm:text-2xl font-bold whitespace-nowrap">シミュレーション結果</h2>
                <Button 
-                onClick={() => {
+                onClick={async () => {
                   if (!simulationResult) return;
                   
                   // 現在の結果から続きを再開
                   setAnimationEnabled(true);
                   setSimulating(true);
-                  setShowSinglePickComplete(true);
                   setShouldStopSimulation(false);
                   
                   // 最後に指名された選手を取得して、次の指名情報を設定
                   const allPicks = simulationResult.picks;
+                  const allLostPicks = simulationResult.lostPicks;
                   const maxRoundPicked = Math.max(...allPicks.map(p => p.round));
                   
                   // 次のラウンドを計算
@@ -947,9 +948,9 @@ export default function AIDraft() {
                   // ウェーバー順（最下位から）で次に指名する球団を見つける
                   const waiverOrder = [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1];
                   const alreadyPickedTeams = allPicks.filter(p => p.round === nextRound).map(p => p.teamId);
-                  const nextTeamId = waiverOrder.find(teamId => !alreadyPickedTeams.includes(teamId));
+                  const nextTeamIndex = waiverOrder.findIndex(teamId => !alreadyPickedTeams.includes(teamId));
                   
-                  if (!nextTeamId) {
+                  if (nextTeamIndex === -1) {
                     toast({
                       title: "エラー",
                       description: "次の指名球団が見つかりません",
@@ -958,39 +959,74 @@ export default function AIDraft() {
                     return;
                   }
                   
-                  // 既に指名された選手を除外
-                  const pickedPlayerIds = allPicks.map(p => p.playerId);
-                  const availablePlayers = players.filter(p => !pickedPlayerIds.includes(p.id));
-                  
-                  // 次の選手を選択（簡易的にAIが選択）
-                  const nextPlayer = availablePlayers[0];
-                  if (!nextPlayer) {
+                  // 続きからシミュレーションを実行
+                  try {
+                    const result = await runDraftSimulation(
+                      players,
+                      maxRounds,
+                      weights,
+                      "2025",
+                      (round, partialResult) => {
+                        setCurrentSimulationRound(round);
+                      },
+                      userTeamIds.length > 0 ? userTeamIds : undefined,
+                      userTeamIds.length > 0 ? async (round, teamId, availablePlayers) => {
+                        return new Promise<number>((resolve) => {
+                          setCurrentPickInfo({ round, teamId });
+                          setAvailablePlayersForSelection(availablePlayers);
+                          setPendingPickResolve(() => resolve);
+                          setShowPlayerSelection(true);
+                        });
+                      } : undefined,
+                      animationEnabled ? async (lotteries) => {
+                        return new Promise<void>((resolve) => {
+                          setLotteryQueue(prev => [...prev, lotteries]);
+                          setLotteryResolve(() => resolve);
+                          setShowLottery(true);
+                        });
+                      } : undefined,
+                      async (pickRound, picks, lostPicks, availablePlayers, hasContest) => {
+                        if (animationEnabled) {
+                          return new Promise<void>((resolve) => {
+                            setPicksCompleteInfo({ pickRound, picks, hasContest });
+                            setPicksCompleteResolve(() => resolve);
+                            setShowPicksComplete(true);
+                          });
+                        }
+                      },
+                      animationEnabled ? async (round, teamId, pick) => {
+                        return new Promise<{ shouldContinue: boolean }>((resolve) => {
+                          setSinglePickInfo({
+                            round,
+                            teamId,
+                            playerName: pick.playerName,
+                            playerTeam: pick.playerTeam,
+                            playerPosition: pick.playerPosition
+                          });
+                          setSinglePickResolve(() => () => {
+                            resolve({ shouldContinue: !shouldStopSimulation });
+                          });
+                          setShowSinglePickComplete(true);
+                        });
+                      } : undefined,
+                      nextRound,
+                      allPicks,
+                      allLostPicks,
+                      nextTeamIndex
+                    );
+                    
+                    setSimulationResult(result);
+                  } catch (error) {
+                    console.error("Simulation error:", error);
                     toast({
                       title: "エラー",
-                      description: "利用可能な選手がいません",
+                      description: "シミュレーション中にエラーが発生しました",
                       variant: "destructive",
                     });
-                    return;
+                  } finally {
+                    setSimulating(false);
                   }
-                  
-                  // ダイアログ情報を設定してシミュレーション続行の準備
-                  setSinglePickInfo({
-                    round: nextRound,
-                    teamId: nextTeamId,
-                    playerName: nextPlayer.name,
-                    playerTeam: nextPlayer.team,
-                    playerPosition: Array.isArray(nextPlayer.position) ? nextPlayer.position[0] : nextPlayer.position
-                  });
-                  
-                  // 続きからシミュレーションを再開するためのresolveを設定
-                  setSinglePickResolve(() => () => {
-                    // 次へボタンを押したときの処理を継続
-                    setShowSinglePickComplete(false);
-                    
-                    // ここから新しいシミュレーションを開始
-                    handleStartSimulation();
-                  });
-                }} 
+                }}
                 variant="outline" 
                 size="sm" 
                 className="flex-1 sm:flex-none"

@@ -89,14 +89,20 @@ export async function runDraftSimulation(
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>,
   onLotteryFound?: (lotteries: Array<{ playerName: string; team: string; position: string; competingTeamIds: number[]; winnerId: number }>) => Promise<void>,
   onPicksComplete?: (pickRound: number, picks: Array<{teamId: number; playerId: number; playerName: string}>, lostPicks: Array<{teamId: number; playerId: number; playerName: string}>, availablePlayers: NormalizedPlayer[], hasContest: boolean) => Promise<void>,
-  onSinglePickComplete?: (round: number, teamId: number, pick: { playerId: number; playerName: string; playerTeam: string; playerPosition: string }) => Promise<{ shouldContinue: boolean }>
+  onSinglePickComplete?: (round: number, teamId: number, pick: { playerId: number; playerName: string; playerTeam: string; playerPosition: string }) => Promise<{ shouldContinue: boolean }>,
+  startFromRound: number = 1,
+  existingPicks: DraftPick[] = [],
+  existingLostPicks: LostPick[] = [],
+  startFromTeamIndex: number = 0
 ): Promise<SimulationResult> {
-  const picks: DraftPick[] = [];
-  const lostPicks: LostPick[] = [];
+  const picks: DraftPick[] = [...existingPicks];
+  const lostPicks: LostPick[] = [...existingLostPicks];
   const summary: SimulationResult["summary"] = [];
-  let availablePlayers = [...allPlayers];
   
-  for (let round = 1; round <= maxRounds; round++) {
+  const pickedPlayerIds = new Set(existingPicks.map(p => p.playerId));
+  let availablePlayers = allPlayers.filter(p => !pickedPlayerIds.has(p.id));
+  
+  for (let round = startFromRound; round <= maxRounds; round++) {
     const waiverOrder = getWaiverOrder(round);
     
     // 1巡目は抽選制（全球団が全選手から選択可能）
@@ -276,7 +282,9 @@ export async function runDraftSimulation(
       }
     } else {
       // 2巡目以降：ウェーバー方式（逐次処理）
-      for (const teamId of waiverOrder) {
+      const startIndex = round === startFromRound ? startFromTeamIndex : 0;
+      for (let i = startIndex; i < waiverOrder.length; i++) {
+        const teamId = waiverOrder[i];
         if (availablePlayers.length === 0) break;
         
         let selectedPlayerId: number;
