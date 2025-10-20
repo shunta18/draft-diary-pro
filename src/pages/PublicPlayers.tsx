@@ -249,6 +249,13 @@ export default function PublicPlayers() {
       return;
     }
 
+    // 確認ダイアログを表示
+    const confirmed = confirm(
+      `「${player.name}（${player.team}）」を自分の選手リストに追加しますか？`
+    );
+    
+    if (!confirmed) return;
+
     // 類似選手をチェック
     const similar = await checkForDuplicates(player);
     
@@ -272,8 +279,9 @@ export default function PublicPlayers() {
     const result = await importPlayerFromPublic(player.id);
     if (result) {
       toast({
-        title: "選手をインポートしました",
-        description: `${player.name}を自分の選手リストに追加しました。`,
+        title: "選手を追加しました",
+        description: `「${player.name}（${player.team}）」があなたの選手リストに追加されました`,
+        duration: 5000,
       });
       loadPlayers();
     } else {
@@ -316,6 +324,15 @@ export default function PublicPlayers() {
         description: "インポートする選手を選択してください。",
         variant: "destructive",
       });
+      return;
+    }
+
+    // 確認ダイアログ（より明確に）
+    const confirmed = confirm(
+      `選択した${selectedPlayerIds.size}名の選手を自分の選手リストに追加しますか？\n\n※この操作により、選手データがあなたのアカウントに永久に追加されます。`
+    );
+    
+    if (!confirmed) {
       return;
     }
 

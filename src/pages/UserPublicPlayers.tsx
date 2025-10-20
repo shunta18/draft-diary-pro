@@ -171,6 +171,13 @@ export default function UserPublicPlayers() {
       return;
     }
 
+    // 確認ダイアログを表示
+    const confirmed = confirm(
+      `「${player.name}（${player.team}）」を自分の選手リストに追加しますか？`
+    );
+    
+    if (!confirmed) return;
+
     const similar = await checkForDuplicates(player);
     
     // nullの場合はすでにインポート済み
@@ -192,8 +199,9 @@ export default function UserPublicPlayers() {
     const result = await importPlayerFromPublic(player.id);
     if (result) {
       toast({
-        title: "選手をインポートしました",
-        description: `${player.name}を自分の選手リストに追加しました。`,
+        title: "選手を追加しました",
+        description: `「${player.name}（${player.team}）」があなたの選手リストに追加されました`,
+        duration: 5000,
       });
       loadData();
     } else {
