@@ -190,18 +190,18 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
 
     if (playerError) throw playerError;
 
-    // public_player_idから選手情報を取得（original_player_idで結合）
+    // public_player_idから選手情報を取得（players.idで結合）
     const publicPlayerIds = [...new Set((playerVotesData || []).map(v => v.public_player_id))];
     const { data: playersData, error: playersError } = await supabase
-      .from("public_players")
-      .select("original_player_id, name, team, category")
-      .in("original_player_id", publicPlayerIds);
+      .from("players")
+      .select("id, name, team, category")
+      .in("id", publicPlayerIds);
 
     if (playersError) throw playersError;
 
-    // original_player_idをキーにしたマップを作成
+    // players.idをキーにしたマップを作成
     const playersMap = new Map(
-      (playersData || []).map(p => [p.original_player_id, p])
+      (playersData || []).map(p => [p.id, p])
     );
 
     // ポジション投票の集計（ドラフト順位も含む）
