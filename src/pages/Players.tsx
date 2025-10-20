@@ -207,7 +207,7 @@ export default function Players() {
     setSelectedYear(user ? "2025" : "all");
   }, [user]);
 
-  const handleUploadToPublic = async (player: Player) => {
+  const handleUploadToPublic = useCallback(async (player: Player) => {
     if (!user) {
       toast({
         title: "ログインが必要です",
@@ -264,9 +264,9 @@ export default function Players() {
     } finally {
       setUploadingPlayerId(null);
     }
-  };
+  }, [user, invalidatePlayers, toast]);
 
-  const handleBulkUpload = async (playerIds: number[]) => {
+  const handleBulkUpload = useCallback(async (playerIds: number[]) => {
     if (!user) {
       toast({
         title: "ログインが必要です",
@@ -334,9 +334,9 @@ export default function Players() {
     } finally {
       setIsUploadingBulk(false);
     }
-  };
+  }, [user, players, invalidatePlayers, toast]);
 
-  const handleBulkDelete = async () => {
+  const handleBulkDelete = useCallback(async () => {
     if (selectedPlayerIds.length === 0) {
       toast({
         title: "選手が選択されていません",
@@ -385,23 +385,23 @@ export default function Players() {
         variant: "destructive",
       });
     }
-  };
+  }, [selectedPlayerIds, invalidatePlayers, toast]);
 
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     if (selectedPlayerIds.length === filteredPlayers.length) {
       setSelectedPlayerIds([]);
     } else {
       setSelectedPlayerIds(filteredPlayers.map(p => p.id!).filter(id => id !== undefined));
     }
-  };
+  }, [selectedPlayerIds.length, filteredPlayers]);
 
-  const togglePlayerSelection = (playerId: number) => {
+  const togglePlayerSelection = useCallback((playerId: number) => {
     setSelectedPlayerIds(prev => 
       prev.includes(playerId) 
         ? prev.filter(id => id !== playerId)
         : [...prev, playerId]
     );
-  };
+  }, []);
 
   const playersStructuredData = {
     "@context": "https://schema.org",

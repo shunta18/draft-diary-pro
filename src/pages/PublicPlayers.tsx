@@ -378,7 +378,7 @@ export default function PublicPlayers() {
     invalidatePublicPlayers();
   };
 
-  const handleImportAllFromUser = async (userId: string, e: React.MouseEvent) => {
+  const handleImportAllFromUser = useCallback(async (userId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     
     if (!user) {
@@ -451,9 +451,9 @@ export default function PublicPlayers() {
         variant: "destructive",
       });
     }
-  };
+  }, [user, checkForDuplicates, executeImport, invalidatePlayers, invalidatePublicPlayers, toast]);
 
-  const togglePlayerSelection = (playerId: string) => {
+  const togglePlayerSelection = useCallback((playerId: string) => {
     const newSelection = new Set(selectedPlayerIds);
     if (newSelection.has(playerId)) {
       newSelection.delete(playerId);
@@ -461,9 +461,9 @@ export default function PublicPlayers() {
       newSelection.add(playerId);
     }
     setSelectedPlayerIds(newSelection);
-  };
+  }, [selectedPlayerIds]);
 
-  const handleDelete = async (player: PublicPlayer) => {
+  const handleDelete = useCallback(async (player: PublicPlayer) => {
     if (!user || user.id !== player.user_id) {
       toast({
         title: "エラー",
@@ -492,9 +492,9 @@ export default function PublicPlayers() {
         variant: "destructive",
       });
     }
-  };
+  }, [user, invalidatePublicPlayers, toast]);
 
-  const handleDeleteDiary = async (diary: PublicDiaryEntry) => {
+  const handleDeleteDiary = useCallback(async (diary: PublicDiaryEntry) => {
     if (!confirm('この観戦日記を削除してもよろしいですか?')) {
       return;
     }
@@ -514,7 +514,7 @@ export default function PublicPlayers() {
         description: "削除に失敗しました",
       });
     }
-  };
+  }, [invalidatePublicDiaries, toast]);
 
   const filteredUsers = showFollowedOnly
     ? users.filter(u => followedUsers.includes(u.user_id))
