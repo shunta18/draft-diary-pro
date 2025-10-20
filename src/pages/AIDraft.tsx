@@ -292,9 +292,17 @@ export default function AIDraft() {
   const loadPlayers = async () => {
     try {
       if (user) {
+        // ユーザー認証確認
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        if (!currentUser) {
+          throw new Error('User not authenticated');
+        }
+
+        // ユーザー自身の選手のみ取得
         const { data, error } = await supabase
           .from("players")
           .select("*")
+          .eq("user_id", currentUser.id)
           .eq("year", 2025)
           .order("name");
         
