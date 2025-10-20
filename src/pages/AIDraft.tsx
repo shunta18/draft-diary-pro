@@ -1328,6 +1328,7 @@ export default function AIDraft() {
             }
             
             setAnimationEnabled(false);
+            setSimulating(false);
           }
           if (!open) {
             setShowSinglePickComplete(false);
