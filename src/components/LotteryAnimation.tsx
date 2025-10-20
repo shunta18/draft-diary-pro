@@ -98,7 +98,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
         <Button
           onClick={handleSkip}
           variant="outline"
-          className="fixed top-16 right-4 md:top-4 z-50 bg-background/90 hover:bg-background text-base md:text-lg px-6 py-3 shadow-lg"
+          className="fixed top-24 right-4 md:top-4 z-50 bg-background/90 hover:bg-background text-base md:text-lg px-6 py-3 shadow-lg"
         >
           スキップ
         </Button>
