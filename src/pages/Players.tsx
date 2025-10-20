@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2, Trash2, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,7 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { DuplicatePlayerChecker } from "@/components/DuplicatePlayerChecker";
 import { usePlayers, useInvalidateQueries } from "@/hooks/usePlayerQueries";
+import { PlayerCard } from "@/components/PlayerCard";
 
 
 const evaluationColors = {
@@ -169,12 +170,7 @@ export default function Players() {
     setSelectedEvaluations([]);
   };
 
-  // Set default year filter based on auth status
-  useEffect(() => {
-    setSelectedYear(user ? "2025" : "all");
-  }, [user]);
-
-  const toggleFavorite = async (player: Player) => {
+  const toggleFavorite = useCallback(async (player: Player) => {
     if (!user) {
       toast({
         title: "ログインが必要です",
@@ -205,7 +201,11 @@ export default function Players() {
         variant: "destructive",
       });
     }
-  };
+  }, [user, invalidatePlayers, toast]);
+
+  useEffect(() => {
+    setSelectedYear(user ? "2025" : "all");
+  }, [user]);
 
   const handleUploadToPublic = async (player: Player) => {
     if (!user) {
@@ -754,82 +754,15 @@ export default function Players() {
         {/* Players List */}
         <div className="space-y-3">
           {filteredPlayers.map((player) => (
-            <Card 
-              key={player.id} 
-              className="gradient-card border-0 shadow-soft hover:shadow-elevated transition-smooth"
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start gap-3">
-                  {user && (
-                    <div className="flex items-center pt-1">
-                      <Checkbox
-                        checked={selectedPlayerIds.includes(player.id!)}
-                        onCheckedChange={() => togglePlayerSelection(player.id!)}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    </div>
-                  )}
-                  <div 
-                    className="flex-1 cursor-pointer" 
-                    onClick={() => setSelectedPlayer(player)}
-                  >
-                   <div className="flex items-start justify-between gap-2 mb-2">
-                      <div className="flex items-center flex-wrap gap-2 min-w-0">
-                        <h3 className="font-bold text-base sm:text-lg text-primary break-words">{player.name}</h3>
-                        {player.is_favorite && (
-                          <Badge className="bg-yellow-500 text-white text-xs flex-shrink-0">
-                            <ThumbsUp className="h-3 w-3 mr-1 fill-current" />
-                            イチオシ
-                          </Badge>
-                        )}
-                        <Badge variant="secondary" className="text-xs flex-shrink-0">
-                          {player.category}
-                        </Badge>
-                        {(player as any).is_public && (
-                          <Badge className="bg-green-500 text-white text-xs flex-shrink-0">
-                            <CheckCircle2 className="h-3 w-3 mr-1" />
-                            公開中
-                          </Badge>
-                        )}
-                        {player.imported_from_public_player_id && (
-                          <Badge variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-300 flex-shrink-0">
-                            インポート
-                          </Badge>
-                        )}
-                        {player.id === 1 && (
-                          <Badge variant="outline" className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300 flex-shrink-0">
-                            サンプル
-                          </Badge>
-                        )}
-                      </div>
-                      {user && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="flex-shrink-0"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(player);
-                          }}
-                        >
-                          <ThumbsUp 
-                            className={`h-5 w-5 ${player.is_favorite ? 'fill-yellow-500 text-yellow-500' : 'text-muted-foreground'}`}
-                          />
-                        </Button>
-                      )}
-                    </div>
-                  
-                    <div className="flex items-center flex-wrap gap-x-2 gap-y-1 text-xs sm:text-sm text-muted-foreground">
-                      <span className="break-all">{player.team}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span className="break-all">{(player as any).main_position || (player as any).mainPosition || sortPositions(player.position).split('、')[0]}</span>
-                      <span className="hidden sm:inline">•</span>
-                      <span className="whitespace-nowrap">{player.year || 2025}年</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+            <PlayerCard
+              key={player.id}
+              player={player}
+              isSelected={selectedPlayerIds.includes(player.id!)}
+              isAuthenticated={!!user}
+              onPlayerClick={setSelectedPlayer}
+              onToggleFavorite={toggleFavorite}
+              onSelectionToggle={togglePlayerSelection}
+            />
           ))}
           
           {filteredPlayers.length === 0 && (
