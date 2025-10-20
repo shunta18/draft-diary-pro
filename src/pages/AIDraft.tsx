@@ -1109,17 +1109,18 @@ export default function AIDraft() {
                 </div>
                 <Card>
                   <CardContent className="p-6 overflow-x-auto">
-                    <Table>
+                    <Table style={{ tableLayout: 'fixed', width: `${80 + displayOrder.length * 120}px` }}>
                       <TableHeader>
                         <TableRow>
-                          <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10 w-20"></TableHead>
+                          <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10 px-1" style={{ width: '80px', minWidth: '80px', maxWidth: '80px' }}></TableHead>
                           {displayOrder.map(teamId => {
                             const team = teams.find(t => t.id === teamId);
                             if (!team) return null;
                             return (
                               <TableHead 
                                 key={team.id} 
-                                className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white w-28`}
+                                className={`whitespace-nowrap overflow-hidden text-ellipsis text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white px-1`}
+                                style={{ width: '120px', minWidth: '120px', maxWidth: '120px' }}
                               >
                                 {team.shortName}
                               </TableHead>
@@ -1148,10 +1149,11 @@ export default function AIDraft() {
                             for (let rowIndex = 0; rowIndex < maxRowsTotal; rowIndex++) {
                               rows.push(
                                 <TableRow key={`round-1-${rowIndex}`}>
-                                  {rowIndex === 0 && (
+                                   {rowIndex === 0 && (
                                     <TableCell 
                                       rowSpan={maxRowsTotal}
-                                      className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r w-20"
+                                      className="font-medium whitespace-nowrap overflow-hidden text-ellipsis sticky left-0 bg-background z-10 text-xs align-middle border-r px-1"
+                                      style={{ width: '80px', minWidth: '80px', maxWidth: '80px' }}
                                     >
                                       1位
                                     </TableCell>
@@ -1163,7 +1165,7 @@ export default function AIDraft() {
                                     
                                     if (rowIndex >= allTeamItems.length) {
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                        <TableCell key={teamId} className="whitespace-nowrap overflow-hidden text-ellipsis text-center text-xs border-r px-1" style={{ width: '120px', minWidth: '120px', maxWidth: '120px' }}>
                                           ―
                                         </TableCell>
                                       );
@@ -1173,14 +1175,14 @@ export default function AIDraft() {
                                     
                                     if (item.type === 'lost') {
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r w-28">
+                                        <TableCell key={teamId} className="whitespace-nowrap overflow-hidden text-ellipsis text-center text-xs text-muted-foreground/50 border-r px-1" style={{ width: '120px', minWidth: '120px', maxWidth: '120px' }}>
                                           {item.data.playerName}
                                         </TableCell>
                                       );
                                     } else {
                                       const player = players.find(p => p.id === item.data.playerId);
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                        <TableCell key={teamId} className="whitespace-nowrap overflow-hidden text-ellipsis text-center text-xs border-r px-1" style={{ width: '120px', minWidth: '120px', maxWidth: '120px' }}>
                                           {player ? player.name : "―"}
                                         </TableCell>
                                       );
@@ -1195,7 +1197,7 @@ export default function AIDraft() {
                           for (let round = 2; round <= maxRound; round++) {
                             rows.push(
                               <TableRow key={`round-${round}`}>
-                                <TableCell className="font-medium whitespace-nowrap sticky left-0 bg-background z-10 text-xs align-middle border-r w-20">
+                                <TableCell className="font-medium whitespace-nowrap overflow-hidden text-ellipsis sticky left-0 bg-background z-10 text-xs align-middle border-r px-1" style={{ width: '80px', minWidth: '80px', maxWidth: '80px' }}>
                                   {round}位
                                 </TableCell>
                                 {displayOrder.map(teamId => {
@@ -1205,7 +1207,7 @@ export default function AIDraft() {
                                   const player = pick ? players.find(p => p.id === pick.playerId) : null;
                                   
                                   return (
-                                    <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                    <TableCell key={team.id} className="whitespace-nowrap overflow-hidden text-ellipsis text-center text-xs border-r px-1" style={{ width: '120px', minWidth: '120px', maxWidth: '120px' }}>
                                       {player ? player.name : "―"}
                                     </TableCell>
                                   );
@@ -1616,17 +1618,18 @@ export default function AIDraft() {
           {/* 全てのpickRoundで結果テーブルを表示 */}
           {picksCompleteInfo && currentPicks.length > 0 ? (
             <div className="flex-1 overflow-y-auto">
-              <Table>
+              <Table style={{ tableLayout: 'fixed', width: `${80 + displayOrder.length * 120}px` }}>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10 w-20"></TableHead>
+                    <TableHead className="whitespace-nowrap sticky left-0 bg-background z-10 overflow-hidden text-ellipsis" style={{ width: '80px', minWidth: '80px', maxWidth: '80px' }}></TableHead>
                     {displayOrder.map(teamId => {
                       const team = teams.find(t => t.id === teamId);
                       if (!team) return null;
                       return (
                         <TableHead 
                           key={team.id} 
-                          className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white w-28`}
+                          className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white overflow-hidden text-ellipsis px-1`}
+                          style={{ width: '120px', minWidth: '120px', maxWidth: '120px' }}
                         >
                           {team.shortName}
                         </TableHead>
@@ -1670,12 +1673,13 @@ export default function AIDraft() {
                       rows.push(
                         <TableRow key={rowIndex}>
                           {rowIndex === 0 && (
-                            <TableCell 
-                              rowSpan={maxRowsTotal}
-                              className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap align-middle"
-                            >
-                              1位
-                            </TableCell>
+                      <TableCell 
+                        rowSpan={maxRowsTotal}
+                        className="font-semibold sticky left-0 bg-background z-10 whitespace-nowrap align-middle px-1 text-xs overflow-hidden text-ellipsis"
+                        style={{ width: '80px', minWidth: '80px', maxWidth: '80px' }}
+                      >
+                        1位
+                      </TableCell>
                           )}
                           {displayOrder.map(teamId => {
                             // この球団のこの行に表示する内容を決定
@@ -1687,7 +1691,7 @@ export default function AIDraft() {
                             
                             if (rowIndex >= teamLabels.length) {
                               return (
-                                <TableCell key={teamId} className="border-r text-center">
+                                <TableCell key={teamId} className="border-r text-center px-1 text-xs whitespace-nowrap overflow-hidden text-ellipsis" style={{ width: '120px', minWidth: '120px', maxWidth: '120px' }}>
                                   <span className="text-muted-foreground">—</span>
                                 </TableCell>
                               );
@@ -1701,16 +1705,14 @@ export default function AIDraft() {
                             const isLost = !pick && lostPick;
                             
                             return (
-                              <TableCell key={teamId} className="border-r text-center">
+                              <TableCell key={teamId} className="border-r text-center px-1 text-xs whitespace-nowrap overflow-hidden text-ellipsis" style={{ width: '120px', minWidth: '120px', maxWidth: '120px' }}>
                                 {pick ? (
-                                  <div className="space-y-1 py-2">
-                                    <div className="font-medium text-sm">{player?.name || ''}</div>
-                                    <div className="text-xs text-muted-foreground">{player?.team || ''}</div>
+                                  <div className="whitespace-nowrap overflow-hidden text-ellipsis">
+                                    {player?.name || ''}
                                   </div>
                                 ) : isLost ? (
-                                  <div className="space-y-1 py-2">
-                                    <div className="font-medium text-sm text-muted-foreground/50">{player?.name || ''}</div>
-                                    <div className="text-xs text-muted-foreground/40">{player?.team || ''}</div>
+                                  <div className="text-muted-foreground/50 whitespace-nowrap overflow-hidden text-ellipsis">
+                                    {player?.name || ''}
                                   </div>
                                 ) : (
                                   <span className="text-muted-foreground">—</span>
