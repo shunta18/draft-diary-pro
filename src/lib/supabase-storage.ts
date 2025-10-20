@@ -109,9 +109,16 @@ export interface UserProfileWithStats {
 // Player Functions
 export const getPlayers = async (): Promise<Player[]> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('User not authenticated');
+      return [];
+    }
+
     const { data, error } = await supabase
       .from('players')
       .select('*')
+      .eq('user_id', user.id)
       .order('is_favorite', { ascending: false })
       .order('created_at', { ascending: false });
     
@@ -184,6 +191,7 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
         position: Array.isArray(playerData.position) ? playerData.position[0] : playerData.position
       })
       .eq('id', id)
+      .eq('user_id', user.id)
       .select()
       .single();
     
@@ -242,10 +250,17 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
 
 export const deletePlayer = async (id: number): Promise<boolean> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('User not authenticated');
+      return false;
+    }
+
     const { error } = await supabase
       .from('players')
       .delete()
-      .eq('id', id);
+      .eq('id', id)
+      .eq('user_id', user.id);
     
     if (error) throw error;
     return true;
@@ -257,10 +272,17 @@ export const deletePlayer = async (id: number): Promise<boolean> => {
 
 export const getPlayerById = async (id: number): Promise<Player | null> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.log('User not authenticated');
+      return null;
+    }
+
     const { data, error } = await supabase
       .from('players')
       .select('*')
       .eq('id', id)
+      .eq('user_id', user.id)
       .single();
     
     if (error) throw error;
