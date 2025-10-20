@@ -1320,6 +1320,13 @@ export default function AIDraft() {
               teamIndex: teamIndex
             });
             setShouldStopSimulation(true);
+            
+            // Promiseを解決してシミュレーションを完全に停止
+            if (singlePickResolve) {
+              singlePickResolve();
+              setSinglePickResolve(null);
+            }
+            
             setAnimationEnabled(false);
           }
           if (!open) {
