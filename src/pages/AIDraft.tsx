@@ -1328,11 +1328,11 @@ export default function AIDraft() {
             }
             
             setAnimationEnabled(false);
-            setSimulating(false);
           }
           if (!open) {
+            setSimulating(false);
             setShowSinglePickComplete(false);
-            setNextButtonClicked(false); // フラグをリセット
+            setNextButtonClicked(false);
           }
         }}>
           <DialogContent className="max-w-md">
