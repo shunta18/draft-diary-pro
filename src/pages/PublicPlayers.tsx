@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, getPublicDiaryEntries, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry, getUserProfiles, followUser, unfollowUser, getFollowedUsers, type UserProfileWithStats, getPlayers, type Player } from "@/lib/supabase-storage";
+import { importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry, followUser, unfollowUser, type UserProfileWithStats, type Player } from "@/lib/supabase-storage";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { calculateSimilarity } from "@/lib/utils";
+import { usePublicPlayers, usePublicDiaryEntries, useUserProfiles, usePlayers, useFollowedUsers, useInvalidateQueries } from "@/hooks/usePlayerQueries";
 
 const evaluationColors = {
   "1位競合": "bg-red-500 text-white",
@@ -88,79 +89,39 @@ export default function PublicPlayers() {
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<PublicPlayer | null>(null);
-  const [players, setPlayers] = useState<PublicPlayer[]>([]);
-  const [diaries, setDiaries] = useState<PublicDiaryEntry[]>([]);
   const [selectedDiary, setSelectedDiary] = useState<PublicDiaryEntry | null>(null);
-  const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<"latest" | "views" | "imports">("latest");
   const [activeTab, setActiveTab] = useState("players");
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
-  const [users, setUsers] = useState<UserProfileWithStats[]>([]);
   const [usersSortBy, setUsersSortBy] = useState<"uploads" | "views" | "imports">("uploads");
-  const [followedUsers, setFollowedUsers] = useState<string[]>([]);
-  const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
   const [showFollowedOnly, setShowFollowedOnly] = useState(false);
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
   const [similarPlayers, setSimilarPlayers] = useState<Array<{ player: Player; similarity: number }>>([]);
   const [pendingImportPlayer, setPendingImportPlayer] = useState<PublicPlayer | null>(null);
 
+  const { invalidatePublicPlayers, invalidatePublicDiaries, invalidateUserProfiles, invalidateFollowedUsers, invalidatePlayers } = useInvalidateQueries();
+
+  // React Queryでデータ取得
+  const { data: players = [], isLoading: playersLoading } = usePublicPlayers(activeTab === "players");
+  const { data: diaries = [], isLoading: diariesLoading } = usePublicDiaryEntries(activeTab === "diaries");
+  const { data: users = [], isLoading: usersLoading } = useUserProfiles(activeTab === "users");
+  const { data: followedUsers = [] } = useFollowedUsers(!!user && activeTab === "users");
+  const { data: myPlayers = [] } = usePlayers(!!user);
+
+  const loading = activeTab === "players" ? playersLoading : activeTab === "diaries" ? diariesLoading : usersLoading;
+
+  // フォロー状態の管理
+  const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
+  
   useEffect(() => {
-    if (activeTab === "players") {
-      loadPlayers();
-    } else if (activeTab === "diaries") {
-      loadDiaries();
-    } else if (activeTab === "users") {
-      loadUsers();
-    }
-  }, [activeTab, user]);
-
-  const loadPlayers = async () => {
-    setLoading(true);
-    try {
-      const data = await getPublicPlayers();
-      setPlayers(data);
-    } catch (error) {
-      console.error('Failed to load players:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadDiaries = async () => {
-    setLoading(true);
-    try {
-      const data = await getPublicDiaryEntries();
-      setDiaries(data);
-    } catch (error) {
-      console.error('Failed to load diaries:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUsers = async () => {
-    setLoading(true);
-    try {
-      const data = await getUserProfiles();
-      setUsers(data);
-      
-      if (user) {
-        const followed = await getFollowedUsers();
-        setFollowedUsers(followed);
-        
-        const states: Record<string, boolean> = {};
-        for (const profile of data) {
-          states[profile.user_id] = followed.includes(profile.user_id);
-        }
-        setFollowingStates(states);
+    if (activeTab === "users" && users.length > 0) {
+      const states: Record<string, boolean> = {};
+      for (const profile of users) {
+        states[profile.user_id] = followedUsers.includes(profile.user_id);
       }
-    } catch (error) {
-      console.error('Failed to load users:', error);
-      setUsers([]);
-    } finally {
-      setLoading(false);
+      setFollowingStates(states);
     }
-  };
+  }, [activeTab, users, followedUsers]);
 
   const filteredPlayers = players.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -191,12 +152,12 @@ export default function PublicPlayers() {
   const handlePlayerClick = async (player: PublicPlayer) => {
     setSelectedPlayer(player);
     await incrementPublicPlayerViewCount(player.id);
-    loadPlayers();
+    invalidatePublicPlayers();
   };
 
   const checkForDuplicates = async (playerToImport: PublicPlayer) => {
     try {
-      const existingPlayers = await getPlayers();
+      const existingPlayers = myPlayers;
       
       // すでにインポート済みかチェック
       const alreadyImported = existingPlayers.find(
@@ -284,7 +245,8 @@ export default function PublicPlayers() {
         description: `「${player.name}（${player.team}）」があなたの選手リストに追加されました`,
         duration: 5000,
       });
-      loadPlayers();
+      invalidatePlayers();
+      invalidatePublicPlayers();
     } else {
       toast({
         title: "エラー",
@@ -363,7 +325,8 @@ export default function PublicPlayers() {
     }
 
     setSelectedPlayerIds(new Set());
-    loadPlayers();
+    invalidatePlayers();
+    invalidatePublicPlayers();
   };
 
   const handleImportAllFromUser = async (userId: string, e: React.MouseEvent) => {
@@ -379,7 +342,6 @@ export default function PublicPlayers() {
     }
 
     try {
-      setLoading(true);
       
       // その投稿者の全選手を取得
       const { data: userPlayers, error } = await supabase
@@ -430,7 +392,8 @@ export default function PublicPlayers() {
         description: `${importedCount}人の選手をインポートしました${skippedCount > 0 ? `（${skippedCount}人はスキップ）` : ""}`,
       });
 
-      await loadPlayers();
+      invalidatePlayers();
+      invalidatePublicPlayers();
     } catch (error) {
       console.error("Error importing all players from user:", error);
       toast({
@@ -438,8 +401,6 @@ export default function PublicPlayers() {
         description: "選手のインポートに失敗しました",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -474,7 +435,7 @@ export default function PublicPlayers() {
         description: `${player.name}を削除しました。`,
       });
       setSelectedPlayer(null);
-      loadPlayers();
+      invalidatePublicPlayers();
     } else {
       toast({
         title: "エラー",
@@ -505,7 +466,7 @@ export default function PublicPlayers() {
         description: "観戦日記を削除しました",
       });
       setSelectedDiary(null);
-      loadDiaries();
+      invalidatePublicDiaries();
     } catch (error) {
       toast({
         variant: "destructive",
@@ -533,14 +494,14 @@ export default function PublicPlayers() {
       if (isCurrentlyFollowing) {
         await unfollowUser(userId);
         setFollowingStates(prev => ({ ...prev, [userId]: false }));
-        setFollowedUsers(prev => prev.filter(id => id !== userId));
+        invalidateFollowedUsers();
         toast({
           title: "フォロー解除しました",
         });
       } else {
         await followUser(userId);
         setFollowingStates(prev => ({ ...prev, [userId]: true }));
-        setFollowedUsers(prev => [...prev, userId]);
+        invalidateFollowedUsers();
         toast({
           title: "フォローしました",
         });

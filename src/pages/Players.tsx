@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { getPlayers, deletePlayer, addPlayer, updatePlayer, uploadPlayerToPublic, type Player } from "@/lib/supabase-storage";
+import { deletePlayer, addPlayer, updatePlayer, uploadPlayerToPublic, type Player } from "@/lib/supabase-storage";
 import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { DuplicatePlayerChecker } from "@/components/DuplicatePlayerChecker";
+import { usePlayers, useInvalidateQueries } from "@/hooks/usePlayerQueries";
 
 
 const evaluationColors = {
@@ -93,63 +94,29 @@ export default function Players() {
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [loading, setLoading] = useState(true);
   const [uploadingPlayerId, setUploadingPlayerId] = useState<number | null>(null);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
   const [isUploadingBulk, setIsUploadingBulk] = useState(false);
   const [sortOrder, setSortOrder] = useState<"registration" | "evaluation">("registration");
+  
+  const { invalidatePlayers } = useInvalidateQueries();
+  
+  // React Queryでデータ取得
+  const { data: supabasePlayers, isLoading } = usePlayers(!!user);
+  
+  // ゲストユーザー用のサンプルデータ
+  const samplePlayers = !user ? (() => {
+    const defaultPlayers = getDefaultPlayers();
+    return defaultPlayers.map(p => ({
+      ...p,
+      position: Array.isArray(p.position) ? p.position.join("、") : p.position,
+      year: p.draftYear ? parseInt(p.draftYear) : 2025
+    })) as Player[];
+  })() : [];
+  
+  const players = user ? (supabasePlayers || []) : samplePlayers;
+  const loading = user ? isLoading : false;
 
-  useEffect(() => {
-    loadPlayers();
-  }, [user]);
-
-  const loadPlayers = async () => {
-    setLoading(true);
-    try {
-      if (user) {
-        // ログインユーザーはSupabaseから取得
-        const data = await getPlayers();
-        setPlayers(data);
-      } else {
-        // ゲストユーザーは最新のサンプルデータを表示
-        const samplePlayers = getDefaultPlayers();
-        // Player型に変換（positionをstringに）
-        const convertedPlayers = samplePlayers.map(p => ({
-          ...p,
-          position: Array.isArray(p.position) ? p.position.join("、") : p.position,
-          year: p.draftYear ? parseInt(p.draftYear) : 2025
-        }));
-        setPlayers(convertedPlayers as any);
-      }
-    } catch (error) {
-      console.error('Failed to load players:', error);
-      setPlayers([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ページ表示時にも最新データを取得するようにする
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && user) {
-        loadPlayers();
-      }
-    };
-    
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    window.addEventListener('focus', () => {
-      if (user) loadPlayers();
-    });
-    
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-      window.removeEventListener('focus', () => {
-        if (user) loadPlayers();
-      });
-    };
-  }, [user]);
 
   // 評価からスコアを計算するヘルパー関数
   const getEvaluationScore = (evaluations: string[] | undefined): number => {
@@ -224,7 +191,7 @@ export default function Players() {
       });
 
       if (updatedPlayer) {
-        await loadPlayers();
+        invalidatePlayers();
         toast({
           title: player.is_favorite ? "イチオシを解除しました" : "イチオシに設定しました",
           description: player.name,
@@ -279,7 +246,7 @@ export default function Players() {
           title: "アップロードしました",
           description: `${player.name}を共通DBに公開しました。`,
         });
-        await loadPlayers();
+        invalidatePlayers();
       } else {
         toast({
           title: "エラー",
@@ -356,7 +323,7 @@ export default function Players() {
       });
 
       setSelectedPlayerIds([]);
-      await loadPlayers();
+      invalidatePlayers();
     } catch (error: any) {
       console.error('Failed to bulk upload:', error);
       toast({
@@ -401,7 +368,7 @@ export default function Players() {
           title: "一括削除完了",
           description: `${successCount}名の選手を削除しました${errorCount > 0 ? `（${errorCount}名は失敗）` : ''}`,
         });
-        await loadPlayers();
+        invalidatePlayers();
         setSelectedPlayerIds([]);
       } else {
         toast({
@@ -494,7 +461,7 @@ export default function Players() {
             
             {user && players.length > 0 && (
               <div className="w-full sm:w-auto sm:max-w-sm">
-                <DuplicatePlayerChecker players={players} onPlayersUpdated={loadPlayers} />
+                <DuplicatePlayerChecker players={players} onPlayersUpdated={invalidatePlayers} />
               </div>
             )}
           </div>
@@ -1131,8 +1098,7 @@ export default function Players() {
                       <AlertDialogAction
                         onClick={async () => {
                           if (selectedPlayer && await deletePlayer(selectedPlayer.id!)) {
-                            const updatedPlayers = await getPlayers();
-                            setPlayers(updatedPlayers);
+                            invalidatePlayers();
                           }
                           setSelectedPlayer(null);
                         }}
