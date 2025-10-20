@@ -54,7 +54,7 @@ export interface DraftPick {
 }
 
 interface VoteData {
-  playerVotes: Map<string, number>; // key: "teamId_playerId"
+  playerVotes: Map<string, number>; // key: "teamId_playerName_playerTeam_playerCategory"
   positionVotes: Map<string, number>; // key: "teamId_round_position"
 }
 
@@ -144,14 +144,20 @@ export async function calculateDraftScores(
     positionVotes: new Map()
   };
   
-  // 選手投票データを変換
-  Object.entries(predictions.playerVotes).forEach(([key, votes]) => {
-    voteData.playerVotes.set(key, votes.length);
+  // 選手投票データを変換（選手名+チーム+カテゴリベースのキーに変更）
+  predictions.playerVotes.forEach((teamVotes, playerId) => {
+    teamVotes.forEach(({ teamId, count, playerName, playerTeam, playerCategory }) => {
+      const key = `${teamId}_${playerName}_${playerTeam}_${playerCategory}`;
+      voteData.playerVotes.set(key, count);
+    });
   });
   
   // ポジション投票データを変換
-  Object.entries(predictions.positionVotes).forEach(([key, votes]) => {
-    voteData.positionVotes.set(key, votes.length);
+  predictions.positionVotes.forEach((teamVotes, position) => {
+    teamVotes.forEach(({ teamId, count, draftRound }) => {
+      const key = `${teamId}_${draftRound}_${position}`;
+      voteData.positionVotes.set(key, count);
+    });
   });
   
   // 最大投票数を計算
@@ -160,8 +166,8 @@ export async function calculateDraftScores(
   
   // スコア計算
   const scores: DraftScore[] = availablePlayers.map(player => {
-    // レイヤー1: 投票データスコア
-    const playerVoteKey = `${teamId}_${player.id}`;
+    // レイヤー1: 投票データスコア（選手名+チーム+カテゴリでマッチング）
+    const playerVoteKey = `${teamId}_${player.name}_${player.team}_${player.category}`;
     const playerVoteCount = voteData.playerVotes.get(playerVoteKey) || 0;
     const voteScore = (playerVoteCount / maxPlayerVotes) * 100;
     
