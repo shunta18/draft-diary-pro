@@ -175,17 +175,21 @@ export const getUserVotes = async (draftYear: string = "2025") => {
 
 // 投票集計データの型
 export interface DraftPredictions {
-  playerVotes: Map<number, { count: number; teamId: number }[]>; // playerId -> [{teamId, count}]
+  playerVotes: Map<number, { count: number; teamId: number; playerName: string; playerTeam: string; playerCategory: string }[]>; // playerId -> [{teamId, count, playerName, playerTeam, playerCategory}]
   positionVotes: Map<string, { count: number; teamId: number; draftRound: number }[]>; // position -> [{teamId, count, draftRound}]
 }
 
 // 投票結果を集計
 export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise<DraftPredictions> => {
   try {
-    // 選手投票の集計
+    // 選手投票の集計（選手情報を含む）
     const { data: playerVotesData, error: playerError } = await supabase
       .from("draft_team_player_votes")
-      .select("team_id, public_player_id")
+      .select(`
+        team_id, 
+        public_player_id,
+        public_players!inner(name, team, category)
+      `)
       .eq("draft_year", draftYear);
 
     if (playerError) throw playerError;
@@ -198,15 +202,21 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
 
     if (positionError) throw positionError;
 
-    // 選手投票をMap形式に変換（public_player_id -> [{teamId, count}]）
-    const playerVotesMap = new Map<number, { count: number; teamId: number }[]>();
-    (playerVotesData || []).forEach((vote) => {
+    // 選手投票をMap形式に変換（public_player_id -> [{teamId, count, playerName, playerTeam, playerCategory}]）
+    const playerVotesMap = new Map<number, { count: number; teamId: number; playerName: string; playerTeam: string; playerCategory: string }[]>();
+    (playerVotesData || []).forEach((vote: any) => {
       const existing = playerVotesMap.get(vote.public_player_id) || [];
       const teamVote = existing.find(v => v.teamId === vote.team_id);
       if (teamVote) {
         teamVote.count++;
       } else {
-        existing.push({ teamId: vote.team_id, count: 1 });
+        existing.push({ 
+          teamId: vote.team_id, 
+          count: 1,
+          playerName: vote.public_players.name,
+          playerTeam: vote.public_players.team,
+          playerCategory: vote.public_players.category
+        });
       }
       playerVotesMap.set(vote.public_player_id, existing);
     });
