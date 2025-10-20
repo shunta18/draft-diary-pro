@@ -460,24 +460,23 @@ export default function DraftPredictions() {
                         </Button>
                       </PlayerSelectionDialog>
 
-                      {/* 投票済みの選手一覧 */}
+                      {/* 全選手一覧（票数順） */}
                       <div className="space-y-2 max-h-[500px] overflow-y-auto">
-                      {userPlayerVotes
-                          .filter((v) => v.team_id === selectedTeam)
-                          .map((vote) => {
-                            const player = players.find((p) => p.id === vote.public_player_id);
-                            if (!player) return null;
-                            
+                        {sortedPlayers.length > 0 ? (
+                          sortedPlayers.map((player) => {
                             const voteCount = getPlayerVoteCount(player.id);
-                            const votePercentage = (voteCount / maxPlayerVotes) * 100;
+                            const votePercentage = maxPlayerVotes > 0 ? (voteCount / maxPlayerVotes) * 100 : 0;
+                            const isVoted = isPlayerVoted(player.id);
 
                             return (
                               <div
                                 key={player.id}
-                                className="flex items-center gap-3 p-3 rounded-lg border bg-accent/30"
+                                className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                                  isVoted ? "bg-accent/30 border-primary/50" : "bg-card hover:bg-accent/10"
+                                }`}
                               >
                                 <Checkbox
-                                  checked={true}
+                                  checked={isVoted}
                                   onCheckedChange={(checked) =>
                                     handlePlayerVoteToggle(player.id, checked as boolean)
                                   }
@@ -501,12 +500,10 @@ export default function DraftPredictions() {
                                 </div>
                               </div>
                             );
-                          })}
-                        
-                        {userPlayerVotes.filter((v) => v.team_id === selectedTeam).length === 0 && (
+                          })
+                        ) : (
                           <p className="text-center text-muted-foreground py-8">
-                            まだ選手が選択されていません。<br />
-                            上のボタンから選手を検索して追加してください。
+                            選手データがありません
                           </p>
                         )}
                       </div>
