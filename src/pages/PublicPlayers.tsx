@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Filter, Eye, Download, User, Calendar, ChevronDown, Pencil, Trash2, Upload, UserPlus, UserMinus, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,9 @@ import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { calculateSimilarity } from "@/lib/utils";
 import { usePublicPlayers, usePublicDiaryEntries, useUserProfiles, usePlayers, useFollowedUsers, useInvalidateQueries } from "@/hooks/usePlayerQueries";
+import { PublicPlayerCard } from "@/components/PublicPlayerCard";
+import { UserProfileCard } from "@/components/UserProfileCard";
+import { DiaryCard } from "@/components/DiaryCard";
 
 const evaluationColors = {
   "1位競合": "bg-red-500 text-white",
@@ -149,11 +152,61 @@ export default function PublicPlayers() {
     }
   });
 
-  const handlePlayerClick = async (player: PublicPlayer) => {
+  const handlePlayerClick = useCallback(async (player: PublicPlayer) => {
     setSelectedPlayer(player);
     await incrementPublicPlayerViewCount(player.id);
     invalidatePublicPlayers();
-  };
+  }, [invalidatePublicPlayers]);
+
+  const handleDiaryClick = useCallback(async (diary: PublicDiaryEntry) => {
+    setSelectedDiary(diary);
+    await incrementPublicDiaryViewCount(diary.id);
+    invalidatePublicDiaries();
+  }, [invalidatePublicDiaries]);
+
+  const handleNavigateToUser = useCallback((userId: string) => {
+    navigate(`/public-players/users/${userId}`);
+  }, [navigate]);
+
+  const handleFollow = useCallback(async (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "フォロー機能を使用するにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const isCurrentlyFollowing = followingStates[userId];
+      
+      if (isCurrentlyFollowing) {
+        await unfollowUser(userId);
+        setFollowingStates(prev => ({ ...prev, [userId]: false }));
+        invalidateFollowedUsers();
+        toast({
+          title: "フォロー解除しました",
+        });
+      } else {
+        await followUser(userId);
+        setFollowingStates(prev => ({ ...prev, [userId]: true }));
+        invalidateFollowedUsers();
+        toast({
+          title: "フォローしました",
+        });
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      toast({
+        variant: "destructive",
+        title: "エラー",
+        description: "フォロー状態の変更に失敗しました",
+      });
+    }
+  }, [user, followingStates, invalidateFollowedUsers, toast]);
 
   const checkForDuplicates = async (playerToImport: PublicPlayer) => {
     try {
@@ -445,15 +498,6 @@ export default function PublicPlayers() {
     }
   };
 
-  const handleDiaryClick = async (diary: PublicDiaryEntry) => {
-    setSelectedDiary(diary);
-    try {
-      await incrementPublicDiaryViewCount(diary.id);
-    } catch (error) {
-      console.error('Failed to increment view count:', error);
-    }
-  };
-
   const handleDeleteDiary = async (diary: PublicDiaryEntry) => {
     if (!confirm('この観戦日記を削除してもよろしいですか?')) {
       return;
@@ -476,47 +520,7 @@ export default function PublicPlayers() {
     }
   };
 
-  const handleFollow = async (userId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!user) {
-      toast({
-        title: "ログインが必要です",
-        description: "フォローするにはログインしてください",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const isCurrentlyFollowing = followingStates[userId];
-      
-      if (isCurrentlyFollowing) {
-        await unfollowUser(userId);
-        setFollowingStates(prev => ({ ...prev, [userId]: false }));
-        invalidateFollowedUsers();
-        toast({
-          title: "フォロー解除しました",
-        });
-      } else {
-        await followUser(userId);
-        setFollowingStates(prev => ({ ...prev, [userId]: true }));
-        invalidateFollowedUsers();
-        toast({
-          title: "フォローしました",
-        });
-      }
-    } catch (error) {
-      console.error("Error toggling follow:", error);
-      toast({
-        title: "エラーが発生しました",
-        description: "もう一度お試しください",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const filteredUsers = showFollowedOnly 
+  const filteredUsers = showFollowedOnly
     ? users.filter(u => followedUsers.includes(u.user_id))
     : users;
 
@@ -667,61 +671,13 @@ export default function PublicPlayers() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {sortedPlayers.map((player) => (
-                <Card key={player.id} className="hover:shadow-lg transition-shadow cursor-pointer relative">
-                  <div 
-                    className="absolute top-3 left-3 z-10"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Checkbox
-                      checked={selectedPlayerIds.has(player.id)}
-                      onCheckedChange={() => togglePlayerSelection(player.id)}
-                    />
-                  </div>
-                  <CardContent className="p-4 pl-12" onClick={() => handlePlayerClick(player)}>
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="font-bold text-lg">{player.name}</h3>
-                          <p className="text-sm text-muted-foreground">{player.team}</p>
-                        </div>
-                        <Badge variant="outline">{player.category}</Badge>
-                      </div>
-
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">
-                          {sortPositions(player.position)}
-                        </p>
-                        {player.evaluations && player.evaluations.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {sortEvaluations(player.evaluations).map((evaluation, index) => (
-                              <Badge key={index} className={evaluationColors[evaluation as keyof typeof evaluationColors]}>
-                                {evaluation}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          <span>{player.view_count}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Download className="h-3 w-3" />
-                          <span>{player.import_count}</span>
-                        </div>
-                        <div className="flex items-center gap-1 ml-auto">
-                          <Avatar className="h-5 w-5">
-                            <AvatarImage src={player.profiles?.avatar_url} />
-                            <AvatarFallback><User className="h-3 w-3" /></AvatarFallback>
-                          </Avatar>
-                          <span>{player.profiles?.display_name || "名無し"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <PublicPlayerCard
+                  key={player.id}
+                  player={player}
+                  isSelected={selectedPlayerIds.has(player.id)}
+                  onPlayerClick={handlePlayerClick}
+                  onSelectionToggle={togglePlayerSelection}
+                />
               ))}
             </div>
           )}
@@ -736,39 +692,11 @@ export default function PublicPlayers() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {diaries.map((diary) => (
-                <Card key={diary.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardContent className="p-4" onClick={() => handleDiaryClick(diary)}>
-                    <div className="space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg">{diary.match_card}</h3>
-                          <p className="text-sm text-muted-foreground">{diary.date}</p>
-                        </div>
-                        <Badge variant="outline">{diary.category}</Badge>
-                      </div>
-
-                      <div className="space-y-1">
-                        <p className="text-sm text-muted-foreground">{diary.venue}</p>
-                        <p className="text-sm font-medium">{diary.score}</p>
-                      </div>
-
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                        <div className="flex items-center gap-1">
-                          <Eye className="h-3 w-3" />
-                          <span>{diary.view_count}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Download className="h-3 w-3" />
-                          <span>{diary.import_count}</span>
-                        </div>
-                        <div className="flex items-center gap-1 ml-auto">
-                          <User className="h-3 w-3" />
-                          <span>{diary.profile?.display_name || "名無し"}</span>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <DiaryCard
+                  key={diary.id}
+                  diary={diary}
+                  onDiaryClick={handleDiaryClick}
+                />
               ))}
             </div>
           )}
@@ -811,85 +739,16 @@ export default function PublicPlayers() {
           ) : (
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {sortedUsers.map((userProfile) => (
-                <Card 
-                  key={userProfile.user_id} 
-                  className="hover:shadow-lg transition-shadow cursor-pointer"
-                  onClick={() => navigate(`/public-players/users/${userProfile.user_id}`)}
-                >
-                  <CardContent className="p-4">
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-16 w-16">
-                          <AvatarImage src={userProfile.avatar_url} />
-                          <AvatarFallback><User className="h-8 w-8" /></AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <h3 className="font-bold text-lg">{userProfile.display_name || "名無し"}</h3>
-                          {userProfile.bio && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">{userProfile.bio}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-2 pt-2 border-t">
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-1 text-muted-foreground">
-                            <Upload className="h-3 w-3" />
-                          </div>
-                          <p className="text-lg font-bold">{userProfile.upload_count}</p>
-                          <p className="text-xs text-muted-foreground">アップロード</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-1 text-muted-foreground">
-                            <Eye className="h-3 w-3" />
-                          </div>
-                          <p className="text-lg font-bold">{userProfile.total_views}</p>
-                          <p className="text-xs text-muted-foreground">総閲覧数</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="flex items-center justify-center gap-1 text-muted-foreground">
-                            <Download className="h-3 w-3" />
-                          </div>
-                          <p className="text-lg font-bold">{userProfile.total_imports}</p>
-                          <p className="text-xs text-muted-foreground">総インポート</p>
-                        </div>
-                      </div>
-
-                      {user && user.id !== userProfile.user_id && (
-                        <div className="flex gap-2 pt-2 border-t">
-                          <Button
-                            variant={followingStates[userProfile.user_id] ? "secondary" : "outline"}
-                            size="sm"
-                            className="flex-1"
-                            onClick={(e) => handleFollow(userProfile.user_id, e)}
-                          >
-                            {followingStates[userProfile.user_id] ? (
-                              <>
-                                <UserMinus className="w-4 h-4 mr-1" />
-                                フォロー中
-                              </>
-                            ) : (
-                              <>
-                                <UserPlus className="w-4 h-4 mr-1" />
-                                フォロー
-                              </>
-                            )}
-                          </Button>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="flex-1"
-                            onClick={(e) => handleImportAllFromUser(userProfile.user_id, e)}
-                            disabled={loading}
-                          >
-                            <Download className="w-4 h-4 mr-1" />
-                            すべてインポート
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                <UserProfileCard
+                  key={userProfile.user_id}
+                  userProfile={userProfile}
+                  isFollowing={followingStates[userProfile.user_id]}
+                  currentUserId={user?.id}
+                  loading={loading}
+                  onNavigate={() => handleNavigateToUser(userProfile.user_id)}
+                  onFollow={handleFollow}
+                  onImportAll={handleImportAllFromUser}
+                />
               ))}
             </div>
           )}
