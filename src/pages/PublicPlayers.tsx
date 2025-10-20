@@ -14,6 +14,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
 import { getPublicPlayers, importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, getPublicDiaryEntries, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry, getUserProfiles, followUser, unfollowUser, getFollowedUsers, type UserProfileWithStats, getPlayers, type Player } from "@/lib/supabase-storage";
+import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -363,6 +364,83 @@ export default function PublicPlayers() {
 
     setSelectedPlayerIds(new Set());
     loadPlayers();
+  };
+
+  const handleImportAllFromUser = async (userId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!user) {
+      toast({
+        title: "ログインが必要です",
+        description: "選手をインポートするにはログインしてください。",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // その投稿者の全選手を取得
+      const { data: userPlayers, error } = await supabase
+        .from("public_players")
+        .select("*")
+        .eq("user_id", userId);
+
+      if (error) throw error;
+
+      if (!userPlayers || userPlayers.length === 0) {
+        toast({
+          title: "エラー",
+          description: "この投稿者の選手が見つかりません",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // 確認ダイアログ
+      const confirmed = confirm(
+        `${userPlayers.length}名の選手を自分の選手リストに追加しますか？\n\n※既に登録済みの選手はスキップされます。`
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+
+      let importedCount = 0;
+      let skippedCount = 0;
+
+      for (const player of userPlayers) {
+        // 重複チェック（型をPublicPlayerにキャスト）
+        const duplicates = await checkForDuplicates(player as PublicPlayer);
+        if (duplicates === null) {
+          // すでにインポート済み
+          skippedCount++;
+        } else if (duplicates.length === 0) {
+          await executeImport(player as PublicPlayer);
+          importedCount++;
+        } else {
+          // 類似選手がいる場合もスキップ
+          skippedCount++;
+        }
+      }
+
+      toast({
+        title: "インポート完了",
+        description: `${importedCount}人の選手をインポートしました${skippedCount > 0 ? `（${skippedCount}人はスキップ）` : ""}`,
+      });
+
+      await loadPlayers();
+    } catch (error) {
+      console.error("Error importing all players from user:", error);
+      toast({
+        title: "エラー",
+        description: "選手のインポートに失敗しました",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const togglePlayerSelection = (playerId: string) => {
@@ -785,22 +863,7 @@ export default function PublicPlayers() {
                           <AvatarFallback><User className="h-8 w-8" /></AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <h3 className="font-bold text-lg">{userProfile.display_name || "名無し"}</h3>
-                            {user && user.id !== userProfile.user_id && (
-                              <Button
-                                variant={followingStates[userProfile.user_id] ? "secondary" : "outline"}
-                                size="sm"
-                                onClick={(e) => handleFollow(userProfile.user_id, e)}
-                              >
-                                {followingStates[userProfile.user_id] ? (
-                                  <UserMinus className="w-4 h-4" />
-                                ) : (
-                                  <UserPlus className="w-4 h-4" />
-                                )}
-                              </Button>
-                            )}
-                          </div>
+                          <h3 className="font-bold text-lg">{userProfile.display_name || "名無し"}</h3>
                           {userProfile.bio && (
                             <p className="text-sm text-muted-foreground line-clamp-2">{userProfile.bio}</p>
                           )}
@@ -830,6 +893,39 @@ export default function PublicPlayers() {
                           <p className="text-xs text-muted-foreground">総インポート</p>
                         </div>
                       </div>
+
+                      {user && user.id !== userProfile.user_id && (
+                        <div className="flex gap-2 pt-2 border-t">
+                          <Button
+                            variant={followingStates[userProfile.user_id] ? "secondary" : "outline"}
+                            size="sm"
+                            className="flex-1"
+                            onClick={(e) => handleFollow(userProfile.user_id, e)}
+                          >
+                            {followingStates[userProfile.user_id] ? (
+                              <>
+                                <UserMinus className="w-4 h-4 mr-1" />
+                                フォロー中
+                              </>
+                            ) : (
+                              <>
+                                <UserPlus className="w-4 h-4 mr-1" />
+                                フォロー
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="flex-1"
+                            onClick={(e) => handleImportAllFromUser(userProfile.user_id, e)}
+                            disabled={loading}
+                          >
+                            <Download className="w-4 h-4 mr-1" />
+                            すべてインポート
+                          </Button>
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
