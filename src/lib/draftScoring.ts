@@ -209,57 +209,79 @@ export async function calculateDraftScores(
     // 現実性調整ルール（スコアに直接加算/減算）
     let realismAdjustment = 0;
     
-    // 同じチームが最近同じポジションを指名していないかチェック（投手を除く）
-    const recentPicks = draftHistory
-      .filter(pick => pick.teamId === teamId)
-      .slice(-2); // 直近2指名をチェック
-    
-    const recentPositions = recentPicks
-      .map(pick => availablePlayers.find(p => p.id === pick.playerId))
-      .filter(p => p !== undefined)
-      .flatMap(p => p!.position);
-    
-    // 現在の選手が投手でない場合のみ、同ポジション連続チェックを行う
+    // 現在の選手が投手かどうかを判定
     const isCurrentPitcher = player.position.some(p => p === "投手" || p === "P");
     
-    if (!isCurrentPitcher) {
-      const hasRecentSamePosition = player.position.some(pos => 
-        pos !== "投手" && pos !== "P" && recentPositions.includes(pos)
-      );
+    // このチームの全指名履歴を取得
+    const teamPicks = draftHistory.filter(pick => pick.teamId === teamId);
+    
+    // 1. 同ポジション連続指名ペナルティ②（直近1指名）
+    if (!isCurrentPitcher && teamPicks.length >= 1) {
+      const lastPick = teamPicks[teamPicks.length - 1];
+      const lastPlayer = availablePlayers.find(p => p.id === lastPick.playerId);
       
-      if (hasRecentSamePosition && recentPicks.length >= 2) {
-        realismAdjustment -= 15; // 同じポジション連続指名でペナルティ（投手を除く）
+      if (lastPlayer) {
+        const lastPositions = lastPlayer.position.filter(p => p !== "投手" && p !== "P");
+        const hasDirectSamePosition = player.position.some(pos => 
+          pos !== "投手" && pos !== "P" && lastPositions.includes(pos)
+        );
+        
+        if (hasDirectSamePosition) {
+          realismAdjustment -= 20; // 直前と同ポジションでペナルティ
+        }
       }
     }
     
-    // 投手・野手バランス調整（1位から3位のみ）
+    // 2. 同ポジション連続指名ペナルティ（直近2指名）
+    if (!isCurrentPitcher && teamPicks.length >= 2) {
+      const recent2Picks = teamPicks.slice(-2);
+      const recentPositions = recent2Picks
+        .map(pick => availablePlayers.find(p => p.id === pick.playerId))
+        .filter(p => p !== undefined)
+        .flatMap(p => p!.position.filter(pos => pos !== "投手" && pos !== "P"));
+      
+      const hasRecent2SamePosition = player.position.some(pos => 
+        pos !== "投手" && pos !== "P" && recentPositions.includes(pos)
+      );
+      
+      if (hasRecent2SamePosition) {
+        realismAdjustment -= 50; // 直近2指名で同ポジションがある場合の大きなペナルティ
+      }
+    }
+    
+    // 3. 投手・野手バランス調整（1位から3位のみ）
     if (round >= 1 && round <= 3) {
-      const top3Picks = draftHistory
-        .filter(pick => pick.teamId === teamId && pick.round >= 1 && pick.round <= 3)
-        .map(pick => {
+      const top3Picks = teamPicks.filter(pick => pick.round >= 1 && pick.round <= 3);
+      
+      if (top3Picks.length === 2) {
+        // 既に2指名済みの場合、タイプをチェック
+        const pickedTypes = top3Picks.map(pick => {
           const p = availablePlayers.find(pl => pl.id === pick.playerId);
-          return p;
-        })
-        .filter(p => p !== undefined);
-      
-      // 現在の選手が投手か野手かを判定
-      const isCurrentPitcher = player.position.some(p => p === "投手" || p === "P");
-      
-      // 既に指名された選手のタイプをチェック
-      const pickedTypes = top3Picks.map(p => {
-        const isPitcher = p!.position.some(pos => pos === "投手" || pos === "P");
-        return isPitcher ? 'pitcher' : 'fielder';
-      });
-      
-      // 3連続同じタイプになるかチェック
-      if (pickedTypes.length === 2) {
-        const allSameType = pickedTypes.every(t => t === pickedTypes[0]);
-        if (allSameType) {
+          if (!p) return null;
+          const isPitcher = p.position.some(pos => pos === "投手" || pos === "P");
+          return isPitcher ? 'pitcher' : 'fielder';
+        }).filter(t => t !== null);
+        
+        // 既に2人が同じタイプかチェック
+        if (pickedTypes.length === 2 && pickedTypes[0] === pickedTypes[1]) {
           const currentType = isCurrentPitcher ? 'pitcher' : 'fielder';
           if (currentType === pickedTypes[0]) {
-            realismAdjustment -= 20; // 3連続同じタイプでペナルティ
+            realismAdjustment -= 50; // 3連続同じタイプでペナルティ
           }
         }
+      }
+    }
+    
+    // 4. カテゴリ調整（4位以降で高校生未指名の場合）
+    if (round >= 4) {
+      const top3Picks = teamPicks.filter(pick => pick.round >= 1 && pick.round <= 3);
+      const hasHighSchoolInTop3 = top3Picks.some(pick => {
+        const p = availablePlayers.find(pl => pl.id === pick.playerId);
+        return p && p.category === "高校";
+      });
+      
+      if (!hasHighSchoolInTop3 && player.category === "高校") {
+        realismAdjustment += 20; // 高校生未指名の場合、高校生に加点
       }
     }
     
