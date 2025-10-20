@@ -131,6 +131,7 @@ export const LotteryAnimation = ({ lotteryData, teams, onComplete }: LotteryAnim
                     src={lotteryBoxImage} 
                     alt="抽選箱" 
                     className="w-full h-full object-contain"
+                    loading="lazy"
                   />
                   {/* 上から厚紙が引かれる演出 */}
                   {sortedCompetingTeams.map((teamId, index) => (

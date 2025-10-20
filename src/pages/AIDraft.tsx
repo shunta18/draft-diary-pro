@@ -1264,7 +1264,7 @@ export default function AIDraft() {
                             </div>
                             <div class="p-4 border-t flex flex-col items-center gap-3">
                               <div class="flex items-center gap-2 text-sm text-muted-foreground">
-                                <img src="/mustache-logo.png" alt="BaaS Logo" class="h-6 w-auto" />
+                                <img src="/mustache-logo.png" alt="BaaS Logo" class="h-6 w-auto" loading="lazy" />
                                 <span>BaaS 野球スカウトノート</span>
                               </div>
                               <button class="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md" onclick="this.closest('.fixed').remove()">
@@ -1802,7 +1802,12 @@ export default function AIDraft() {
                   {/* ロゴとブランディング */}
                   <div className="mb-2 md:mb-3 w-full flex justify-start">
                     <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
-                      <img src="/mustache-logo.png" alt="BaaS Logo" className="h-4 md:h-8 w-auto" />
+                      <img 
+                        src="/mustache-logo.png" 
+                        alt="BaaS Logo" 
+                        className="h-4 md:h-8 w-auto"
+                        loading="lazy"
+                      />
                       <span className="font-semibold text-sm md:text-lg text-black">BaaS 野球スカウトノート</span>
                     </div>
                   </div>

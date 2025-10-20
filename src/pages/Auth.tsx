@@ -149,7 +149,14 @@ export default function Auth() {
         <Card className="w-full max-w-md gradient-card border-0 shadow-soft">
            <CardHeader className="text-center">
             <div className="flex items-center justify-center space-x-2 mb-2">
-              <img src={logoIcon} alt="ロゴ" className="h-8 w-8" />
+              <img 
+                src={logoIcon} 
+                alt="ロゴ" 
+                className="h-8 w-8"
+                width="32"
+                height="32"
+                loading="lazy"
+              />
               <CardTitle className="text-2xl text-primary">BaaS 野球スカウトノート</CardTitle>
             </div>
           </CardHeader>

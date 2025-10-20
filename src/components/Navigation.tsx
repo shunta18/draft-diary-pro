@@ -39,7 +39,14 @@ export const Navigation = () => {
     <div className="bg-card border-b shadow-soft">
       <div className="flex items-center justify-between p-4">
         <Link to="/" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
-          <img src={logoIcon} alt="ロゴ" className="h-8 w-8" />
+          <img 
+            src={logoIcon} 
+            alt="ロゴ" 
+            className="h-8 w-8" 
+            width="32" 
+            height="32"
+            loading="lazy"
+          />
           <h1 className="text-xl font-bold text-primary hidden sm:block">
             BaaS 野球スカウトノート
           </h1>
