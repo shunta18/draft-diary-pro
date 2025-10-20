@@ -291,7 +291,7 @@ export default function Draft() {
     const loadPlayers = async () => {
       try {
         if (user) {
-          // Logged in: load from Supabase
+          // Logged in: load from Supabase (user's own players only)
           const supabasePlayers = await getSupabasePlayers();
           setPlayers(supabasePlayers);
         } else {
