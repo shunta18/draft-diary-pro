@@ -1119,7 +1119,7 @@ export default function AIDraft() {
                             return (
                               <TableHead 
                                 key={team.id} 
-                                className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white w-28`}
+                                className={`whitespace-nowrap text-center text-xs font-bold border-r bg-gradient-to-br ${team.color} text-white min-w-[120px] w-[120px] max-w-[120px]`}
                               >
                                 {team.shortName}
                               </TableHead>
@@ -1163,7 +1163,7 @@ export default function AIDraft() {
                                     
                                     if (rowIndex >= allTeamItems.length) {
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r min-w-[120px] w-[120px] max-w-[120px]">
                                           ―
                                         </TableCell>
                                       );
@@ -1173,14 +1173,14 @@ export default function AIDraft() {
                                     
                                     if (item.type === 'lost') {
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r w-28">
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs text-muted-foreground/50 border-r min-w-[120px] w-[120px] max-w-[120px]">
                                           {item.data.playerName}
                                         </TableCell>
                                       );
                                     } else {
                                       const player = players.find(p => p.id === item.data.playerId);
                                       return (
-                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                        <TableCell key={teamId} className="whitespace-nowrap text-center text-xs border-r min-w-[120px] w-[120px] max-w-[120px]">
                                           {player ? player.name : "―"}
                                         </TableCell>
                                       );
@@ -1205,7 +1205,7 @@ export default function AIDraft() {
                                   const player = pick ? players.find(p => p.id === pick.playerId) : null;
                                   
                                   return (
-                                    <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r w-28">
+                                    <TableCell key={team.id} className="whitespace-nowrap text-center text-xs border-r min-w-[120px] w-[120px] max-w-[120px]">
                                       {player ? player.name : "―"}
                                     </TableCell>
                                   );
