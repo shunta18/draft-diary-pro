@@ -352,17 +352,13 @@ export default function PublicPlayers() {
       return;
     }
 
-    let successCount = 0;
-    let failCount = 0;
-
-    for (const playerId of Array.from(selectedPlayerIds)) {
-      const result = await importPlayerFromPublic(playerId);
-      if (result) {
-        successCount++;
-      } else {
-        failCount++;
-      }
-    }
+    // 並列処理でインポート
+    const results = await Promise.all(
+      Array.from(selectedPlayerIds).map(playerId => importPlayerFromPublic(playerId))
+    );
+    
+    const successCount = results.filter(result => result).length;
+    const failCount = results.length - successCount;
 
     if (successCount > 0) {
       toast({
@@ -422,23 +418,23 @@ export default function PublicPlayers() {
         return;
       }
 
-      let importedCount = 0;
-      let skippedCount = 0;
-
-      for (const player of userPlayers) {
-        // 重複チェック（型をPublicPlayerにキャスト）
-        const duplicates = await checkForDuplicates(player as PublicPlayer);
-        if (duplicates === null) {
-          // すでにインポート済み
-          skippedCount++;
-        } else if (duplicates.length === 0) {
-          await executeImport(player as PublicPlayer);
-          importedCount++;
-        } else {
-          // 類似選手がいる場合もスキップ
-          skippedCount++;
-        }
-      }
+      // 並列処理で重複チェックとインポート
+      const results = await Promise.all(
+        userPlayers.map(async (player) => {
+          const duplicates = await checkForDuplicates(player as PublicPlayer);
+          if (duplicates === null) {
+            return { status: 'skipped' as const };
+          } else if (duplicates.length === 0) {
+            await executeImport(player as PublicPlayer);
+            return { status: 'imported' as const };
+          } else {
+            return { status: 'skipped' as const };
+          }
+        })
+      );
+      
+      const importedCount = results.filter(r => r.status === 'imported').length;
+      const skippedCount = results.filter(r => r.status === 'skipped').length;
 
       toast({
         title: "インポート完了",
