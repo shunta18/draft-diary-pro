@@ -171,19 +171,30 @@ export async function calculateDraftScores(
     const playerVoteCount = voteData.playerVotes.get(playerVoteKey) || 0;
     const voteScore = (playerVoteCount / maxPlayerVotes) * 100;
     
-    // レイヤー2: チームニーズマッチングスコア
+    // レイヤー2: チームニーズマッチングスコア（加重平均）
     let teamNeedsScore = 0;
     const positionVoteKeys = Array.from(voteData.positionVotes.keys())
       .filter(key => key.startsWith(`${teamId}_${round}_`));
     
     if (positionVoteKeys.length > 0) {
-      const positionScores = positionVoteKeys.map(key => {
+      let totalWeightedScore = 0;
+      let totalWeight = 0;
+      
+      positionVoteKeys.forEach(key => {
         const position = key.split('_')[2];
         const votes = voteData.positionVotes.get(key) || 0;
         const matchScore = calculatePositionMatch(player.position, position);
-        return (votes / maxPositionVotes) * matchScore;
+        
+        // 投票数を重みとして使用
+        const weight = votes;
+        const score = matchScore; // 0-100のスコア
+        
+        totalWeightedScore += score * weight;
+        totalWeight += weight;
       });
-      teamNeedsScore = Math.max(...positionScores, 0);
+      
+      // 加重平均を計算（0-100の範囲に収まる）
+      teamNeedsScore = totalWeight > 0 ? totalWeightedScore / totalWeight : 0;
     } else {
       // 投票データがない場合はデフォルト値
       teamNeedsScore = 50;
