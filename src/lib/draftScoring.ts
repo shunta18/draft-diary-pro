@@ -65,14 +65,14 @@ const evaluatePlayerRating = (evaluations: string[]): number => {
   // 順位評価の点数マッピング
   const rankScores: { [key: string]: number } = {
     '1位競合': 100,
-    '1位一本釣り': 95,
-    '外れ1位': 90,
+    '1位一本釣り': 90,
+    '外れ1位': 85,
     '2位': 80,
     '3位': 70,
     '4位': 60,
     '5位': 50,
-    '6位以下': 40,
-    '育成': 30
+    '6位以下': 45,
+    '育成': 40
   };
   
   const foundScores: number[] = [];
@@ -93,8 +93,8 @@ const evaluatePlayerRating = (evaluations: string[]): number => {
   // 複数の順位評価がある場合は平均値を計算
   const averageScore = foundScores.reduce((sum, score) => sum + score, 0) / foundScores.length;
   
-  // 30-100の範囲を0-100に正規化
-  const normalizedScore = ((averageScore - 30) / (100 - 30)) * 100;
+  // 40-100の範囲を0-100に正規化
+  const normalizedScore = ((averageScore - 40) / (100 - 40)) * 100;
   
   return Math.round(Math.max(0, Math.min(100, normalizedScore)));
 };
