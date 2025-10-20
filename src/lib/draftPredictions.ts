@@ -182,17 +182,27 @@ export interface DraftPredictions {
 // 投票結果を集計
 export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise<DraftPredictions> => {
   try {
-    // 選手投票の集計（選手情報を含む）
+    // 選手投票の集計（public_player_idを取得）
     const { data: playerVotesData, error: playerError } = await supabase
       .from("draft_team_player_votes")
-      .select(`
-        team_id, 
-        public_player_id,
-        public_players!inner(name, team, category)
-      `)
+      .select("team_id, public_player_id")
       .eq("draft_year", draftYear);
 
     if (playerError) throw playerError;
+
+    // public_player_idから選手情報を取得（players.idで結合）
+    const publicPlayerIds = [...new Set((playerVotesData || []).map(v => v.public_player_id))];
+    const { data: playersData, error: playersError } = await supabase
+      .from("players")
+      .select("id, name, team, category")
+      .in("id", publicPlayerIds);
+
+    if (playersError) throw playersError;
+
+    // players.idをキーにしたマップを作成
+    const playersMap = new Map(
+      (playersData || []).map(p => [p.id, p])
+    );
 
     // ポジション投票の集計（ドラフト順位も含む）
     const { data: positionVotesData, error: positionError } = await supabase
@@ -205,6 +215,9 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
     // 選手投票をMap形式に変換（public_player_id -> [{teamId, count, playerName, playerTeam, playerCategory}]）
     const playerVotesMap = new Map<number, { count: number; teamId: number; playerName: string; playerTeam: string; playerCategory: string }[]>();
     (playerVotesData || []).forEach((vote: any) => {
+      const playerInfo = playersMap.get(vote.public_player_id);
+      if (!playerInfo) return; // 選手情報が見つからない場合はスキップ
+      
       const existing = playerVotesMap.get(vote.public_player_id) || [];
       const teamVote = existing.find(v => v.teamId === vote.team_id);
       if (teamVote) {
@@ -213,9 +226,9 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
         existing.push({ 
           teamId: vote.team_id, 
           count: 1,
-          playerName: vote.public_players.name,
-          playerTeam: vote.public_players.team,
-          playerCategory: vote.public_players.category
+          playerName: playerInfo.name,
+          playerTeam: playerInfo.team,
+          playerCategory: playerInfo.category
         });
       }
       playerVotesMap.set(vote.public_player_id, existing);
