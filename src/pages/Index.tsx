@@ -201,7 +201,7 @@ const Index = () => {
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-primary">選手リスト</h3>
                     <p className="text-sm text-muted-foreground">ドラフト候補選手の情報を管理・評価</p>
-                    <p className="text-xs text-accent mt-1 font-medium">{totalPlayers}名登録済み →</p>
+                    <p className="text-xs text-accent mt-1 font-medium">選手リストを見る →</p>
                   </div>
                 </div>
               </CardContent>
