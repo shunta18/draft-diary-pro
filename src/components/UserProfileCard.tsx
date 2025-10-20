@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Eye, Download, Upload, UserPlus, UserMinus, User } from "lucide-react";
+import { Eye, Upload, UserPlus, UserMinus, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,7 +12,6 @@ interface UserProfileCardProps {
   loading: boolean;
   onNavigate: () => void;
   onFollow: (userId: string, e: React.MouseEvent) => void;
-  onImportAll: (userId: string, e: React.MouseEvent) => void;
 }
 
 export const UserProfileCard = memo(function UserProfileCard({
@@ -22,7 +21,6 @@ export const UserProfileCard = memo(function UserProfileCard({
   loading,
   onNavigate,
   onFollow,
-  onImportAll,
 }: UserProfileCardProps) {
   return (
     <Card 
@@ -44,7 +42,7 @@ export const UserProfileCard = memo(function UserProfileCard({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-2 pt-2 border-t">
+          <div className="grid grid-cols-2 gap-2 pt-2 border-t">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 text-muted-foreground">
                 <Upload className="h-3 w-3" />
@@ -59,46 +57,27 @@ export const UserProfileCard = memo(function UserProfileCard({
               <p className="text-lg font-bold">{userProfile.total_views}</p>
               <p className="text-xs text-muted-foreground">総閲覧数</p>
             </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-muted-foreground">
-                <Download className="h-3 w-3" />
-              </div>
-              <p className="text-lg font-bold">{userProfile.total_imports}</p>
-              <p className="text-xs text-muted-foreground">総インポート</p>
-            </div>
           </div>
 
           {currentUserId && currentUserId !== userProfile.user_id && (
-            <div className="flex gap-2 pt-2 border-t">
-              <Button
-                variant={isFollowing ? "secondary" : "outline"}
-                size="sm"
-                className="flex-1"
-                onClick={(e) => onFollow(userProfile.user_id, e)}
-              >
-                {isFollowing ? (
-                  <>
-                    <UserMinus className="w-4 h-4 mr-1" />
-                    フォロー中
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="w-4 h-4 mr-1" />
-                    フォロー
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="default"
-                size="sm"
-                className="flex-1"
-                onClick={(e) => onImportAll(userProfile.user_id, e)}
-                disabled={loading}
-              >
-                <Download className="w-4 h-4 mr-1" />
-                すべてインポート
-              </Button>
-            </div>
+            <Button
+              variant={isFollowing ? "secondary" : "outline"}
+              size="sm"
+              className="w-full"
+              onClick={(e) => onFollow(userProfile.user_id, e)}
+            >
+              {isFollowing ? (
+                <>
+                  <UserMinus className="w-4 h-4 mr-1" />
+                  フォロー中
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-4 h-4 mr-1" />
+                  フォロー
+                </>
+              )}
+            </Button>
           )}
         </div>
       </CardContent>

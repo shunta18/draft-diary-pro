@@ -378,81 +378,6 @@ export default function PublicPlayers() {
     invalidatePublicPlayers();
   };
 
-  const handleImportAllFromUser = useCallback(async (userId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!user) {
-      toast({
-        title: "ログインが必要です",
-        description: "選手をインポートするにはログインしてください。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      
-      // その投稿者の全選手を取得
-      const { data: userPlayers, error } = await supabase
-        .from("public_players")
-        .select("*")
-        .eq("user_id", userId);
-
-      if (error) throw error;
-
-      if (!userPlayers || userPlayers.length === 0) {
-        toast({
-          title: "エラー",
-          description: "この投稿者の選手が見つかりません",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // 確認ダイアログ
-      const confirmed = confirm(
-        `${userPlayers.length}名の選手を自分の選手リストに追加しますか？\n\n※既に登録済みの選手はスキップされます。`
-      );
-      
-      if (!confirmed) {
-        return;
-      }
-
-      // 並列処理で重複チェックとインポート
-      const results = await Promise.all(
-        userPlayers.map(async (player) => {
-          const duplicates = await checkForDuplicates(player as PublicPlayer);
-          if (duplicates === null) {
-            return { status: 'skipped' as const };
-          } else if (duplicates.length === 0) {
-            await executeImport(player as PublicPlayer);
-            return { status: 'imported' as const };
-          } else {
-            return { status: 'skipped' as const };
-          }
-        })
-      );
-      
-      const importedCount = results.filter(r => r.status === 'imported').length;
-      const skippedCount = results.filter(r => r.status === 'skipped').length;
-
-      toast({
-        title: "インポート完了",
-        description: `${importedCount}人の選手をインポートしました${skippedCount > 0 ? `（${skippedCount}人はスキップ）` : ""}`,
-      });
-
-      invalidatePlayers();
-      invalidatePublicPlayers();
-    } catch (error) {
-      console.error("Error importing all players from user:", error);
-      toast({
-        title: "エラー",
-        description: "選手のインポートに失敗しました",
-        variant: "destructive",
-      });
-    }
-  }, [user, checkForDuplicates, executeImport, invalidatePlayers, invalidatePublicPlayers, toast]);
-
   const togglePlayerSelection = useCallback((playerId: string) => {
     const newSelection = new Set(selectedPlayerIds);
     if (newSelection.has(playerId)) {
@@ -743,7 +668,6 @@ export default function PublicPlayers() {
                   loading={loading}
                   onNavigate={() => handleNavigateToUser(userProfile.user_id)}
                   onFollow={handleFollow}
-                  onImportAll={handleImportAllFromUser}
                 />
               ))}
             </div>
