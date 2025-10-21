@@ -559,7 +559,7 @@ export const uploadAvatar = async (file: File): Promise<string | null> => {
 // Public Players Functions
 export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
   try {
-    // 選手データを取得
+    // 選手データのみを取得（ユーザー情報は個別取得時のみ）
     const { data: players, error } = await supabase
       .from('public_players')
       .select('*')
@@ -568,24 +568,10 @@ export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
     if (error) throw error;
     if (!players) return [];
     
-    // ユニークなuser_idを取得
-    const userIds = [...new Set(players.map(p => p.user_id).filter(Boolean))];
-    
-    // プロフィールを一括取得
-    const { data: profiles } = await supabase
-      .from('profiles')
-      .select('user_id, display_name, avatar_url, bio, social_links')
-      .in('user_id', userIds);
-    
-    // user_idをキーとしたマップを作成
-    const profileMap = new Map(
-      (profiles || []).map(profile => [profile.user_id, profile])
-    );
-    
-    // 選手データにプロフィールを結合
+    // プロフィール情報なしで返す
     return players.map(player => ({
       ...player,
-      profiles: profileMap.get(player.user_id),
+      profiles: undefined,
       career_path: player.career_path as PublicPlayer['career_path']
     }));
   } catch (error) {
