@@ -145,12 +145,14 @@ export async function runDraftSimulation(
           if (userTeamIds && userTeamIds.includes(teamId) && onUserTeamPick) {
             selectedPlayerId = await onUserTeamPick(round, teamId, availablePlayers);
           } else {
-            // 固定指名のチェック（第1ラウンドのみ）
-            const fixedPlayerName = FIXED_FIRST_ROUND_PICKS[teamId];
+            // 固定指名のチェック（第1ラウンド（1位指名）のみ、外れ1位以降は通常スコアリング）
+            const fixedPlayerName = pickRound === 1 ? FIXED_FIRST_ROUND_PICKS[teamId] : undefined;
             let fixedPlayer: NormalizedPlayer | undefined;
             
             if (fixedPlayerName) {
-              fixedPlayer = availablePlayers.find(p => p.name === fixedPlayerName);
+              // 名前のスペースを除去して比較（表記揺れ対策）
+              const normalizedFixedName = fixedPlayerName.replace(/\s+/g, '');
+              fixedPlayer = availablePlayers.find(p => p.name.replace(/\s+/g, '') === normalizedFixedName);
               if (fixedPlayer) {
                 selectedPlayerId = fixedPlayer.id;
               } else {
