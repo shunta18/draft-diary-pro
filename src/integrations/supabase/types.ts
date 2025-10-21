@@ -196,8 +196,7 @@ export type Database = {
           created_at: string
           draft_year: string
           id: string
-          player_id: number | null
-          public_player_id: number | null
+          public_player_id: string | null
           session_id: string | null
           team_id: number
           updated_at: string
@@ -207,8 +206,7 @@ export type Database = {
           created_at?: string
           draft_year?: string
           id?: string
-          player_id?: number | null
-          public_player_id?: number | null
+          public_player_id?: string | null
           session_id?: string | null
           team_id: number
           updated_at?: string
@@ -218,8 +216,7 @@ export type Database = {
           created_at?: string
           draft_year?: string
           id?: string
-          player_id?: number | null
-          public_player_id?: number | null
+          public_player_id?: string | null
           session_id?: string | null
           team_id?: number
           updated_at?: string
@@ -230,7 +227,7 @@ export type Database = {
             foreignKeyName: "draft_team_player_votes_public_player_id_fkey"
             columns: ["public_player_id"]
             isOneToOne: false
-            referencedRelation: "players"
+            referencedRelation: "public_players"
             referencedColumns: ["id"]
           },
         ]
