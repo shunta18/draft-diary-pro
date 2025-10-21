@@ -41,7 +41,7 @@ const teams = [
 const positions = ["投手", "捕手", "一塁手", "二塁手", "三塁手", "遊撃手", "外野手"];
 
 interface RawSupabasePlayer {
-  id: number;
+  id: string; // UUID from public_players
   name: string;
   team: string;
   position: string;
@@ -51,7 +51,8 @@ interface RawSupabasePlayer {
 }
 
 interface NormalizedPlayer {
-  id: number;
+  id: number; // For display and vote logic
+  publicPlayerId: string; // UUID from public_players
   name: string;
   team: string;
   position: string[];
@@ -62,14 +63,20 @@ interface NormalizedPlayer {
 }
 
 const normalizeSupabasePlayer = (player: RawSupabasePlayer): NormalizedPlayer => ({
-  ...player,
+  id: parseInt(player.id, 16) % 1000000, // Convert UUID to display number
+  publicPlayerId: player.id,
+  name: player.name,
+  team: player.team,
   position: [player.position],
+  category: player.category,
+  evaluations: player.evaluations,
   draftYear: player.year ? String(player.year) : "2025",
   videoLinks: [],
 });
 
 const normalizeLocalPlayer = (player: LocalPlayer): NormalizedPlayer => ({
   id: player.id,
+  publicPlayerId: String(player.id), // Use string representation for local players
   name: player.name,
   team: player.team,
   position: player.position,
@@ -107,11 +114,11 @@ export default function DraftPredictions() {
   const loadData = async () => {
     setIsLoading(true);
 
-    // AdminのデータからS選手データを読み込み
+    // public_playersテーブルから選手データを読み込み
     const { data, error } = await supabase
-      .from("players")
+      .from("public_players")
       .select("id, name, team, position, category, year, evaluations")
-      .eq("user_id", ADMIN_USER_ID);
+      .eq("year", parseInt(selectedYear));
 
     let allPlayers: NormalizedPlayer[] = [];
     if (!error && data && data.length > 0) {
@@ -120,11 +127,7 @@ export default function DraftPredictions() {
       allPlayers = getDefaultPlayers().map(normalizeLocalPlayer);
     }
 
-    // 選択された年度の選手のみをフィルタリング
-    const filteredPlayers = allPlayers.filter(
-      (player) => player.draftYear === selectedYear
-    );
-    setPlayers(filteredPlayers);
+    setPlayers(allPlayers);
 
     // ユーザーの投票状態を読み込み
     const { playerVotes, positionVotes } = await getUserVotes(selectedYear);
@@ -190,9 +193,12 @@ export default function DraftPredictions() {
   }, [selectedYear]);
 
   const handlePlayerVoteToggle = async (playerId: number, isChecked: boolean) => {
-    console.log('Vote toggle:', { playerId, isChecked, selectedTeam, selectedYear });
+    const player = players.find(p => p.id === playerId);
+    if (!player) return;
     
-    const { error } = await upsertPlayerVote(selectedTeam, playerId, isChecked, selectedYear);
+    console.log('Vote toggle:', { playerId, publicPlayerId: player.publicPlayerId, isChecked, selectedTeam, selectedYear });
+    
+    const { error } = await upsertPlayerVote(selectedTeam, parseInt(player.publicPlayerId, 16) % 1000000, isChecked, selectedYear);
 
     if (error) {
       console.error('Vote error:', error);
