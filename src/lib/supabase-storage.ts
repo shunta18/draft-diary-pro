@@ -559,46 +559,33 @@ export const uploadAvatar = async (file: File): Promise<string | null> => {
 // Public Players Functions
 export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
   try {
-    // N+1問題を解決: 1回のクエリで選手とプロフィールを結合取得
-    const { data, error } = await supabase
+    // 選手データを取得
+    const { data: players, error } = await supabase
       .from('public_players')
-      .select(`
-        id,
-        user_id,
-        name,
-        team,
-        position,
-        category,
-        year,
-        evaluations,
-        recommended_teams,
-        batting_hand,
-        throwing_hand,
-        height,
-        weight,
-        age,
-        hometown,
-        main_position,
-        usage,
-        memo,
-        videos,
-        career_path,
-        view_count,
-        import_count,
-        created_at,
-        updated_at,
-        profiles(user_id, display_name, avatar_url, bio, social_links)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
+    if (!players) return [];
     
-    if (!data) return [];
+    // ユニークなuser_idを取得
+    const userIds = [...new Set(players.map(p => p.user_id).filter(Boolean))];
     
-    // データ整形
-    return data.map(player => ({
+    // プロフィールを一括取得
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .in('user_id', userIds);
+    
+    // user_idをキーとしたマップを作成
+    const profileMap = new Map(
+      (profiles || []).map(profile => [profile.user_id, profile])
+    );
+    
+    // 選手データにプロフィールを結合
+    return players.map(player => ({
       ...player,
-      profiles: Array.isArray(player.profiles) ? player.profiles[0] : player.profiles,
+      profiles: profileMap.get(player.user_id),
       career_path: player.career_path as PublicPlayer['career_path']
     }));
   } catch (error) {
@@ -609,48 +596,27 @@ export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
 
 export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | null> => {
   try {
-    // 1回のクエリで選手とプロフィールを結合取得
-    const { data, error } = await supabase
+    // 選手データを取得
+    const { data: player, error } = await supabase
       .from('public_players')
-      .select(`
-        id,
-        user_id,
-        name,
-        team,
-        position,
-        category,
-        year,
-        evaluations,
-        recommended_teams,
-        batting_hand,
-        throwing_hand,
-        height,
-        weight,
-        age,
-        hometown,
-        main_position,
-        usage,
-        memo,
-        videos,
-        career_path,
-        view_count,
-        import_count,
-        original_player_id,
-        created_at,
-        updated_at,
-        profiles(user_id, display_name, avatar_url, bio, social_links)
-      `)
+      .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     
     if (error) throw error;
+    if (!player) return null;
     
-    if (!data) return null;
+    // プロフィールを取得
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .eq('user_id', player.user_id)
+      .maybeSingle();
     
     return {
-      ...data,
-      profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles,
-      career_path: data.career_path as PublicPlayer['career_path']
+      ...player,
+      profiles: profile,
+      career_path: player.career_path as PublicPlayer['career_path']
     };
   } catch (error) {
     console.error('Failed to get public player by id:', error);
@@ -827,46 +793,27 @@ export const incrementPublicPlayerViewCount = async (publicPlayerId: string): Pr
 
 export const getPublicPlayersByUserId = async (userId: string): Promise<PublicPlayer[]> => {
   try {
-    // 1回のクエリで選手とプロフィールを結合取得
-    const { data, error } = await supabase
+    // 選手データを取得
+    const { data: players, error } = await supabase
       .from('public_players')
-      .select(`
-        id,
-        user_id,
-        name,
-        team,
-        position,
-        category,
-        year,
-        evaluations,
-        recommended_teams,
-        batting_hand,
-        throwing_hand,
-        height,
-        weight,
-        age,
-        hometown,
-        main_position,
-        usage,
-        memo,
-        videos,
-        career_path,
-        view_count,
-        import_count,
-        created_at,
-        updated_at,
-        profiles(user_id, display_name, avatar_url, bio, social_links)
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
+    if (!players) return [];
     
-    if (!data) return [];
+    // プロフィールを取得
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .eq('user_id', userId)
+      .maybeSingle();
     
-    return data.map(player => ({
+    // すべての選手に同じプロフィールを追加
+    return players.map(player => ({
       ...player,
-      profiles: Array.isArray(player.profiles) ? player.profiles[0] : player.profiles,
+      profiles: profile,
       career_path: player.career_path as PublicPlayer['career_path']
     }));
   } catch (error) {
