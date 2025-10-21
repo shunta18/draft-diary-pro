@@ -24,22 +24,20 @@ export const upsertPlayerVote = async (
     const sessionId = getOrCreateSessionId();
 
     if (isVoting) {
-      // 投票を追加（既存がある場合は更新）
+      // 投票を追加（複数投票可能）
       const { error } = await supabase
         .from("draft_team_player_votes")
-        .upsert({
+        .insert({
           user_id: user?.id || null,
           session_id: user ? null : sessionId,
           team_id: teamId,
           public_player_id: playerId,
           draft_year: draftYear,
-        }, {
-          onConflict: user ? 'user_id,team_id,public_player_id,draft_year' : 'session_id,team_id,public_player_id,draft_year'
         });
 
       if (error) throw error;
     } else {
-      // 投票を削除
+      // 投票を全て削除
       const query = supabase
         .from("draft_team_player_votes")
         .delete()
@@ -76,28 +74,21 @@ export const upsertPositionVote = async (
     const sessionId = getOrCreateSessionId();
 
     if (position) {
-      // 投票を追加（既存がある場合は更新）
+      // 投票を追加（複数投票可能）
       const { error } = await supabase
         .from("draft_team_position_votes")
-        .upsert(
-          {
-            user_id: user?.id || null,
-            session_id: user ? null : sessionId,
-            team_id: teamId,
-            position: position,
-            draft_round: draftRound,
-            draft_year: draftYear,
-          },
-          {
-            onConflict: user 
-              ? 'user_id,team_id,draft_round,draft_year'
-              : 'session_id,team_id,draft_round,draft_year',
-          }
-        );
+        .insert({
+          user_id: user?.id || null,
+          session_id: user ? null : sessionId,
+          team_id: teamId,
+          position: position,
+          draft_round: draftRound,
+          draft_year: draftYear,
+        });
 
       if (error) throw error;
     } else {
-      // 投票を削除（positionがnullの場合）
+      // 投票を全て削除（positionがnullの場合）
       const query = supabase
         .from("draft_team_position_votes")
         .delete()
