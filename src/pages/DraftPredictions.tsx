@@ -153,8 +153,12 @@ export default function DraftPredictions() {
           table: "draft_team_player_votes",
         },
         async () => {
+          // 全体の投票数とユーザーの投票状態を更新
           const { voteCounts } = await getPlayerVoteCounts(selectedYear);
           setPlayerVoteCounts(voteCounts);
+          
+          const { playerVotes } = await getUserVotes(selectedYear);
+          setUserPlayerVotes(playerVotes);
         }
       )
       .subscribe();
@@ -169,8 +173,12 @@ export default function DraftPredictions() {
           table: "draft_team_position_votes",
         },
         async () => {
-          const { voteCounts } = await getPositionVoteCounts();
+          // 全体の投票数とユーザーの投票状態を更新
+          const { voteCounts } = await getPositionVoteCounts(selectedYear);
           setPositionVoteCounts(voteCounts);
+          
+          const { positionVotes } = await getUserVotes(selectedYear);
+          setUserPositionVotes(positionVotes);
         }
       )
       .subscribe();
@@ -179,7 +187,7 @@ export default function DraftPredictions() {
       supabase.removeChannel(playerChannel);
       supabase.removeChannel(positionChannel);
     };
-  }, []);
+  }, [selectedYear]);
 
   const handlePlayerVoteToggle = async (playerId: number, isChecked: boolean) => {
     console.log('Vote toggle:', { playerId, isChecked, selectedTeam, selectedYear });
