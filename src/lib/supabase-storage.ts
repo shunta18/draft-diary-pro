@@ -658,73 +658,6 @@ export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | nu
   }
 };
 
-export const uploadPlayerToPublic = async (playerId: number): Promise<{ success: boolean; message?: string; data?: PublicPlayer }> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, message: 'User not authenticated' };
-
-    const player = await getPlayerById(playerId);
-    if (!player) return { success: false, message: 'Player not found' };
-
-    // インポートした選手かチェック
-    if (player.imported_from_public_player_id) {
-      return { success: false, message: 'インポートした選手はアップロードできません' };
-    }
-
-    // 既にアップロード済みかチェック（original_player_idとuser_idで）
-    const { data: existing } = await supabase
-      .from('public_players')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('original_player_id', playerId)
-      .maybeSingle();
-
-    if (existing) {
-      return { success: false, message: '既にアップロード済みの選手です' };
-    }
-
-    const { data, error } = await supabase
-      .from('public_players')
-      .insert([{
-        user_id: user.id,
-        original_player_id: playerId,
-        name: player.name,
-        team: player.team,
-        position: player.position,
-        category: player.category,
-        evaluations: player.evaluations,
-        recommended_teams: player.recommended_teams,
-        year: player.year,
-        batting_hand: player.batting_hand,
-        throwing_hand: player.throwing_hand,
-        height: player.height,
-        weight: player.weight,
-        age: player.age,
-        memo: player.memo,
-        hometown: player.hometown,
-        career_path: player.career_path,
-        usage: player.usage,
-        videos: player.videos,
-        main_position: player.main_position,
-        is_favorite: player.is_favorite,
-      }])
-      .select()
-      .single();
-    
-    if (error) return { success: false, message: error.message };
-    
-    return { 
-      success: true, 
-      data: data ? {
-        ...data,
-        career_path: data.career_path as PublicPlayer['career_path']
-      } : undefined
-    };
-  } catch (error) {
-    console.error('Failed to upload player to public:', error);
-    return { success: false, message: 'アップロードに失敗しました' };
-  }
-};
 
 export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Player | null> => {
   try {
@@ -1189,53 +1122,6 @@ export const getPublicDiaryEntries = async (): Promise<PublicDiaryEntry[]> => {
   }
 };
 
-export const uploadDiaryToPublic = async (diaryId: number): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('User must be logged in to upload diary');
-  }
-
-  // Get the diary entry
-  const diary = await getDiaryEntryById(diaryId);
-  if (!diary) {
-    throw new Error('Diary entry not found');
-  }
-
-  // Check if already uploaded
-  const { data: existing } = await supabase
-    .from('public_diary_entries' as any)
-    .select('id')
-    .eq('original_diary_id', diaryId)
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (existing) {
-    throw new Error('この観戦日記は既に公開されています');
-  }
-
-  // Upload to public
-  const { error } = await supabase
-    .from('public_diary_entries' as any)
-    .insert({
-      user_id: user.id,
-      original_diary_id: diaryId,
-      match_card: diary.match_card,
-      date: diary.date,
-      venue: diary.venue,
-      score: diary.score,
-      category: diary.category,
-      tournament_name: diary.tournament_name,
-      player_comments: diary.player_comments,
-      overall_impression: diary.overall_impression,
-      videos: diary.videos
-    });
-
-  if (error) {
-    console.error('Failed to upload diary to public:', error);
-    throw error;
-  }
-};
 
 export const deletePublicDiaryEntry = async (id: string): Promise<void> => {
   const { error } = await supabase

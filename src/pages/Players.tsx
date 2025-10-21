@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, Upload, CheckCircle2, Trash2, ArrowUpDown } from "lucide-react";
+import { ArrowLeft, Plus, Search, Filter, X, MapPin, Calendar, Users, Target, MapPin as LocationIcon, RotateCcw, ChevronDown, ThumbsUp, CheckCircle2, Trash2, ArrowUpDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { deletePlayer, addPlayer, updatePlayer, uploadPlayerToPublic, type Player } from "@/lib/supabase-storage";
+import { deletePlayer, addPlayer, updatePlayer, type Player } from "@/lib/supabase-storage";
 import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -95,9 +95,7 @@ export default function Players() {
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-  const [uploadingPlayerId, setUploadingPlayerId] = useState<number | null>(null);
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<number[]>([]);
-  const [isUploadingBulk, setIsUploadingBulk] = useState(false);
   const [sortOrder, setSortOrder] = useState<"registration" | "evaluation">("registration");
   
   const { invalidatePlayers } = useInvalidateQueries();
@@ -207,134 +205,6 @@ export default function Players() {
     setSelectedYear(user ? "2025" : "all");
   }, [user]);
 
-  const handleUploadToPublic = useCallback(async (player: Player) => {
-    if (!user) {
-      toast({
-        title: "ログインが必要です",
-        description: "共通DBにアップロードするにはログインしてください。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // インポートした選手はアップロード不可
-    if (player.imported_from_public_player_id) {
-      toast({
-        title: "アップロードできません",
-        description: "インポートした選手はアップロードできません。自分で作成した選手のみアップロード可能です。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!player.id) {
-      toast({
-        title: "エラー",
-        description: "選手IDが見つかりません。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setUploadingPlayerId(player.id);
-    
-    try {
-      const result = await uploadPlayerToPublic(player.id);
-      
-      if (result.success) {
-        toast({
-          title: "アップロードしました",
-          description: `${player.name}を共通DBに公開しました。`,
-        });
-        invalidatePlayers();
-      } else {
-        toast({
-          title: "エラー",
-          description: result.message || "アップロードに失敗しました。",
-          variant: "destructive",
-        });
-      }
-    } catch (error: any) {
-      console.error('Failed to upload player:', error);
-      toast({
-        title: "エラー",
-        description: error.message || "アップロードに失敗しました。",
-        variant: "destructive",
-      });
-    } finally {
-      setUploadingPlayerId(null);
-    }
-  }, [user, invalidatePlayers, toast]);
-
-  const handleBulkUpload = useCallback(async (playerIds: number[]) => {
-    if (!user) {
-      toast({
-        title: "ログインが必要です",
-        description: "共通DBにアップロードするにはログインしてください。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // インポートした選手を除外
-    const uploadablePlayers = players.filter(p => 
-      p.id && playerIds.includes(p.id) && !p.imported_from_public_player_id
-    );
-
-    if (uploadablePlayers.length === 0) {
-      toast({
-        title: "アップロード可能な選手がありません",
-        description: "インポートした選手はアップロードできません。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsUploadingBulk(true);
-    
-    try {
-      let successCount = 0;
-      let skipCount = 0;
-      let errorCount = 0;
-
-      for (const player of uploadablePlayers) {
-        try {
-          const result = await uploadPlayerToPublic(player.id!);
-          if (result.success) {
-            successCount++;
-          } else if (result.message?.includes("既に")) {
-            skipCount++;
-          } else {
-            errorCount++;
-          }
-        } catch (error) {
-          errorCount++;
-        }
-      }
-
-      const messages = [];
-      if (successCount > 0) messages.push(`${successCount}名をアップロード`);
-      if (skipCount > 0) messages.push(`${skipCount}名はスキップ（既存）`);
-      if (errorCount > 0) messages.push(`${errorCount}名は失敗`);
-
-      toast({
-        title: "一括アップロード完了",
-        description: messages.join("、"),
-      });
-
-      setSelectedPlayerIds([]);
-      invalidatePlayers();
-    } catch (error: any) {
-      console.error('Failed to bulk upload:', error);
-      toast({
-        title: "エラー",
-        description: "一括アップロードに失敗しました。",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploadingBulk(false);
-    }
-  }, [user, players, invalidatePlayers, toast]);
 
   const handleBulkDelete = useCallback(async () => {
     if (selectedPlayerIds.length === 0) {
@@ -485,75 +355,36 @@ export default function Players() {
                 すべて選択 ({selectedPlayerIds.length}/{filteredPlayers.length})
               </Label>
             </div>
-            <div className="flex flex-col sm:flex-row gap-2">
-              <Button
-                onClick={() => handleBulkUpload(filteredPlayers.filter(p => !p.imported_from_public_player_id).map(p => p.id!).filter(id => id !== undefined))}
-                variant="default"
-                size="sm"
-                disabled={isUploadingBulk || filteredPlayers.filter(p => !p.imported_from_public_player_id).length === 0}
-                className="gap-2 w-full sm:w-auto"
-              >
-                <Upload className="h-4 w-4" />
-                {isUploadingBulk ? "アップロード中..." : "すべてアップロード"}
-              </Button>
-              {selectedPlayerIds.length > 0 && (
-                <>
+            {selectedPlayerIds.length > 0 && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
                   <Button
-                    onClick={() => {
-                      // インポートした選手を除外してアップロード
-                      const uploadablePlayerIds = selectedPlayerIds.filter(id => {
-                        const player = players.find(p => p.id === id);
-                        return player && !player.imported_from_public_player_id;
-                      });
-                      if (uploadablePlayerIds.length === 0) {
-                        toast({
-                          title: "アップロード可能な選手がありません",
-                          description: "インポートした選手はアップロードできません。",
-                          variant: "destructive",
-                        });
-                        return;
-                      }
-                      handleBulkUpload(uploadablePlayerIds);
-                    }}
-                    variant="secondary"
+                    variant="destructive"
                     size="sm"
-                    disabled={isUploadingBulk || players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length === 0}
                     className="gap-2 w-full sm:w-auto"
                   >
-                    <Upload className="h-4 w-4" />
-                    {isUploadingBulk ? "アップロード中..." : `選択した${players.filter(p => p.id && selectedPlayerIds.includes(p.id) && !p.imported_from_public_player_id).length}名をアップロード`}
+                    <Trash2 className="h-4 w-4" />
+                    選択した{selectedPlayerIds.length}名を削除
                   </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="gap-2 w-full sm:w-auto"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        選択した{selectedPlayerIds.length}名を削除
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>選手を一括削除</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          選択した{selectedPlayerIds.length}名の選手を削除しますか？
-                          <br />
-                          この操作は取り消せません。
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>キャンセル</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                          削除
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )}
-            </div>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>選手を一括削除</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      選択した{selectedPlayerIds.length}名の選手を削除しますか？
+                      <br />
+                      この操作は取り消せません。
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>キャンセル</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleBulkDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                      削除
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         )}
 
