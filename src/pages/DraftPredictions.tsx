@@ -182,9 +182,12 @@ export default function DraftPredictions() {
   }, []);
 
   const handlePlayerVoteToggle = async (playerId: number, isChecked: boolean) => {
+    console.log('Vote toggle:', { playerId, isChecked, selectedTeam, selectedYear });
+    
     const { error } = await upsertPlayerVote(selectedTeam, playerId, isChecked, selectedYear);
 
     if (error) {
+      console.error('Vote error:', error);
       toast({
         title: "エラー",
         description: "投票の更新に失敗しました",
@@ -192,6 +195,8 @@ export default function DraftPredictions() {
       });
       return;
     }
+
+    console.log('Vote success');
 
     // ローカル状態を更新
     if (isChecked) {
@@ -205,6 +210,11 @@ export default function DraftPredictions() {
     // 投票数を再読み込み
     const { voteCounts } = await getPlayerVoteCounts(selectedYear);
     setPlayerVoteCounts(voteCounts);
+    
+    toast({
+      title: isChecked ? "投票完了" : "投票取消",
+      description: isChecked ? "選手に投票しました" : "投票を取り消しました",
+    });
   };
 
   const handlePositionVoteChange = async (draftRound: number, position: string | null) => {
