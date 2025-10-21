@@ -92,7 +92,7 @@ export default function DraftPredictions() {
   const [selectedYear, setSelectedYear] = useState("2025");
   const [selectedTeam, setSelectedTeam] = useState(1);
   const [players, setPlayers] = useState<NormalizedPlayer[]>([]);
-  const [userPlayerVotes, setUserPlayerVotes] = useState<{ team_id: number; public_player_id: number }[]>([]);
+  const [userPlayerVotes, setUserPlayerVotes] = useState<{ team_id: number; public_player_id: string }[]>([]);
   const [userPositionVotes, setUserPositionVotes] = useState<{ team_id: number; position: string; draft_round: number }[]>([]);
   const [playerVoteCounts, setPlayerVoteCounts] = useState<Record<string, number>>({});
   const [positionVoteCounts, setPositionVoteCounts] = useState<Record<string, number>>({});
@@ -198,7 +198,7 @@ export default function DraftPredictions() {
     
     console.log('Vote toggle:', { playerId, publicPlayerId: player.publicPlayerId, isChecked, selectedTeam, selectedYear });
     
-    const { error } = await upsertPlayerVote(selectedTeam, parseInt(player.publicPlayerId, 16) % 1000000, isChecked, selectedYear);
+    const { error } = await upsertPlayerVote(selectedTeam, player.publicPlayerId, isChecked, selectedYear);
 
     if (error) {
       console.error('Vote error:', error);
@@ -214,10 +214,10 @@ export default function DraftPredictions() {
 
     // ローカル状態を更新
     if (isChecked) {
-      setUserPlayerVotes([...userPlayerVotes, { team_id: selectedTeam, public_player_id: playerId }]);
+      setUserPlayerVotes([...userPlayerVotes, { team_id: selectedTeam, public_player_id: player.publicPlayerId }]);
     } else {
       setUserPlayerVotes(
-        userPlayerVotes.filter((v) => !(v.team_id === selectedTeam && v.public_player_id === playerId))
+        userPlayerVotes.filter((v) => !(v.team_id === selectedTeam && v.public_player_id === player.publicPlayerId))
       );
     }
 
@@ -279,7 +279,9 @@ export default function DraftPredictions() {
   };
 
   const isPlayerVoted = (playerId: number) => {
-    return userPlayerVotes.some((v) => v.team_id === selectedTeam && v.public_player_id === playerId);
+    const player = players.find(p => p.id === playerId);
+    if (!player) return false;
+    return userPlayerVotes.some((v) => v.team_id === selectedTeam && v.public_player_id === player.publicPlayerId);
   };
 
   const getSelectedPosition = (draftRound: number): string | undefined => {
@@ -287,7 +289,9 @@ export default function DraftPredictions() {
   };
 
   const getPlayerVoteCount = (playerId: number) => {
-    return playerVoteCounts[`${selectedTeam}_${playerId}`] || 0;
+    const player = players.find(p => p.id === playerId);
+    if (!player) return 0;
+    return playerVoteCounts[`${selectedTeam}_${player.publicPlayerId}`] || 0;
   };
 
   const getPositionVoteCount = (draftRound: number, position: string) => {

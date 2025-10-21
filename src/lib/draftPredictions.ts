@@ -15,7 +15,7 @@ export const getOrCreateSessionId = (): string => {
 // 選手投票の追加/削除
 export const upsertPlayerVote = async (
   teamId: number,
-  playerId: number,
+  playerId: string, // UUID
   isVoting: boolean,
   draftYear: string = "2025"
 ): Promise<{ error: Error | null }> => {
@@ -166,7 +166,7 @@ export const getUserVotes = async (draftYear: string = "2025") => {
 
 // 投票集計データの型
 export interface DraftPredictions {
-  playerVotes: Map<number, { count: number; teamId: number; playerName: string; playerTeam: string; playerCategory: string }[]>; // playerId -> [{teamId, count, playerName, playerTeam, playerCategory}]
+  playerVotes: Map<string, { count: number; teamId: number; playerName: string; playerTeam: string; playerCategory: string }[]>; // playerId (UUID) -> [{teamId, count, playerName, playerTeam, playerCategory}]
   positionVotes: Map<string, { count: number; teamId: number; draftRound: number }[]>; // position -> [{teamId, count, draftRound}]
 }
 
@@ -184,15 +184,15 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
     // 重複なしのpublic_player_idリストを取得
     const publicPlayerIds = [...new Set((playerVotesData || []).map(v => v.public_player_id))];
     
-    // players情報を一括取得（必要な列のみ）
+    // public_players情報を一括取得（必要な列のみ）
     const { data: playersData, error: playersError } = await supabase
-      .from("players")
+      .from("public_players")
       .select("id, name, team, category")
       .in("id", publicPlayerIds);
 
     if (playersError) throw playersError;
 
-    // players.idをキーにしたMapを作成
+    // public_players.idをキーにしたMapを作成
     const playersMap = new Map(
       (playersData || []).map(p => [p.id, p])
     );
@@ -206,7 +206,7 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
     if (positionError) throw positionError;
 
     // 選手投票をMap形式に変換（public_player_id -> [{teamId, count, playerName, playerTeam, playerCategory}]）
-    const playerVotesMap = new Map<number, { count: number; teamId: number; playerName: string; playerTeam: string; playerCategory: string }[]>();
+    const playerVotesMap = new Map<string, { count: number; teamId: number; playerName: string; playerTeam: string; playerCategory: string }[]>();
     (playerVotesData || []).forEach((vote: any) => {
       const playerInfo = playersMap.get(vote.public_player_id);
       if (!playerInfo) return; // 選手情報が見つからない場合はスキップ
