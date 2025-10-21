@@ -559,46 +559,33 @@ export const uploadAvatar = async (file: File): Promise<string | null> => {
 // Public Players Functions
 export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
   try {
-    // N+1問題を解決: 1回のクエリで選手とプロフィールを結合取得
-    const { data, error } = await supabase
+    // 選手データを取得
+    const { data: players, error } = await supabase
       .from('public_players')
-      .select(`
-        id,
-        user_id,
-        name,
-        team,
-        position,
-        category,
-        year,
-        evaluations,
-        recommended_teams,
-        batting_hand,
-        throwing_hand,
-        height,
-        weight,
-        age,
-        hometown,
-        main_position,
-        usage,
-        memo,
-        videos,
-        career_path,
-        view_count,
-        import_count,
-        created_at,
-        updated_at,
-        profiles!inner(user_id, display_name, avatar_url, bio, social_links)
-      `)
+      .select('*')
       .order('created_at', { ascending: false });
     
     if (error) throw error;
+    if (!players) return [];
     
-    if (!data) return [];
+    // ユニークなuser_idを取得
+    const userIds = [...new Set(players.map(p => p.user_id).filter(Boolean))];
     
-    // データ整形
-    return data.map(player => ({
+    // プロフィールを一括取得
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .in('user_id', userIds);
+    
+    // user_idをキーとしたマップを作成
+    const profileMap = new Map(
+      (profiles || []).map(profile => [profile.user_id, profile])
+    );
+    
+    // 選手データにプロフィールを結合
+    return players.map(player => ({
       ...player,
-      profiles: Array.isArray(player.profiles) ? player.profiles[0] : player.profiles,
+      profiles: profileMap.get(player.user_id),
       career_path: player.career_path as PublicPlayer['career_path']
     }));
   } catch (error) {
@@ -609,48 +596,27 @@ export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
 
 export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | null> => {
   try {
-    // 1回のクエリで選手とプロフィールを結合取得
-    const { data, error } = await supabase
+    // 選手データを取得
+    const { data: player, error } = await supabase
       .from('public_players')
-      .select(`
-        id,
-        user_id,
-        name,
-        team,
-        position,
-        category,
-        year,
-        evaluations,
-        recommended_teams,
-        batting_hand,
-        throwing_hand,
-        height,
-        weight,
-        age,
-        hometown,
-        main_position,
-        usage,
-        memo,
-        videos,
-        career_path,
-        view_count,
-        import_count,
-        original_player_id,
-        created_at,
-        updated_at,
-        profiles!inner(user_id, display_name, avatar_url, bio, social_links)
-      `)
+      .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle();
     
     if (error) throw error;
+    if (!player) return null;
     
-    if (!data) return null;
+    // プロフィールを取得
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .eq('user_id', player.user_id)
+      .maybeSingle();
     
     return {
-      ...data,
-      profiles: Array.isArray(data.profiles) ? data.profiles[0] : data.profiles,
-      career_path: data.career_path as PublicPlayer['career_path']
+      ...player,
+      profiles: profile,
+      career_path: player.career_path as PublicPlayer['career_path']
     };
   } catch (error) {
     console.error('Failed to get public player by id:', error);
@@ -658,73 +624,6 @@ export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | nu
   }
 };
 
-export const uploadPlayerToPublic = async (playerId: number): Promise<{ success: boolean; message?: string; data?: PublicPlayer }> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, message: 'User not authenticated' };
-
-    const player = await getPlayerById(playerId);
-    if (!player) return { success: false, message: 'Player not found' };
-
-    // インポートした選手かチェック
-    if (player.imported_from_public_player_id) {
-      return { success: false, message: 'インポートした選手はアップロードできません' };
-    }
-
-    // 既にアップロード済みかチェック（original_player_idとuser_idで）
-    const { data: existing } = await supabase
-      .from('public_players')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('original_player_id', playerId)
-      .maybeSingle();
-
-    if (existing) {
-      return { success: false, message: '既にアップロード済みの選手です' };
-    }
-
-    const { data, error } = await supabase
-      .from('public_players')
-      .insert([{
-        user_id: user.id,
-        original_player_id: playerId,
-        name: player.name,
-        team: player.team,
-        position: player.position,
-        category: player.category,
-        evaluations: player.evaluations,
-        recommended_teams: player.recommended_teams,
-        year: player.year,
-        batting_hand: player.batting_hand,
-        throwing_hand: player.throwing_hand,
-        height: player.height,
-        weight: player.weight,
-        age: player.age,
-        memo: player.memo,
-        hometown: player.hometown,
-        career_path: player.career_path,
-        usage: player.usage,
-        videos: player.videos,
-        main_position: player.main_position,
-        is_favorite: player.is_favorite,
-      }])
-      .select()
-      .single();
-    
-    if (error) return { success: false, message: error.message };
-    
-    return { 
-      success: true, 
-      data: data ? {
-        ...data,
-        career_path: data.career_path as PublicPlayer['career_path']
-      } : undefined
-    };
-  } catch (error) {
-    console.error('Failed to upload player to public:', error);
-    return { success: false, message: 'アップロードに失敗しました' };
-  }
-};
 
 export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Player | null> => {
   try {
@@ -894,46 +793,27 @@ export const incrementPublicPlayerViewCount = async (publicPlayerId: string): Pr
 
 export const getPublicPlayersByUserId = async (userId: string): Promise<PublicPlayer[]> => {
   try {
-    // 1回のクエリで選手とプロフィールを結合取得
-    const { data, error } = await supabase
+    // 選手データを取得
+    const { data: players, error } = await supabase
       .from('public_players')
-      .select(`
-        id,
-        user_id,
-        name,
-        team,
-        position,
-        category,
-        year,
-        evaluations,
-        recommended_teams,
-        batting_hand,
-        throwing_hand,
-        height,
-        weight,
-        age,
-        hometown,
-        main_position,
-        usage,
-        memo,
-        videos,
-        career_path,
-        view_count,
-        import_count,
-        created_at,
-        updated_at,
-        profiles!inner(user_id, display_name, avatar_url, bio, social_links)
-      `)
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
     
     if (error) throw error;
+    if (!players) return [];
     
-    if (!data) return [];
+    // プロフィールを取得
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('user_id, display_name, avatar_url, bio, social_links')
+      .eq('user_id', userId)
+      .maybeSingle();
     
-    return data.map(player => ({
+    // すべての選手に同じプロフィールを追加
+    return players.map(player => ({
       ...player,
-      profiles: Array.isArray(player.profiles) ? player.profiles[0] : player.profiles,
+      profiles: profile,
       career_path: player.career_path as PublicPlayer['career_path']
     }));
   } catch (error) {
@@ -1189,53 +1069,6 @@ export const getPublicDiaryEntries = async (): Promise<PublicDiaryEntry[]> => {
   }
 };
 
-export const uploadDiaryToPublic = async (diaryId: number): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('User must be logged in to upload diary');
-  }
-
-  // Get the diary entry
-  const diary = await getDiaryEntryById(diaryId);
-  if (!diary) {
-    throw new Error('Diary entry not found');
-  }
-
-  // Check if already uploaded
-  const { data: existing } = await supabase
-    .from('public_diary_entries' as any)
-    .select('id')
-    .eq('original_diary_id', diaryId)
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (existing) {
-    throw new Error('この観戦日記は既に公開されています');
-  }
-
-  // Upload to public
-  const { error } = await supabase
-    .from('public_diary_entries' as any)
-    .insert({
-      user_id: user.id,
-      original_diary_id: diaryId,
-      match_card: diary.match_card,
-      date: diary.date,
-      venue: diary.venue,
-      score: diary.score,
-      category: diary.category,
-      tournament_name: diary.tournament_name,
-      player_comments: diary.player_comments,
-      overall_impression: diary.overall_impression,
-      videos: diary.videos
-    });
-
-  if (error) {
-    console.error('Failed to upload diary to public:', error);
-    throw error;
-  }
-};
 
 export const deletePublicDiaryEntry = async (id: string): Promise<void> => {
   const { error } = await supabase
