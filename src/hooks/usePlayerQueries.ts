@@ -2,11 +2,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { 
   getPublicPlayers, 
   getPublicDiaryEntries, 
-  getUserProfiles,
   getPlayers,
-  getFollowedUsers,
   type PublicPlayer,
-  type UserProfileWithStats,
   type Player
 } from "@/lib/supabase-storage";
 
@@ -14,9 +11,7 @@ import {
 export const queryKeys = {
   publicPlayers: ['publicPlayers'] as const,
   publicDiaries: ['publicDiaries'] as const,
-  userProfiles: ['userProfiles'] as const,
   players: ['players'] as const,
-  followedUsers: ['followedUsers'] as const,
 };
 
 // 共通のキャッシュ設定
@@ -47,31 +42,11 @@ export function usePublicDiaryEntries(enabled = true) {
   });
 }
 
-// ユーザープロファイルデータのフック
-export function useUserProfiles(enabled = true) {
-  return useQuery<UserProfileWithStats[], Error>({
-    queryKey: queryKeys.userProfiles,
-    queryFn: getUserProfiles,
-    enabled,
-    ...cacheConfig,
-  });
-}
-
 // 個人の選手データのフック
 export function usePlayers(enabled = true) {
   return useQuery<Player[], Error>({
     queryKey: queryKeys.players,
     queryFn: getPlayers,
-    enabled,
-    ...cacheConfig,
-  });
-}
-
-// フォロー中のユーザーのフック
-export function useFollowedUsers(enabled = true) {
-  return useQuery<string[], Error>({
-    queryKey: queryKeys.followedUsers,
-    queryFn: getFollowedUsers,
     enabled,
     ...cacheConfig,
   });
@@ -85,14 +60,10 @@ export function useInvalidateQueries() {
     invalidatePlayers: () => queryClient.invalidateQueries({ queryKey: queryKeys.players }),
     invalidatePublicPlayers: () => queryClient.invalidateQueries({ queryKey: queryKeys.publicPlayers }),
     invalidatePublicDiaries: () => queryClient.invalidateQueries({ queryKey: queryKeys.publicDiaries }),
-    invalidateUserProfiles: () => queryClient.invalidateQueries({ queryKey: queryKeys.userProfiles }),
-    invalidateFollowedUsers: () => queryClient.invalidateQueries({ queryKey: queryKeys.followedUsers }),
     invalidateAll: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.players });
       queryClient.invalidateQueries({ queryKey: queryKeys.publicPlayers });
       queryClient.invalidateQueries({ queryKey: queryKeys.publicDiaries });
-      queryClient.invalidateQueries({ queryKey: queryKeys.userProfiles });
-      queryClient.invalidateQueries({ queryKey: queryKeys.followedUsers });
     },
   };
 }

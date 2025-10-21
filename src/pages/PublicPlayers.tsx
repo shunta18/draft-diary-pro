@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
-import { Search, Filter, Eye, Download, User, Calendar, ChevronDown, Pencil, Trash2, Upload, UserPlus, UserMinus, AlertTriangle } from "lucide-react";
+import { useState, useCallback } from "react";
+import { Search, Filter, Eye, Download, User, Calendar, ChevronDown, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry, followUser, unfollowUser, type UserProfileWithStats, type Player } from "@/lib/supabase-storage";
+import { importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry, type Player } from "@/lib/supabase-storage";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,9 +21,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { calculateSimilarity } from "@/lib/utils";
-import { usePublicPlayers, usePublicDiaryEntries, useUserProfiles, usePlayers, useFollowedUsers, useInvalidateQueries } from "@/hooks/usePlayerQueries";
+import { usePublicPlayers, usePublicDiaryEntries, usePlayers, useInvalidateQueries } from "@/hooks/usePlayerQueries";
 import { PublicPlayerCard } from "@/components/PublicPlayerCard";
-import { UserProfileCard } from "@/components/UserProfileCard";
 import { DiaryCard } from "@/components/DiaryCard";
 
 const evaluationColors = {
@@ -96,35 +95,18 @@ export default function PublicPlayers() {
   const [sortBy, setSortBy] = useState<"latest" | "views" | "imports">("latest");
   const [activeTab, setActiveTab] = useState("players");
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
-  const [usersSortBy, setUsersSortBy] = useState<"uploads" | "views" | "imports">("uploads");
-  const [showFollowedOnly, setShowFollowedOnly] = useState(false);
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
   const [similarPlayers, setSimilarPlayers] = useState<Array<{ player: Player; similarity: number }>>([]);
   const [pendingImportPlayer, setPendingImportPlayer] = useState<PublicPlayer | null>(null);
 
-  const { invalidatePublicPlayers, invalidatePublicDiaries, invalidateUserProfiles, invalidateFollowedUsers, invalidatePlayers } = useInvalidateQueries();
+  const { invalidatePublicPlayers, invalidatePublicDiaries, invalidatePlayers } = useInvalidateQueries();
 
   // React Queryでデータ取得
   const { data: players = [], isLoading: playersLoading } = usePublicPlayers(activeTab === "players");
   const { data: diaries = [], isLoading: diariesLoading } = usePublicDiaryEntries(activeTab === "diaries");
-  const { data: users = [], isLoading: usersLoading } = useUserProfiles(activeTab === "users");
-  const { data: followedUsers = [] } = useFollowedUsers(!!user && activeTab === "users");
   const { data: myPlayers = [] } = usePlayers(!!user);
 
-  const loading = activeTab === "players" ? playersLoading : activeTab === "diaries" ? diariesLoading : usersLoading;
-
-  // フォロー状態の管理
-  const [followingStates, setFollowingStates] = useState<Record<string, boolean>>({});
-  
-  useEffect(() => {
-    if (activeTab === "users" && users.length > 0) {
-      const states: Record<string, boolean> = {};
-      for (const profile of users) {
-        states[profile.user_id] = followedUsers.includes(profile.user_id);
-      }
-      setFollowingStates(states);
-    }
-  }, [activeTab, users, followedUsers]);
+  const loading = activeTab === "players" ? playersLoading : diariesLoading;
 
   const filteredPlayers = players.filter((player) => {
     const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -164,49 +146,6 @@ export default function PublicPlayers() {
     invalidatePublicDiaries();
   }, [invalidatePublicDiaries]);
 
-  const handleNavigateToUser = useCallback((userId: string) => {
-    navigate(`/public-players/users/${userId}`);
-  }, [navigate]);
-
-  const handleFollow = useCallback(async (userId: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!user) {
-      toast({
-        title: "ログインが必要です",
-        description: "フォロー機能を使用するにはログインしてください。",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    try {
-      const isCurrentlyFollowing = followingStates[userId];
-      
-      if (isCurrentlyFollowing) {
-        await unfollowUser(userId);
-        setFollowingStates(prev => ({ ...prev, [userId]: false }));
-        invalidateFollowedUsers();
-        toast({
-          title: "フォロー解除しました",
-        });
-      } else {
-        await followUser(userId);
-        setFollowingStates(prev => ({ ...prev, [userId]: true }));
-        invalidateFollowedUsers();
-        toast({
-          title: "フォローしました",
-        });
-      }
-    } catch (error) {
-      console.error("Error toggling follow:", error);
-      toast({
-        variant: "destructive",
-        title: "エラー",
-        description: "フォロー状態の変更に失敗しました",
-      });
-    }
-  }, [user, followingStates, invalidateFollowedUsers, toast]);
 
   const checkForDuplicates = async (playerToImport: PublicPlayer) => {
     try {
@@ -441,19 +380,6 @@ export default function PublicPlayers() {
     }
   }, [invalidatePublicDiaries, toast]);
 
-  const filteredUsers = showFollowedOnly
-    ? users.filter(u => followedUsers.includes(u.user_id))
-    : users;
-
-  const sortedUsers = [...filteredUsers].sort((a, b) => {
-    if (usersSortBy === "uploads") {
-      return b.upload_count - a.upload_count;
-    } else if (usersSortBy === "views") {
-      return b.total_views - a.total_views;
-    } else {
-      return b.total_imports - a.total_imports;
-    }
-  });
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -480,9 +406,8 @@ export default function PublicPlayers() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="p-4">
-        <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-3">
+        <TabsList className="grid w-full max-w-2xl mx-auto grid-cols-2">
           <TabsTrigger value="players">選手を探す</TabsTrigger>
-          <TabsTrigger value="users">投稿者から探す</TabsTrigger>
           <TabsTrigger value="diaries">観戦日記</TabsTrigger>
         </TabsList>
 
@@ -623,56 +548,6 @@ export default function PublicPlayers() {
           )}
         </TabsContent>
 
-        <TabsContent value="users" className="space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={showFollowedOnly ? "default" : "outline"}
-                    onClick={() => setShowFollowedOnly(!showFollowedOnly)}
-                    disabled={!user}
-                  >
-                    フォロー中のみ表示
-                  </Button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Label className="text-sm">並び替え:</Label>
-                  <Select value={usersSortBy} onValueChange={(value: any) => setUsersSortBy(value)}>
-                    <SelectTrigger className="w-auto">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="uploads">アップロード数順</SelectItem>
-                      <SelectItem value="views">総閲覧数順</SelectItem>
-                      <SelectItem value="imports">総インポート数順</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {loading ? (
-            <div className="text-center py-8">
-              <p className="text-muted-foreground">読み込み中...</p>
-            </div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {sortedUsers.map((userProfile) => (
-                <UserProfileCard
-                  key={userProfile.user_id}
-                  userProfile={userProfile}
-                  isFollowing={followingStates[userProfile.user_id]}
-                  currentUserId={user?.id}
-                  loading={loading}
-                  onNavigate={() => handleNavigateToUser(userProfile.user_id)}
-                  onFollow={handleFollow}
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
       </Tabs>
 
       {/* Player Detail Dialog */}
