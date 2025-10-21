@@ -182,7 +182,7 @@ export interface DraftPredictions {
 // 投票結果を集計
 export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise<DraftPredictions> => {
   try {
-    // 選手投票の集計（public_player_idを取得）
+    // 選手投票の集計（public_player_idごとにteam_idをカウント）
     const { data: playerVotesData, error: playerError } = await supabase
       .from("draft_team_player_votes")
       .select("team_id, public_player_id")
@@ -190,8 +190,10 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
 
     if (playerError) throw playerError;
 
-    // public_player_idから選手情報を取得（players.idで結合）
+    // 重複なしのpublic_player_idリストを取得
     const publicPlayerIds = [...new Set((playerVotesData || []).map(v => v.public_player_id))];
+    
+    // players情報を一括取得（必要な列のみ）
     const { data: playersData, error: playersError } = await supabase
       .from("players")
       .select("id, name, team, category")
@@ -199,12 +201,12 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
 
     if (playersError) throw playersError;
 
-    // players.idをキーにしたマップを作成
+    // players.idをキーにしたMapを作成
     const playersMap = new Map(
       (playersData || []).map(p => [p.id, p])
     );
 
-    // ポジション投票の集計（ドラフト順位も含む）
+    // ポジション投票の集計（必要な列のみ）
     const { data: positionVotesData, error: positionError } = await supabase
       .from("draft_team_position_votes")
       .select("team_id, position, draft_round")
