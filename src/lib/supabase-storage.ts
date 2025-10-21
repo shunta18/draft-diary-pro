@@ -587,7 +587,7 @@ export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
         import_count,
         created_at,
         updated_at,
-        profiles!inner(user_id, display_name, avatar_url, bio, social_links)
+        profiles(user_id, display_name, avatar_url, bio, social_links)
       `)
       .order('created_at', { ascending: false });
     
@@ -638,7 +638,7 @@ export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | nu
         original_player_id,
         created_at,
         updated_at,
-        profiles!inner(user_id, display_name, avatar_url, bio, social_links)
+        profiles(user_id, display_name, avatar_url, bio, social_links)
       `)
       .eq('id', id)
       .single();
@@ -855,7 +855,7 @@ export const getPublicPlayersByUserId = async (userId: string): Promise<PublicPl
         import_count,
         created_at,
         updated_at,
-        profiles!inner(user_id, display_name, avatar_url, bio, social_links)
+        profiles(user_id, display_name, avatar_url, bio, social_links)
       `)
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
