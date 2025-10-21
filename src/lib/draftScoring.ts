@@ -291,14 +291,15 @@ export async function calculateDraftScores(
     
     // 4. カテゴリ調整（4位以降で高校生未指名の場合）
     if (round >= 4) {
-      const top3Picks = teamPicks.filter(pick => pick.round >= 1 && pick.round <= 3);
-      const hasHighSchoolInTop3 = top3Picks.some(pick => {
+      // これまでの全指名で高校生が指名されているかチェック
+      const hasHighSchoolPicked = teamPicks.some(pick => {
         const p = availablePlayers.find(pl => pl.id === pick.playerId);
         return p && p.category === "高校";
       });
       
-      if (!hasHighSchoolInTop3 && player.category === "高校") {
-        realismAdjustment += 20; // 高校生未指名の場合、高校生に加点
+      // 高校生が未指名で、現在の選手が高校生なら加点
+      if (!hasHighSchoolPicked && player.category === "高校") {
+        realismAdjustment += 5; // 高校生未指名の場合、高校生に+5点
       }
     }
     
