@@ -20,6 +20,12 @@ export interface SimulationResult {
   }[];
 }
 
+// 固定指名（実際に指名を公表している球団）
+const FIXED_FIRST_ROUND_PICKS: Record<number, string> = {
+  3: "小島大河",  // 西武ライオンズ
+  12: "立石正広"  // 広島カープ
+};
+
 const teams = [
   { id: 1, name: "北海道日本ハムファイターズ" },
   { id: 2, name: "東北楽天ゴールデンイーグルス" },
@@ -139,20 +145,36 @@ export async function runDraftSimulation(
           if (userTeamIds && userTeamIds.includes(teamId) && onUserTeamPick) {
             selectedPlayerId = await onUserTeamPick(round, teamId, availablePlayers);
           } else {
-            // AI球団：全選手からスコアリングして選択
-            const scores = await calculateDraftScores(
-              round,
-              teamId,
-              availablePlayers,
-              picks,
-              weightConfig,
-              draftYear
-            );
+            // 固定指名のチェック（第1ラウンドのみ）
+            const fixedPlayerName = FIXED_FIRST_ROUND_PICKS[teamId];
+            let fixedPlayer: NormalizedPlayer | undefined;
             
-            if (scores.length === 0) break;
+            if (fixedPlayerName) {
+              fixedPlayer = availablePlayers.find(p => p.name === fixedPlayerName);
+              if (fixedPlayer) {
+                selectedPlayerId = fixedPlayer.id;
+              } else {
+                console.warn(`固定指名の選手 ${fixedPlayerName} が見つかりません（球団ID: ${teamId}）`);
+              }
+            }
             
-            // スコアに基づいて確率的に選手を選択
-            selectedPlayerId = selectPlayerProbabilistically(scores, round, 10);
+            // 固定指名がない、または選手が見つからない場合は通常のAI指名
+            if (!fixedPlayer) {
+              // AI球団：全選手からスコアリングして選択
+              const scores = await calculateDraftScores(
+                round,
+                teamId,
+                availablePlayers,
+                picks,
+                weightConfig,
+                draftYear
+              );
+              
+              if (scores.length === 0) break;
+              
+              // スコアに基づいて確率的に選手を選択
+              selectedPlayerId = selectPlayerProbabilistically(scores, round, 10);
+            }
           }
           
           currentRoundPicks.push({ teamId, playerId: selectedPlayerId });
