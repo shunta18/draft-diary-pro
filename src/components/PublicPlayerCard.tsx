@@ -1,8 +1,6 @@
 import { memo } from "react";
-import { Eye, Download, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { PublicPlayer } from "@/lib/supabase-storage";
 
@@ -94,24 +92,6 @@ export const PublicPlayerCard = memo(function PublicPlayerCard({
                 ))}
               </div>
             )}
-          </div>
-
-          <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-            <div className="flex items-center gap-1">
-              <Eye className="h-3 w-3" />
-              <span>{player.view_count}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <Download className="h-3 w-3" />
-              <span>{player.import_count}</span>
-            </div>
-            <div className="flex items-center gap-1 ml-auto">
-              <Avatar className="h-5 w-5">
-                <AvatarImage src={player.profiles?.avatar_url} />
-                <AvatarFallback><User className="h-3 w-3" /></AvatarFallback>
-              </Avatar>
-              <span>{player.profiles?.display_name || "名無し"}</span>
-            </div>
           </div>
         </div>
       </CardContent>
