@@ -2114,8 +2114,8 @@ export default function AIDraft() {
                 </DialogClose>
               </div>
               
-              <ScrollArea className="flex-1 w-full h-full">
-                <div className="flex flex-col items-start w-full py-16 px-0.5 md:p-4">
+              <ScrollArea className="flex-1 w-full h-full" style={{ touchAction: 'pan-x pan-y' }}>
+                <div className="flex flex-col items-start w-full py-16 px-0.5 md:p-4 min-w-max">
                   {/* ロゴとブランディング */}
                   <div className="mb-2 md:mb-3 w-full flex justify-start">
                     <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
@@ -2130,7 +2130,7 @@ export default function AIDraft() {
                   </div>
                   
                   {/* テーブル */}
-                  <div className="w-full">
+                  <div className="w-full" style={{ minWidth: 'max-content' }}>
                     <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }} className="transition-transform duration-200">
                       <Table className="border-collapse text-[9px]">
                         <TableHeader>
