@@ -2115,11 +2115,13 @@ export default function AIDraft() {
               </div>
               
               <div 
-                className="flex-1 w-full h-full overflow-auto flex justify-center items-start"
+                className="flex-1 w-full h-full overflow-auto"
                 style={{ 
                   overscrollBehavior: 'contain',
                   WebkitOverflowScrolling: 'touch',
-                  touchAction: 'pan-x pan-y'
+                  touchAction: 'pan-x pan-y',
+                  display: 'flex',
+                  justifyContent: 'center'
                 }}
               >
                 <div 
@@ -2130,8 +2132,7 @@ export default function AIDraft() {
                     transition: 'transform 0.2s',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    minWidth: 'max-content'
+                    alignItems: 'center'
                   }}
                 >
                   {/* ロゴとブランディング */}
