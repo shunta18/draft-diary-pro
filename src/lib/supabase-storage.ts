@@ -618,7 +618,7 @@ export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Pl
 
     // Check if already imported to prevent duplicates
     const { data: existingImport } = await supabase
-      .from('public_player_imports')
+      .from('public_player_imports' as any)
       .select('id')
       .eq('user_id', user.id)
       .eq('public_player_id', publicPlayerId)
@@ -634,7 +634,7 @@ export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Pl
 
     // インポート記録を追加
     await supabase
-      .from('public_player_imports')
+      .from('public_player_imports' as any)
       .insert([{
         user_id: user.id,
         public_player_id: publicPlayerId
@@ -748,7 +748,7 @@ export const incrementPublicPlayerViewCount = async (publicPlayerId: string): Pr
 
     // 既に閲覧済みかチェック
     const { data: existingView } = await supabase
-      .from('public_player_views')
+      .from('public_player_views' as any)
       .select('id')
       .eq('public_player_id', publicPlayerId)
       .or(user ? `user_id.eq.${user.id}` : `session_id.eq.${sessionId}`)
@@ -760,7 +760,7 @@ export const incrementPublicPlayerViewCount = async (publicPlayerId: string): Pr
 
     // 閲覧記録を追加
     await supabase
-      .from('public_player_views')
+      .from('public_player_views' as any)
       .insert([{
         public_player_id: publicPlayerId,
         user_id: user?.id,

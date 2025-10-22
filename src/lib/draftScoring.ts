@@ -25,6 +25,7 @@ export interface DraftScore {
 
 export interface NormalizedPlayer {
   id: number;
+  publicPlayerId?: string; // UUID（public_playersテーブルのID）
   name: string;
   team: string;
   position: string[];

@@ -44,6 +44,21 @@ interface RawSupabasePlayer {
   age?: number;
 }
 
+interface RawPublicPlayer {
+  id: string; // UUID
+  name: string;
+  team: string;
+  position: string;
+  category: string;
+  evaluations: string[];
+  year?: number;
+  batting_hand?: string;
+  throwing_hand?: string;
+  hometown?: string;
+  age?: number;
+  videos?: string[];
+}
+
 const teams = [
   { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800", colors: { primary: "220 100% 50%", secondary: "220 100% 30%" } },
   { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900", colors: { primary: "350 70% 35%", secondary: "350 70% 25%" } },
@@ -83,6 +98,23 @@ const normalizeSupabasePlayer = (player: RawSupabasePlayer): NormalizedPlayer =>
   videoLinks: [],
 });
 
+const normalizePublicPlayer = (player: RawPublicPlayer, index: number): NormalizedPlayer => ({
+  id: index + 1, // 連番でIDを割り当て
+  publicPlayerId: player.id, // 元のUUIDを保持
+  name: player.name,
+  team: player.team,
+  position: [player.position],
+  category: player.category,
+  evaluations: player.evaluations || [],
+  year: player.year,
+  draftYear: player.year?.toString() || "2025",
+  batting_hand: player.batting_hand,
+  throwing_hand: player.throwing_hand,
+  hometown: player.hometown,
+  age: player.age,
+  videoLinks: player.videos || [],
+});
+
 const normalizeLocalPlayer = (player: LocalPlayer): NormalizedPlayer => ({
   id: player.id,
   name: player.name,
@@ -120,6 +152,10 @@ export default function AIDraft() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [currentPicks, setCurrentPicks] = useState<DraftPick[]>([]);
   const [zoomLevel, setZoomLevel] = useState(0.55);
+  
+  // 選手除外機能用のstate
+  const [excludedPlayerIds, setExcludedPlayerIds] = useState<Set<string>>(new Set());
+  const [playerSearchQuery, setPlayerSearchQuery] = useState('');
   
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev + 0.05, 1.0));
@@ -204,6 +240,13 @@ export default function AIDraft() {
     loadWeights();
     checkAdmin();
   }, []);
+
+  // ログイン状態に応じて指名人数を設定
+  useEffect(() => {
+    if (!user) {
+      setMaxRounds(2); // 未ログイン時は2人固定
+    }
+  }, [user]);
 
   useEffect(() => {
     // ログインしていないユーザーの利用回数をチェック
@@ -302,31 +345,21 @@ export default function AIDraft() {
 
   const loadPlayers = async () => {
     try {
-      if (user) {
-        // ユーザー認証確認
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (!currentUser) {
-          throw new Error('User not authenticated');
-        }
-
-        // ユーザー自身の選手のみ取得
-        const { data, error } = await supabase
-          .from("players")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .eq("year", 2025)
-          .order("name");
-        
-        if (error) throw error;
-        const normalized = (data || []).map(normalizeSupabasePlayer);
-        setPlayers(normalized);
-      } else {
-        const localPlayers = getDefaultPlayers();
-        const normalized = localPlayers
-          .map(normalizeLocalPlayer)
-          .filter(p => p.draftYear === "2025");
-        setPlayers(normalized);
-      }
+      // 全ユーザー共通：public_playersテーブルから2025年のドラフト候補を読み込み
+      const { data, error } = await supabase
+        .from("public_players")
+        .select("*")
+        .eq("year", 2025)
+        .order("name");
+      
+      if (error) throw error;
+      
+      // UUIDをベースにした一意のIDに変換
+      const normalized = (data || []).map((player, index) => 
+        normalizePublicPlayer(player, index)
+      );
+      
+      setPlayers(normalized);
     } catch (error) {
       console.error("Failed to load players:", error);
       toast({
@@ -493,9 +526,14 @@ export default function AIDraft() {
     setShouldStopSimulation(false);
     setInterruptedPickInfo(null); // 新しいシミュレーション開始時にクリア
 
+    // 除外選手をフィルタリング
+    const availablePlayers = players.filter(player => 
+      !player.publicPlayerId || !excludedPlayerIds.has(player.publicPlayerId)
+    );
+
     try {
       const result = await runDraftSimulation(
-        players,
+        availablePlayers,
         maxRounds,
         weights,
         "2025",
@@ -753,10 +791,10 @@ export default function AIDraft() {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => navigate("/")}
+                  onClick={() => setShowSignupDialog(false)}
                   className="flex-1"
                 >
-                  ホームに戻る
+                  結果を見る
                 </Button>
               </div>
             </CardContent>
@@ -993,16 +1031,141 @@ export default function AIDraft() {
             <CardContent>
               <div className="space-y-2">
                 <Label>指名人数: {maxRounds}人</Label>
-                <Slider
-                  value={[maxRounds]}
-                  onValueChange={([value]) => setMaxRounds(value)}
-                  min={1}
-                  max={10}
-                  step={1}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  各球団が指名する選手の人数を設定します（1〜10人）
-                </p>
+                {user ? (
+                  <>
+                    <Slider
+                      value={[maxRounds]}
+                      onValueChange={([value]) => setMaxRounds(value)}
+                      min={1}
+                      max={10}
+                      step={1}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      各球団が指名する選手の人数を設定します（1〜10人）
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Slider
+                      value={[2]}
+                      disabled
+                      min={1}
+                      max={10}
+                      step={1}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ログインしていない場合は2人固定です。<br />
+                      アカウント登録すると指名人数を自由に選べます（1〜10人）
+                    </p>
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 対象選手選択 */}
+        {!simulating && !simulationResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle>対象選手の選択</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label>ドラフト対象から除外する選手を選択</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    実際に指名されないと思われる選手を対象から除外できます
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Input
+                      type="text"
+                      placeholder="選手名、チーム、ポジションで検索..."
+                      value={playerSearchQuery}
+                      onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="text-sm text-muted-foreground whitespace-nowrap">
+                    対象: {players.length - excludedPlayerIds.size} / {players.length} 名
+                  </div>
+                </div>
+
+                <ScrollArea className="h-[400px] w-full border rounded-lg">
+                  <div className="p-4 space-y-2">
+                    {players
+                      .filter(player => {
+                        const searchLower = playerSearchQuery.toLowerCase();
+                        return (
+                          player.name.toLowerCase().includes(searchLower) ||
+                          player.team.toLowerCase().includes(searchLower) ||
+                          player.position.some(p => p.toLowerCase().includes(searchLower))
+                        );
+                      })
+                      .sort((a, b) => {
+                        const rankA = getHighestEvaluationRank(a.evaluations);
+                        const rankB = getHighestEvaluationRank(b.evaluations);
+                        
+                        if (rankA !== rankB) {
+                          return rankA - rankB;
+                        }
+                        
+                        return a.name.localeCompare(b.name, 'ja');
+                      })
+                      .map((player) => {
+                        const isExcluded = player.publicPlayerId ? excludedPlayerIds.has(player.publicPlayerId) : false;
+                        return (
+                          <div
+                            key={player.publicPlayerId || player.id}
+                            className={`
+                              flex items-center justify-between p-3 rounded-lg border transition-all
+                              ${isExcluded ? 'bg-muted/50 opacity-60' : 'bg-card hover:bg-accent/5'}
+                            `}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <h3 className={`font-semibold ${isExcluded && 'line-through text-muted-foreground'}`}>
+                                  {player.name}
+                                </h3>
+                                <span className="text-sm text-muted-foreground">
+                                  {player.team}
+                                </span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {player.position.join('/')}
+                                </Badge>
+                                {player.evaluations && player.evaluations.length > 0 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {player.evaluations[0]}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant={isExcluded ? "outline" : "default"}
+                              size="sm"
+                              onClick={() => {
+                                if (player.publicPlayerId) {
+                                  setExcludedPlayerIds(prev => {
+                                    const newSet = new Set(prev);
+                                    if (newSet.has(player.publicPlayerId!)) {
+                                      newSet.delete(player.publicPlayerId!);
+                                    } else {
+                                      newSet.add(player.publicPlayerId!);
+                                    }
+                                    return newSet;
+                                  });
+                                }
+                              }}
+                            >
+                              {isExcluded ? "対象に含める" : "対象から除外"}
+                            </Button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </ScrollArea>
               </div>
             </CardContent>
           </Card>
