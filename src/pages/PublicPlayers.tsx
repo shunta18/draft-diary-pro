@@ -92,7 +92,7 @@ export default function PublicPlayers() {
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<PublicPlayer | null>(null);
   const [selectedDiary, setSelectedDiary] = useState<PublicDiaryEntry | null>(null);
-  const [sortBy, setSortBy] = useState<"latest" | "views" | "imports">("latest");
+  const [sortBy, setSortBy] = useState<"evaluation" | "position">("evaluation");
   const [activeTab, setActiveTab] = useState("players");
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
@@ -125,13 +125,34 @@ export default function PublicPlayers() {
   });
 
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    if (sortBy === "views") {
-      return b.view_count - a.view_count;
-    } else if (sortBy === "imports") {
-      return b.import_count - a.import_count;
-    } else {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (sortBy === "evaluation") {
+      // 評価順でソート（評価が高い順）
+      const aEval = a.evaluations && a.evaluations.length > 0 ? a.evaluations[0] : "";
+      const bEval = b.evaluations && b.evaluations.length > 0 ? b.evaluations[0] : "";
+      const aIndex = evaluationOrder.indexOf(aEval);
+      const bIndex = evaluationOrder.indexOf(bEval);
+      
+      // 評価がない場合は最後に
+      if (aIndex === -1 && bIndex === -1) return 0;
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      
+      return aIndex - bIndex;
+    } else if (sortBy === "position") {
+      // ポジション順でソート
+      const aPos = a.position.split(/[,、]/)[0]?.trim() || "";
+      const bPos = b.position.split(/[,、]/)[0]?.trim() || "";
+      const aIndex = positionOrder.indexOf(aPos);
+      const bIndex = positionOrder.indexOf(bPos);
+      
+      // ポジションが見つからない場合は最後に
+      if (aIndex === -1 && bIndex === -1) return 0;
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      
+      return aIndex - bIndex;
     }
+    return 0;
   });
 
   const handlePlayerClick = useCallback(async (player: PublicPlayer) => {
@@ -388,7 +409,7 @@ export default function PublicPlayers() {
     setSelectedCategories([]);
     setSelectedPositions([]);
     setSelectedEvaluations([]);
-    setSortBy("latest");
+    setSortBy("evaluation");
   };
 
   return (
@@ -430,17 +451,16 @@ export default function PublicPlayers() {
 
               {/* フィルターグリッド */}
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                {/* 登録順 */}
+                {/* 並び替え */}
                 <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">登録順</Label>
+                  <Label className="text-xs text-muted-foreground">並び替え</Label>
                   <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
                     <SelectTrigger className="h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-card border shadow-lg z-50">
-                      <SelectItem value="latest">新しい順</SelectItem>
-                      <SelectItem value="views">閲覧数順</SelectItem>
-                      <SelectItem value="imports">インポート数順</SelectItem>
+                      <SelectItem value="evaluation">評価順</SelectItem>
+                      <SelectItem value="position">ポジション順</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
