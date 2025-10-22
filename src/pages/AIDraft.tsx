@@ -153,6 +153,10 @@ export default function AIDraft() {
   const [currentPicks, setCurrentPicks] = useState<DraftPick[]>([]);
   const [zoomLevel, setZoomLevel] = useState(0.55);
   
+  // 選手除外機能用のstate
+  const [excludedPlayerIds, setExcludedPlayerIds] = useState<Set<string>>(new Set());
+  const [playerSearchQuery, setPlayerSearchQuery] = useState('');
+  
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev + 0.05, 1.0));
   };
@@ -515,9 +519,14 @@ export default function AIDraft() {
     setShouldStopSimulation(false);
     setInterruptedPickInfo(null); // 新しいシミュレーション開始時にクリア
 
+    // 除外選手をフィルタリング
+    const availablePlayers = players.filter(player => 
+      !player.publicPlayerId || !excludedPlayerIds.has(player.publicPlayerId)
+    );
+
     try {
       const result = await runDraftSimulation(
-        players,
+        availablePlayers,
         maxRounds,
         weights,
         "2025",
@@ -1025,6 +1034,104 @@ export default function AIDraft() {
                 <p className="text-xs text-muted-foreground mt-2">
                   各球団が指名する選手の人数を設定します（1〜10人）
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* 対象選手選択 */}
+        {!simulating && !simulationResult && (
+          <Card>
+            <CardHeader>
+              <CardTitle>対象選手の選択</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Label>ドラフト対象から除外する選手を選択</Label>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    実際に指名されないと思われる選手を対象から除外できます
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="flex-1">
+                    <Input
+                      type="text"
+                      placeholder="選手名、チーム、ポジションで検索..."
+                      value={playerSearchQuery}
+                      onChange={(e) => setPlayerSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <div className="text-sm text-muted-foreground whitespace-nowrap">
+                    対象: {players.length - excludedPlayerIds.size} / {players.length} 名
+                  </div>
+                </div>
+
+                <ScrollArea className="h-[400px] w-full border rounded-lg">
+                  <div className="p-4 space-y-2">
+                    {players
+                      .filter(player => {
+                        const searchLower = playerSearchQuery.toLowerCase();
+                        return (
+                          player.name.toLowerCase().includes(searchLower) ||
+                          player.team.toLowerCase().includes(searchLower) ||
+                          player.position.some(p => p.toLowerCase().includes(searchLower))
+                        );
+                      })
+                      .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+                      .map((player) => {
+                        const isExcluded = player.publicPlayerId ? excludedPlayerIds.has(player.publicPlayerId) : false;
+                        return (
+                          <div
+                            key={player.publicPlayerId || player.id}
+                            className={`
+                              flex items-center justify-between p-3 rounded-lg border transition-all
+                              ${isExcluded ? 'bg-muted/50 opacity-60' : 'bg-card hover:bg-accent/5'}
+                            `}
+                          >
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 flex-wrap">
+                                <h3 className={`font-semibold ${isExcluded && 'line-through text-muted-foreground'}`}>
+                                  {player.name}
+                                </h3>
+                                <span className="text-sm text-muted-foreground">
+                                  {player.team}
+                                </span>
+                                <Badge variant="secondary" className="text-xs">
+                                  {player.position.join('/')}
+                                </Badge>
+                                {player.evaluations && player.evaluations.length > 0 && (
+                                  <span className="text-xs text-muted-foreground">
+                                    {player.evaluations[0]}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                            <Button
+                              variant={isExcluded ? "outline" : "default"}
+                              size="sm"
+                              onClick={() => {
+                                if (player.publicPlayerId) {
+                                  setExcludedPlayerIds(prev => {
+                                    const newSet = new Set(prev);
+                                    if (newSet.has(player.publicPlayerId!)) {
+                                      newSet.delete(player.publicPlayerId!);
+                                    } else {
+                                      newSet.add(player.publicPlayerId!);
+                                    }
+                                    return newSet;
+                                  });
+                                }
+                              }}
+                            >
+                              {isExcluded ? "対象に含める" : "対象から除外"}
+                            </Button>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </ScrollArea>
               </div>
             </CardContent>
           </Card>
