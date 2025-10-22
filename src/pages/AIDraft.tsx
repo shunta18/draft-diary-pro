@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import mustacheLogo from "@/assets/mustache-logo.png";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search, ChevronDown } from "lucide-react";
@@ -2114,11 +2114,28 @@ export default function AIDraft() {
                 </DialogClose>
               </div>
               
-              <div className="flex-1 flex items-start justify-start py-16 px-0.5 md:p-4 overflow-auto w-full">
-                <div className="flex flex-col items-start w-full">
+              <div 
+                className="flex-1 w-full h-full overflow-auto"
+                style={{ 
+                  overscrollBehavior: 'contain',
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'pan-x pan-y'
+                }}
+              >
+                <div 
+                  className="py-16 px-0.5 md:p-4"
+                  style={{ 
+                    transform: `scale(${zoomLevel})`,
+                    transformOrigin: 'top left',
+                    transition: 'transform 0.2s',
+                    display: 'inline-flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start'
+                  }}
+                >
                   {/* ロゴとブランディング */}
                   <div className="mb-2 md:mb-3 w-full flex justify-start">
-                    <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
+                    <div className="flex items-center gap-0.5 md:gap-2">
                       <img 
                         src="/mustache-logo.png" 
                         alt="BaaS Logo" 
@@ -2130,8 +2147,8 @@ export default function AIDraft() {
                   </div>
                   
                   {/* テーブル */}
-                  <div className="overflow-visible w-full">
-                    <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }} className="transition-transform duration-200">
+                  <div className="w-full" style={{ minWidth: 'max-content' }}>
+                    <div className="transition-transform duration-200">
                       <Table className="border-collapse text-[9px]">
                         <TableHeader>
                           <TableRow>
@@ -2155,12 +2172,14 @@ export default function AIDraft() {
                         </TableHeader>
                         <TableBody>
                           {(() => {
+                            // 1巡目の指名をpickLabelでグループ化し、各球団の抽選外れも取得
                             const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
                             const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
                             
                             const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
                             const rows = [];
                             
+                            // 1巡目は特別処理（全ての指名を「1位」で括る）
                             if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
                               const rowsPerTeam = displayOrder.map(teamId => {
                                 const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
@@ -2187,7 +2206,7 @@ export default function AIDraft() {
                                       
                                       if (rowIndex >= allTeamItems.length) {
                                         return (
-                                          <TableCell key={teamId} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
+                                          <TableCell key={teamId} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 text-[9px]">
                                             ―
                                           </TableCell>
                                         );
