@@ -474,67 +474,6 @@ export type Database = {
         }
         Relationships: []
       }
-      public_player_imports: {
-        Row: {
-          created_at: string
-          id: string
-          public_player_id: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          public_player_id: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          public_player_id?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "public_player_imports_public_player_id_fkey"
-            columns: ["public_player_id"]
-            isOneToOne: false
-            referencedRelation: "public_players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      public_player_views: {
-        Row: {
-          created_at: string
-          id: string
-          public_player_id: string
-          session_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          public_player_id: string
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          public_player_id?: string
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "public_player_views_public_player_id_fkey"
-            columns: ["public_player_id"]
-            isOneToOne: false
-            referencedRelation: "public_players"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       public_players: {
         Row: {
           age: number | null
