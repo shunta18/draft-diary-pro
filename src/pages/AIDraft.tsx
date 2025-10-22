@@ -9,7 +9,7 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { getDefaultPlayers, Player as LocalPlayer } from "@/lib/playerStorage";
-import { Play, ArrowLeft, Settings, Download, Maximize2 } from "lucide-react";
+import { Play, ArrowLeft, Settings, Download, Maximize2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { runDraftSimulation, SimulationResult } from "@/lib/draftSimulation";
@@ -175,6 +175,7 @@ export default function AIDraft() {
   const [singlePickResolve, setSinglePickResolve] = useState<(() => void) | null>(null);
   const [shouldStopSimulation, setShouldStopSimulation] = useState(false);
   const shouldStopSimulationRef = useRef(false);
+  const [showSignupDialog, setShowSignupDialog] = useState(false);
   
   // shouldStopSimulationの変更をrefに同期
   useEffect(() => {
@@ -203,6 +204,16 @@ export default function AIDraft() {
     loadWeights();
     checkAdmin();
   }, []);
+
+  useEffect(() => {
+    // ログインしていないユーザーの利用回数をチェック
+    if (!user) {
+      const usageCount = localStorage.getItem('aiDraftUsageCount');
+      if (usageCount && parseInt(usageCount) >= 1) {
+        setShowSignupDialog(true);
+      }
+    }
+  }, [user]);
 
   // リアルタイム更新の監視
   useEffect(() => {
@@ -466,6 +477,12 @@ export default function AIDraft() {
       return;
     }
 
+    // ログインしていないユーザーの利用回数を記録
+    if (!user) {
+      const currentCount = parseInt(localStorage.getItem('aiDraftUsageCount') || '0');
+      localStorage.setItem('aiDraftUsageCount', (currentCount + 1).toString());
+    }
+
     setSimulating(true);
     setCurrentSimulationRound(0);
     setSimulationResult(null);
@@ -487,6 +504,12 @@ export default function AIDraft() {
           // 各ラウンド終了後に部分結果を更新
           if (partialResult) {
             setSimulationResult(partialResult);
+          }
+          
+          // 2巡目終了後、ログインしていない場合はダイアログを表示してシミュレーションを停止
+          if (round === 2 && !user) {
+            setShowSignupDialog(true);
+            setShouldStopSimulation(true);
           }
         },
         userTeamIds.length > 0 ? userTeamIds : undefined,
@@ -696,6 +719,50 @@ export default function AIDraft() {
         structuredData={aiDraftStructuredData}
       />
       <Navigation />
+      
+      {/* アカウント登録促進ダイアログ */}
+      {showSignupDialog && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <AlertCircle className="h-5 w-5 text-primary" />
+                アカウント登録のお願い
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                ゲストモードでのAIドラフトは1回までとなっております。
+              </p>
+              <p className="text-sm text-muted-foreground">
+                アカウント登録（無料）すると、以下の機能が利用できるようになります：
+              </p>
+              <ul className="text-sm text-muted-foreground space-y-2 list-disc list-inside">
+                <li>仮想ドラフト・AIドラフトの回数制限なし</li>
+                <li>3巡目以降のドラフト</li>
+                <li>選手データの保存・管理</li>
+                <li>ドラフト結果の保存</li>
+                <li>自分の選手リストでシミュレーション</li>
+              </ul>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => navigate("/auth")}
+                  className="flex-1"
+                >
+                  アカウント登録（無料）
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => navigate("/")}
+                  className="flex-1"
+                >
+                  ホームに戻る
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       
       <main className="flex-1 container mx-auto px-4 py-8 space-y-6">
         {/* ヘッダー */}
