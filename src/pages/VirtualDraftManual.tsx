@@ -719,12 +719,37 @@ const VirtualDraft = () => {
     );
   }
 
+  const manualDraftStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "BaaS 手動ドラフトシミュレーター",
+    "applicationCategory": "SportsApplication",
+    "description": "プロ野球ドラフト会議を手動でシミュレーション。12球団すべてを操作し、抽選方式とウェーバー方式を完全再現",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "JPY"
+    },
+    "featureList": [
+      "1位指名抽選システム",
+      "2位以降ウェーバー方式",
+      "育成ドラフト対応",
+      "リアルタイムシミュレーション"
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <SEO 
-        title="仮想ドラフト会議"
-        description="プロ野球ドラフト会議のシミュレーション。12球団の1位指名を自分で決めて、被った場合は抽選を行います。ドラフト戦略の検討にご活用ください。"
-        keywords={["仮想ドラフト", "ドラフト会議", "シミュレーション", "プロ野球", "指名", "抽選"]}
+        title="手動ドラフト会議 - プロ野球ドラフトシミュレーター"
+        description="プロ野球ドラフト会議を手動で完全シミュレーション。12球団すべてを操作し、1位指名の抽選方式から2位以降のウェーバー方式、育成ドラフトまで本格再現。競合による抽選演出も体験でき、リアルなドラフト戦略を検討できます。"
+        keywords={[
+          "仮想ドラフト", "手動ドラフト", "ドラフト会議", "ドラフト シミュレーション", 
+          "プロ野球", "ドラフト指名", "抽選方式", "ウェーバー方式", "育成ドラフト",
+          "ドラフト戦略", "競合指名", "12球団", "野球シミュレーター"
+        ]}
+        structuredData={manualDraftStructuredData}
       />
       <Navigation />
 

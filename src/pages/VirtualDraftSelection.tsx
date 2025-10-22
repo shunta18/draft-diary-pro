@@ -9,11 +9,31 @@ import { Users, Sparkles } from "lucide-react";
 export default function VirtualDraftSelection() {
   const navigate = useNavigate();
 
+  const virtualDraftStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "BaaS 仮想ドラフト",
+    "applicationCategory": "SportsApplication",
+    "description": "プロ野球ドラフト会議を体験できる仮想ドラフトシミュレーター。手動指名とAI自動シミュレーションの2つのモードを選択可能",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "JPY"
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
       <SEO 
-        title="仮想ドラフト選択"
-        description="手動で選手を指名する従来の仮想ドラフトか、スコアリングシステムによる自動シミュレーションを選択してください"
+        title="仮想ドラフト選択 - プロ野球ドラフト会議シミュレーター"
+        description="プロ野球ドラフト会議を本格的に体験できる仮想ドラフトシミュレーター。手動で12球団すべてを操作する従来モードと、AI自動シミュレーションモードから選択。抽選方式やウェーバー方式を完全再現し、リアルなドラフト戦略を体験できます。"
+        keywords={[
+          "仮想ドラフト", "プロ野球 ドラフト", "ドラフト会議", "ドラフト シミュレーション",
+          "手動ドラフト", "AIドラフト", "抽選方式", "ウェーバー方式", 
+          "ドラフト体験", "野球シミュレーター", "ドラフト予想"
+        ]}
+        structuredData={virtualDraftStructuredData}
       />
       <Navigation />
       
