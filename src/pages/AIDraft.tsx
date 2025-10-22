@@ -662,11 +662,38 @@ export default function AIDraft() {
     );
   }
 
+  const aiDraftStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "BaaS AIドラフトシミュレーター",
+    "applicationCategory": "SportsApplication",
+    "description": "プロ野球ドラフト会議をAIで自動シミュレーション。多層スコアリングシステムで各球団のドラフト戦略を予測します",
+    "operatingSystem": "Web",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "JPY"
+    },
+    "featureList": [
+      "投票データ反映の多層スコアリングシステム",
+      "チームニーズ自動分析",
+      "選手評価の数値化",
+      "スコア重み調整機能",
+      "リアルタイムドラフトシミュレーション"
+    ]
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-background via-background to-muted/20">
       <SEO 
-        title="AIドラフト"
-        description="多層スコアリングシステムによる自動ドラフトシミュレーション"
+        title="AIドラフト シミュレーション - プロ野球ドラフト会議予想"
+        description="プロ野球ドラフト会議をAIで自動シミュレーション。多層スコアリングシステムで投票データ、チームニーズ、選手評価を分析し、各球団のドラフト戦略を予測します。好きな球団を操作して本格的なドラフト体験が可能。"
+        keywords={[
+          "AIドラフト", "プロ野球", "ドラフト シミュレーション", "ドラフト会議", 
+          "ドラフト予想", "スコアリングシステム", "チームニーズ分析", "選手評価",
+          "仮想ドラフト", "ドラフト戦略", "自動シミュレーション", "野球 AI"
+        ]}
+        structuredData={aiDraftStructuredData}
       />
       <Navigation />
       
@@ -689,6 +716,74 @@ export default function AIDraft() {
           </div>
           
         </div>
+
+        {/* AIドラフトの説明セクション（SEO対策） */}
+        {!simulating && !simulationResult && (
+          <Card className="bg-gradient-to-br from-card to-accent/5 border-accent/20">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-primary">
+                <Play className="w-5 h-5" />
+                AIドラフトシミュレーションとは
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 text-sm leading-relaxed">
+              <p className="text-foreground/90">
+                <strong className="text-primary">AIドラフト</strong>は、プロ野球ドラフト会議を高精度に再現する自動シミュレーションシステムです。
+                多層スコアリングシステムにより、各球団のドラフト戦略を予測し、リアルなドラフト会議を体験できます。
+              </p>
+              
+              <div className="space-y-3 pl-4 border-l-2 border-accent/30">
+                <div>
+                  <h3 className="font-semibold text-primary mb-1">1. 投票データの反映</h3>
+                  <p className="text-muted-foreground">
+                    ユーザーの投票データを基に、各球団がどの選手に注目しているかを数値化。
+                    実際のドラフト予想を反映した指名傾向を再現します。
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-primary mb-1">2. チームニーズ分析</h3>
+                  <p className="text-muted-foreground">
+                    各球団のポジション別需要を自動分析。投手・野手のバランス、
+                    特定ポジションの不足などを考慮し、戦略的な指名順位を決定します。
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-primary mb-1">3. 選手評価の数値化</h3>
+                  <p className="text-muted-foreground">
+                    ユーザーが設定した選手評価（1位競合、1位一本釣り、外れ1位など）を
+                    スコア化し、ドラフト順位の予測精度を向上させます。
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-primary mb-1">4. 現実性調整スコア</h3>
+                  <p className="text-muted-foreground">
+                    指名済み選手の傾向（投手・野手の比率、カテゴリバランス）を分析し、
+                    各球団の現実的な指名パターンを自動調整。より本物に近いドラフト結果を生成します。
+                  </p>
+                </div>
+                
+                <div>
+                  <h3 className="font-semibold text-primary mb-1">5. スコア重み調整機能</h3>
+                  <p className="text-muted-foreground">
+                    各スコアリング要素の重要度を自由に調整可能。
+                    「投票データ重視」「チームニーズ重視」など、独自のシミュレーション設定でドラフト予想を楽しめます。
+                  </p>
+                </div>
+              </div>
+              
+              <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
+                <p className="text-sm text-foreground/80">
+                  <strong className="text-accent">💡 ポイント：</strong>
+                  好きな球団だけを操作し、残りの球団はAIが自動で指名。
+                  リアルタイムで進行するドラフト会議の臨場感を体験できます。
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* 操作球団選択 */}
         {!simulating && !simulationResult && (

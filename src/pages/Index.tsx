@@ -127,10 +127,15 @@ const Index = () => {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     "name": "BaaS プロ野球ドラフト管理ツール",
-    "description": "野球ファンのためのドラフト候補選手管理・評価・観戦記録アプリ",
+    "description": "プロ野球ドラフト候補選手の管理、評価、仮想ドラフトシミュレーションを提供する野球ファン向けアプリ",
     "url": "https://baas-baseball.com",
     "applicationCategory": "SportsApplication",
     "operatingSystem": "All",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "JPY"
+    },
     "author": {
       "@type": "Organization",
       "name": "BaaS Baseball"
@@ -139,18 +144,21 @@ const Index = () => {
       "ドラフト候補選手管理",
       "選手評価・スカウティング",
       "観戦記録・日記",
-      "ドラフト構想作成"
+      "ドラフト構想作成",
+      "仮想ドラフトシミュレーション",
+      "AIドラフト自動シミュレーション"
     ]
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-muted/30 to-accent/10">
       <SEO 
-        title="ホーム"
-        description="プロ野球ドラフト候補選手の管理、評価、観戦記録を効率的に行える野球ファン向けツール。スカウティングデータの蓄積からドラフト構想の作成まで完全サポート。"
+        title="ホーム - プロ野球ドラフト管理・仮想ドラフトシミュレーター"
+        description="プロ野球ドラフト候補選手の管理、評価、観戦記録を効率的に行える野球ファン向けツール。仮想ドラフトやAIドラフトシミュレーションで本格的なドラフト会議を体験。スカウティングデータの蓄積からドラフト構想の作成まで完全サポート。"
         keywords={[
-          "プロ野球", "ドラフト", "選手管理", "スカウティング", "野球", 
-          "観戦記録", "日記", "評価", "候補選手", "BaaS"
+          "プロ野球", "ドラフト", "仮想ドラフト", "AIドラフト", "ドラフト会議",
+          "選手管理", "スカウティング", "野球", "ドラフト シミュレーション",
+          "観戦記録", "日記", "評価", "候補選手", "ドラフト予想", "BaaS"
         ]}
         structuredData={homeStructuredData}
       />
@@ -411,13 +419,31 @@ const Index = () => {
               </div>
               
               <div>
-                <h4 className="font-medium text-primary">6. 仮想ドラフト会議</h4>
+                <h4 className="font-medium text-primary">6. 仮想ドラフト会議（手動＆AIシミュレーション）</h4>
                 <p className="text-muted-foreground">
-                  実際のプロ野球ドラフト会議をシミュレーションできる機能です。
-                  抽選による指名順決定から、各球団の指名まで、本番さながらの緊張感を体験。
-                  あなたが作成したドラフト構想をもとに、どの球団がどの選手を指名するか、
-                  競合や外れ1位の流れをシミュレートできます。スクリーンショット機能で結果を保存・共有も可能です。
+                  実際のプロ野球ドラフト会議を本格的に体験できる<strong className="text-primary">仮想ドラフト</strong>機能です。
+                  2つのモードから選択可能：
                 </p>
+                <div className="pl-4 mt-2 space-y-2">
+                  <div>
+                    <h5 className="font-medium text-primary text-sm">手動ドラフトモード</h5>
+                    <p className="text-muted-foreground">
+                      12球団すべてを自分で操作し、1位指名の抽選方式から2位以降のウェーバー方式まで完全再現。
+                      競合による抽選演出や、育成ドラフトまで含めた本格的なシミュレーションが可能です。
+                      あなたが作成したドラフト構想をもとに、戦略的な指名を体験できます。
+                    </p>
+                  </div>
+                  <div>
+                    <h5 className="font-medium text-primary text-sm">AIドラフトモード</h5>
+                    <p className="text-muted-foreground">
+                      <strong className="text-primary">多層スコアリングシステム</strong>による自動シミュレーション。
+                      好きな球団だけを操作し、残りはAIが自動で指名します。
+                      投票データ反映、チームニーズ分析、選手評価の数値化、現実性調整など、
+                      高度なアルゴリズムでリアルなドラフト予想を実現。
+                      スコアの重みを自由に調整でき、自分だけのシミュレーション設定でドラフト会議を楽しめます。
+                    </p>
+                  </div>
+                </div>
               </div>
               
               <div>
