@@ -241,6 +241,13 @@ export default function AIDraft() {
     checkAdmin();
   }, []);
 
+  // ログイン状態に応じて指名人数を設定
+  useEffect(() => {
+    if (!user) {
+      setMaxRounds(2); // 未ログイン時は2人固定
+    }
+  }, [user]);
+
   useEffect(() => {
     // ログインしていないユーザーの利用回数をチェック
     if (!user) {
@@ -1024,16 +1031,34 @@ export default function AIDraft() {
             <CardContent>
               <div className="space-y-2">
                 <Label>指名人数: {maxRounds}人</Label>
-                <Slider
-                  value={[maxRounds]}
-                  onValueChange={([value]) => setMaxRounds(value)}
-                  min={1}
-                  max={10}
-                  step={1}
-                />
-                <p className="text-xs text-muted-foreground mt-2">
-                  各球団が指名する選手の人数を設定します（1〜10人）
-                </p>
+                {user ? (
+                  <>
+                    <Slider
+                      value={[maxRounds]}
+                      onValueChange={([value]) => setMaxRounds(value)}
+                      min={1}
+                      max={10}
+                      step={1}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      各球団が指名する選手の人数を設定します（1〜10人）
+                    </p>
+                  </>
+                ) : (
+                  <>
+                    <Slider
+                      value={[2]}
+                      disabled
+                      min={1}
+                      max={10}
+                      step={1}
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      ログインしていない場合は2人固定です。<br />
+                      アカウント登録すると指名人数を自由に選べます（1〜10人）
+                    </p>
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
