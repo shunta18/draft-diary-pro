@@ -94,21 +94,10 @@ export default function PlayerForm() {
     if (isEditing && id) {
       const loadPlayer = async () => {
         if (isPublicPlayer) {
-          // 公開選手を読み込み
+          // 公開選手を読み込み（ログインユーザーなら誰でも編集可能）
           const player = await getPublicPlayerById(id);
           if (player) {
-            // 権限チェック：自分の投稿または管理者のみ編集可能
-            if (user && player.user_id !== user.id && !isAdmin) {
-              toast({
-                title: "アクセス権限がありません",
-                description: "この選手を編集する権限がありません。",
-                variant: "destructive",
-              });
-              navigate("/public-players");
-              return;
-            }
-
-            const careerPath = player.career_path && typeof player.career_path === 'object' 
+            const careerPath = player.career_path && typeof player.career_path === 'object'
               ? player.career_path as { middle_school?: string; high_school?: string; university?: string; corporate?: string }
               : { middle_school: "", high_school: "", university: "", corporate: "" };
             
