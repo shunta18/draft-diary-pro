@@ -2115,7 +2115,7 @@ export default function AIDraft() {
               </div>
               
               <div 
-                className="flex-1 w-full h-full overflow-auto"
+                className="flex-1 w-full h-full overflow-auto flex justify-center items-start"
                 style={{ 
                   overscrollBehavior: 'contain',
                   WebkitOverflowScrolling: 'touch',
@@ -2123,31 +2123,32 @@ export default function AIDraft() {
                 }}
               >
                 <div 
-                  className="py-16 px-0.5 md:p-4"
+                  className="py-8 px-2 md:py-16 md:px-4"
                   style={{ 
                     transform: `scale(${zoomLevel})`,
-                    transformOrigin: 'top left',
+                    transformOrigin: 'top center',
                     transition: 'transform 0.2s',
-                    display: 'inline-flex',
+                    display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'flex-start'
+                    alignItems: 'center',
+                    minWidth: 'max-content'
                   }}
                 >
                   {/* ロゴとブランディング */}
-                  <div className="mb-2 md:mb-3 w-full flex justify-start">
-                    <div className="flex items-center gap-0.5 md:gap-2">
+                  <div className="mb-2 md:mb-3 flex justify-center">
+                    <div className="flex items-center gap-1 md:gap-2">
                       <img 
                         src="/mustache-logo.png" 
                         alt="BaaS Logo" 
-                        className="h-4 md:h-8 w-auto"
+                        className="h-6 md:h-8 w-auto"
                         loading="lazy"
                       />
-                      <span className="font-semibold text-sm md:text-lg text-black">BaaS 野球スカウトノート</span>
+                      <span className="font-semibold text-base md:text-lg text-black whitespace-nowrap">BaaS 野球スカウトノート</span>
                     </div>
                   </div>
                   
                   {/* テーブル */}
-                  <div className="w-full" style={{ minWidth: 'max-content' }}>
+                  <div style={{ minWidth: 'max-content' }}>
                     <div className="transition-transform duration-200">
                       <Table className="border-collapse text-[9px]">
                         <TableHeader>
