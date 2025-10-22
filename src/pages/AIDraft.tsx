@@ -1079,7 +1079,16 @@ export default function AIDraft() {
                           player.position.some(p => p.toLowerCase().includes(searchLower))
                         );
                       })
-                      .sort((a, b) => a.name.localeCompare(b.name, 'ja'))
+                      .sort((a, b) => {
+                        const rankA = getHighestEvaluationRank(a.evaluations);
+                        const rankB = getHighestEvaluationRank(b.evaluations);
+                        
+                        if (rankA !== rankB) {
+                          return rankA - rankB;
+                        }
+                        
+                        return a.name.localeCompare(b.name, 'ja');
+                      })
                       .map((player) => {
                         const isExcluded = player.publicPlayerId ? excludedPlayerIds.has(player.publicPlayerId) : false;
                         return (
