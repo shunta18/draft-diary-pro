@@ -90,7 +90,6 @@ export default function PublicPlayers() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<PublicPlayer | null>(null);
   const [selectedDiary, setSelectedDiary] = useState<PublicDiaryEntry | null>(null);
   const [sortBy, setSortBy] = useState<"latest" | "views" | "imports">("latest");
@@ -114,7 +113,6 @@ export default function PublicPlayers() {
                          player.team.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
     const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(player.category);
-    const matchesTeam = selectedTeams.length === 0 || selectedTeams.includes(player.team);
     
     const playerPositions = player.position.split(/[,、]/).map(p => p.trim());
     const matchesPosition = selectedPositions.length === 0 || 
@@ -123,7 +121,7 @@ export default function PublicPlayers() {
     const matchesEvaluation = selectedEvaluations.length === 0 || 
       (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
     
-    return matchesSearch && matchesYear && matchesCategory && matchesTeam && matchesPosition && matchesEvaluation;
+    return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
   });
 
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
@@ -388,14 +386,10 @@ export default function PublicPlayers() {
     setSearchTerm("");
     setSelectedYear("2025");
     setSelectedCategories([]);
-    setSelectedTeams([]);
     setSelectedPositions([]);
     setSelectedEvaluations([]);
     setSortBy("latest");
   };
-
-  // ユニークなチームリストを取得
-  const availableTeams = Array.from(new Set(players.map(p => p.team))).sort();
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted">
@@ -435,7 +429,7 @@ export default function PublicPlayers() {
               </div>
 
               {/* フィルターグリッド */}
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-5">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {/* 登録順 */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">登録順</Label>
@@ -466,43 +460,6 @@ export default function PublicPlayers() {
                       <SelectItem value="2025">2025年度</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-
-                {/* 所属 */}
-                <div className="space-y-1">
-                  <Label className="text-xs text-muted-foreground">所属</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="h-10 w-full justify-between font-normal">
-                        <span className="truncate">
-                          {selectedTeams.length === 0 ? "全ての所属" : `${selectedTeams.length}件選択`}
-                        </span>
-                        <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-64 p-3 bg-card border shadow-lg z-50" align="start">
-                      <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {availableTeams.map((team) => (
-                          <div key={team} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`team-${team}`}
-                              checked={selectedTeams.includes(team)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedTeams([...selectedTeams, team]);
-                                } else {
-                                  setSelectedTeams(selectedTeams.filter(t => t !== team));
-                                }
-                              }}
-                            />
-                            <label htmlFor={`team-${team}`} className="text-sm cursor-pointer flex-1">
-                              {team}
-                            </label>
-                          </div>
-                        ))}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
                 </div>
 
                 {/* ポジション */}
@@ -580,6 +537,24 @@ export default function PublicPlayers() {
                 </div>
               </div>
 
+              {/* リセットボタン */}
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="flex items-center gap-2"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M3 21v-5h5" />
+                  </svg>
+                  リセット
+                </Button>
+              </div>
+
               {/* 一括インポートボタン */}
               {selectedPlayerIds.size > 0 && (
                 <div className="flex items-center gap-2 flex-wrap w-full pt-2 border-t">
@@ -594,26 +569,6 @@ export default function PublicPlayers() {
               )}
             </CardContent>
           </Card>
-
-          {/* リセットボタン（右下固定） */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={resetFilters}
-            className="fixed flex items-center gap-2 shadow-lg z-40"
-            style={{
-              bottom: 'max(80px, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
-              right: '1rem'
-            }}
-          >
-            <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
-              <path d="M21 3v5h-5" />
-              <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
-              <path d="M3 21v-5h5" />
-            </svg>
-            リセット
-          </Button>
 
           {/* Player Cards */}
           {loading ? (
