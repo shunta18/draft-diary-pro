@@ -215,15 +215,29 @@ export default function DraftPredictions() {
     // ローカル状態を更新
     if (isChecked) {
       setUserPlayerVotes([...userPlayerVotes, { team_id: selectedTeam, public_player_id: player.publicPlayerId }]);
+      // 投票数を楽観的に更新
+      const voteKey = `${selectedTeam}_${player.publicPlayerId}`;
+      setPlayerVoteCounts(prev => ({
+        ...prev,
+        [voteKey]: (prev[voteKey] || 0) + 1
+      }));
     } else {
       setUserPlayerVotes(
         userPlayerVotes.filter((v) => !(v.team_id === selectedTeam && v.public_player_id === player.publicPlayerId))
       );
+      // 投票数を楽観的に更新
+      const voteKey = `${selectedTeam}_${player.publicPlayerId}`;
+      setPlayerVoteCounts(prev => ({
+        ...prev,
+        [voteKey]: Math.max((prev[voteKey] || 0) - 1, 0)
+      }));
     }
 
-    // 投票数を再読み込み
-    const { voteCounts } = await getPlayerVoteCounts(selectedYear);
-    setPlayerVoteCounts(voteCounts);
+    // 投票数を再読み込みして正確な値に更新
+    setTimeout(async () => {
+      const { voteCounts } = await getPlayerVoteCounts(selectedYear);
+      setPlayerVoteCounts(voteCounts);
+    }, 500);
     
     toast({
       title: isChecked ? "投票完了" : "投票取消",
@@ -273,9 +287,11 @@ export default function DraftPredictions() {
       });
     }
 
-    // 投票数を再読み込み
-    const { voteCounts } = await getPositionVoteCounts(selectedYear);
-    setPositionVoteCounts(voteCounts);
+    // 投票数を再読み込みして正確な値に更新
+    setTimeout(async () => {
+      const { voteCounts } = await getPositionVoteCounts(selectedYear);
+      setPositionVoteCounts(voteCounts);
+    }, 500);
   };
 
   const isPlayerVoted = (playerId: number) => {
