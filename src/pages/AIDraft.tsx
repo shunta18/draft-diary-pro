@@ -44,6 +44,21 @@ interface RawSupabasePlayer {
   age?: number;
 }
 
+interface RawPublicPlayer {
+  id: string; // UUID
+  name: string;
+  team: string;
+  position: string;
+  category: string;
+  evaluations: string[];
+  year?: number;
+  batting_hand?: string;
+  throwing_hand?: string;
+  hometown?: string;
+  age?: number;
+  videos?: string[];
+}
+
 const teams = [
   { id: 1, name: "北海道日本ハムファイターズ", shortName: "日本ハム", color: "from-blue-600 to-blue-800", colors: { primary: "220 100% 50%", secondary: "220 100% 30%" } },
   { id: 2, name: "東北楽天ゴールデンイーグルス", shortName: "楽天", color: "from-red-700 to-red-900", colors: { primary: "350 70% 35%", secondary: "350 70% 25%" } },
@@ -81,6 +96,23 @@ const normalizeSupabasePlayer = (player: RawSupabasePlayer): NormalizedPlayer =>
   position: [player.position],
   draftYear: player.year?.toString() || "",
   videoLinks: [],
+});
+
+const normalizePublicPlayer = (player: RawPublicPlayer, index: number): NormalizedPlayer => ({
+  id: index + 1, // 連番でIDを割り当て
+  publicPlayerId: player.id, // 元のUUIDを保持
+  name: player.name,
+  team: player.team,
+  position: [player.position],
+  category: player.category,
+  evaluations: player.evaluations || [],
+  year: player.year,
+  draftYear: player.year?.toString() || "2025",
+  batting_hand: player.batting_hand,
+  throwing_hand: player.throwing_hand,
+  hometown: player.hometown,
+  age: player.age,
+  videoLinks: player.videos || [],
 });
 
 const normalizeLocalPlayer = (player: LocalPlayer): NormalizedPlayer => ({
@@ -302,31 +334,21 @@ export default function AIDraft() {
 
   const loadPlayers = async () => {
     try {
-      if (user) {
-        // ユーザー認証確認
-        const { data: { user: currentUser } } = await supabase.auth.getUser();
-        if (!currentUser) {
-          throw new Error('User not authenticated');
-        }
-
-        // ユーザー自身の選手のみ取得
-        const { data, error } = await supabase
-          .from("players")
-          .select("*")
-          .eq("user_id", currentUser.id)
-          .eq("year", 2025)
-          .order("name");
-        
-        if (error) throw error;
-        const normalized = (data || []).map(normalizeSupabasePlayer);
-        setPlayers(normalized);
-      } else {
-        const localPlayers = getDefaultPlayers();
-        const normalized = localPlayers
-          .map(normalizeLocalPlayer)
-          .filter(p => p.draftYear === "2025");
-        setPlayers(normalized);
-      }
+      // 全ユーザー共通：public_playersテーブルから2025年のドラフト候補を読み込み
+      const { data, error } = await supabase
+        .from("public_players")
+        .select("*")
+        .eq("year", 2025)
+        .order("name");
+      
+      if (error) throw error;
+      
+      // UUIDをベースにした一意のIDに変換
+      const normalized = (data || []).map((player, index) => 
+        normalizePublicPlayer(player, index)
+      );
+      
+      setPlayers(normalized);
     } catch (error) {
       console.error("Failed to load players:", error);
       toast({
