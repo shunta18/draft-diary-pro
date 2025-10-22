@@ -2123,11 +2123,13 @@ export default function AIDraft() {
                 }}
               >
                 <div 
-                  className="py-8 px-2 md:py-16 md:px-4"
+                  className="px-2 md:px-4"
                   style={{ 
                     transform: `scale(${zoomLevel})`,
                     transformOrigin: 'top left',
-                    transition: 'transform 0.2s'
+                    transition: 'transform 0.2s',
+                    paddingTop: 'max(env(safe-area-inset-top, 0px) + 5rem, 6rem)',
+                    paddingBottom: '2rem'
                   }}
                 >
                   {/* ロゴとブランディング */}
