@@ -38,7 +38,7 @@ export const upsertPlayerVote = async (
       if (error) throw error;
     } else {
       // 投票を全て削除
-      const query = supabase
+      let query = supabase
         .from("draft_team_player_votes")
         .delete()
         .eq("team_id", teamId)
@@ -46,9 +46,9 @@ export const upsertPlayerVote = async (
         .eq("draft_year", draftYear);
 
       if (user) {
-        query.eq("user_id", user.id);
+        query = query.eq("user_id", user.id);
       } else {
-        query.eq("session_id", sessionId);
+        query = query.eq("session_id", sessionId);
       }
 
       const { error } = await query;
@@ -89,7 +89,7 @@ export const upsertPositionVote = async (
       if (error) throw error;
     } else {
       // 投票を全て削除（positionがnullの場合）
-      const query = supabase
+      let query = supabase
         .from("draft_team_position_votes")
         .delete()
         .eq("team_id", teamId)
@@ -97,9 +97,9 @@ export const upsertPositionVote = async (
         .eq("draft_year", draftYear);
 
       if (user) {
-        query.eq("user_id", user.id);
+        query = query.eq("user_id", user.id);
       } else {
-        query.eq("session_id", sessionId);
+        query = query.eq("session_id", sessionId);
       }
 
       const { error } = await query;
