@@ -212,18 +212,14 @@ export default function DraftPredictions() {
 
     console.log('Vote success');
 
-    // ローカル状態を更新
-    if (isChecked) {
-      setUserPlayerVotes([...userPlayerVotes, { team_id: selectedTeam, public_player_id: player.publicPlayerId }]);
-    } else {
-      setUserPlayerVotes(
-        userPlayerVotes.filter((v) => !(v.team_id === selectedTeam && v.public_player_id === player.publicPlayerId))
-      );
-    }
-
-    // 投票数を再読み込み
+    // 投票数を即座に再読み込み
     const { voteCounts } = await getPlayerVoteCounts(selectedYear);
+    console.log('Updated vote counts:', voteCounts);
     setPlayerVoteCounts(voteCounts);
+
+    // ユーザーの投票状態を更新
+    const { playerVotes } = await getUserVotes(selectedYear);
+    setUserPlayerVotes(playerVotes);
     
     toast({
       title: isChecked ? "投票完了" : "投票取消",
@@ -243,39 +239,26 @@ export default function DraftPredictions() {
       return;
     }
 
-    // ローカル状態を更新
+    // 投票数を即座に再読み込み
+    const { voteCounts } = await getPositionVoteCounts(selectedYear);
+    setPositionVoteCounts(voteCounts);
+
+    // ユーザーの投票状態を更新
+    const { positionVotes } = await getUserVotes(selectedYear);
+    setUserPositionVotes(positionVotes);
+    
+    // 投票完了のフィードバック
     if (position) {
-      const existingIndex = userPositionVotes.findIndex(
-        (v) => v.team_id === selectedTeam && v.draft_round === draftRound
-      );
-      
-      if (existingIndex >= 0) {
-        const newVotes = [...userPositionVotes];
-        newVotes[existingIndex] = { team_id: selectedTeam, position, draft_round: draftRound };
-        setUserPositionVotes(newVotes);
-      } else {
-        setUserPositionVotes([...userPositionVotes, { team_id: selectedTeam, position, draft_round: draftRound }]);
-      }
-      
-      // 投票完了のフィードバック
       toast({
         title: "投票完了",
         description: `${draftRound}位: ${position}に投票しました`,
       });
     } else {
-      setUserPositionVotes(
-        userPositionVotes.filter((v) => !(v.team_id === selectedTeam && v.draft_round === draftRound))
-      );
-      
       toast({
         title: "投票取消",
         description: `${draftRound}位の投票を取り消しました`,
       });
     }
-
-    // 投票数を再読み込み
-    const { voteCounts } = await getPositionVoteCounts(selectedYear);
-    setPositionVoteCounts(voteCounts);
   };
 
   const isPlayerVoted = (playerId: number) => {
@@ -298,12 +281,14 @@ export default function DraftPredictions() {
     return positionVoteCounts[`${selectedTeam}_${draftRound}_${position}`] || 0;
   };
 
-  // ソート: 投票数の多い順
-  const sortedPlayers = [...players].sort((a, b) => {
-    const countA = getPlayerVoteCount(a.id);
-    const countB = getPlayerVoteCount(b.id);
-    return countB - countA;
-  });
+  // ソート: 投票数の多い順（0票の選手は除外）
+  const sortedPlayers = [...players]
+    .filter((p) => getPlayerVoteCount(p.id) > 0)
+    .sort((a, b) => {
+      const countA = getPlayerVoteCount(a.id);
+      const countB = getPlayerVoteCount(b.id);
+      return countB - countA;
+    });
 
   const maxPlayerVotes = Math.max(...sortedPlayers.map((p) => getPlayerVoteCount(p.id)), 1);
 
