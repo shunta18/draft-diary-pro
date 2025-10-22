@@ -764,14 +764,6 @@ export default function AIDraft() {
                     各球団の現実的な指名パターンを自動調整。より本物に近いドラフト結果を生成します。
                   </p>
                 </div>
-                
-                <div>
-                  <h3 className="font-semibold text-primary mb-1">5. スコア重み調整機能</h3>
-                  <p className="text-muted-foreground">
-                    各スコアリング要素の重要度を自由に調整可能。
-                    「投票データ重視」「チームニーズ重視」など、独自のシミュレーション設定でドラフト予想を楽しめます。
-                  </p>
-                </div>
               </div>
               
               <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
