@@ -2123,13 +2123,14 @@ export default function AIDraft() {
                 }}
               >
                 <div 
-                  className="flex flex-col items-start py-16 px-0.5 md:p-4"
+                  className="py-16 px-0.5 md:p-4"
                   style={{ 
                     transform: `scale(${zoomLevel})`,
                     transformOrigin: 'top left',
-                    width: `${100 / zoomLevel}%`,
-                    minWidth: 'max-content',
-                    transition: 'transform 0.2s'
+                    transition: 'transform 0.2s',
+                    display: 'inline-flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start'
                   }}
                 >
                   {/* ロゴとブランディング */}
