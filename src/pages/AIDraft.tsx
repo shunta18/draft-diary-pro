@@ -20,7 +20,7 @@ import { Progress } from "@/components/ui/progress";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import mustacheLogo from "@/assets/mustache-logo.png";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Search, ChevronDown } from "lucide-react";
@@ -2114,8 +2114,8 @@ export default function AIDraft() {
                 </DialogClose>
               </div>
               
-              <div className="flex-1 flex items-start justify-start py-16 px-0.5 md:p-4 overflow-auto w-full">
-                <div className="flex flex-col items-start w-full">
+              <ScrollArea className="flex-1 w-full h-full">
+                <div className="flex flex-col items-start w-full py-16 px-0.5 md:p-4">
                   {/* ロゴとブランディング */}
                   <div className="mb-2 md:mb-3 w-full flex justify-start">
                     <div className="flex items-center gap-0.5 md:gap-2" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }}>
@@ -2130,7 +2130,7 @@ export default function AIDraft() {
                   </div>
                   
                   {/* テーブル */}
-                  <div className="overflow-visible w-full">
+                  <div className="w-full">
                     <div style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'top left' }} className="transition-transform duration-200">
                       <Table className="border-collapse text-[9px]">
                         <TableHeader>
@@ -2244,7 +2244,9 @@ export default function AIDraft() {
                     </div>
                   </div>
                 </div>
-              </div>
+                <ScrollBar orientation="horizontal" />
+                <ScrollBar orientation="vertical" />
+              </ScrollArea>
             </div>
           )}
         </DialogContent>
