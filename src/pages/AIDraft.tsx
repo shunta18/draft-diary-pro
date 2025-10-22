@@ -791,10 +791,10 @@ export default function AIDraft() {
                 </Button>
                 <Button 
                   variant="outline"
-                  onClick={() => navigate("/")}
+                  onClick={() => setShowSignupDialog(false)}
                   className="flex-1"
                 >
-                  ホームに戻る
+                  結果を見る
                 </Button>
               </div>
             </CardContent>
