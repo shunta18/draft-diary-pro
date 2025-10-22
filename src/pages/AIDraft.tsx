@@ -2114,7 +2114,14 @@ export default function AIDraft() {
                 </DialogClose>
               </div>
               
-              <ScrollArea className="flex-1 w-full h-full" style={{ touchAction: 'pan-x pan-y' }}>
+              <div 
+                className="flex-1 w-full h-full overflow-auto"
+                style={{ 
+                  overscrollBehavior: 'contain',
+                  WebkitOverflowScrolling: 'touch',
+                  touchAction: 'pan-x pan-y'
+                }}
+              >
                 <div className="flex flex-col items-start w-full py-16 px-0.5 md:p-4 min-w-max">
                   {/* ロゴとブランディング */}
                   <div className="mb-2 md:mb-3 w-full flex justify-start">
@@ -2155,12 +2162,14 @@ export default function AIDraft() {
                         </TableHeader>
                         <TableBody>
                           {(() => {
+                            // 1巡目の指名をpickLabelでグループ化し、各球団の抽選外れも取得
                             const firstRoundPicks = simulationResult.picks.filter(p => p.round === 1);
                             const firstRoundLostPicks = simulationResult.lostPicks?.filter(p => p.round === 1) || [];
                             
                             const maxRound = Math.max(...simulationResult.picks.map(p => p.round));
                             const rows = [];
                             
+                            // 1巡目は特別処理（全ての指名を「1位」で括る）
                             if (firstRoundPicks.length > 0 || firstRoundLostPicks.length > 0) {
                               const rowsPerTeam = displayOrder.map(teamId => {
                                 const teamPicks = firstRoundPicks.filter(p => p.teamId === teamId);
@@ -2187,7 +2196,7 @@ export default function AIDraft() {
                                       
                                       if (rowIndex >= allTeamItems.length) {
                                         return (
-                                          <TableCell key={teamId} className="text-center border border-gray-300 bg-white text-black px-0.5 py-0.5 whitespace-nowrap text-[9px]">
+                                          <TableCell key={teamId} className="text-center text-gray-400 border border-gray-300 bg-white px-0.5 py-0.5 text-[9px]">
                                             ―
                                           </TableCell>
                                         );
@@ -2244,9 +2253,7 @@ export default function AIDraft() {
                     </div>
                   </div>
                 </div>
-                <ScrollBar orientation="horizontal" />
-                <ScrollBar orientation="vertical" />
-              </ScrollArea>
+              </div>
             </div>
           )}
         </DialogContent>
