@@ -281,12 +281,14 @@ export default function DraftPredictions() {
     return positionVoteCounts[`${selectedTeam}_${draftRound}_${position}`] || 0;
   };
 
-  // ソート: 投票数の多い順
-  const sortedPlayers = [...players].sort((a, b) => {
-    const countA = getPlayerVoteCount(a.id);
-    const countB = getPlayerVoteCount(b.id);
-    return countB - countA;
-  });
+  // ソート: 投票数の多い順（0票の選手は除外）
+  const sortedPlayers = [...players]
+    .filter((p) => getPlayerVoteCount(p.id) > 0)
+    .sort((a, b) => {
+      const countA = getPlayerVoteCount(a.id);
+      const countB = getPlayerVoteCount(b.id);
+      return countB - countA;
+    });
 
   const maxPlayerVotes = Math.max(...sortedPlayers.map((p) => getPlayerVoteCount(p.id)), 1);
 
