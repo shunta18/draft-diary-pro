@@ -23,6 +23,7 @@ export interface SimulationResult {
 // 固定指名（実際に指名を公表している球団）
 const FIXED_FIRST_ROUND_PICKS: Record<number, string> = {
   3: "小島大河",  // 西武ライオンズ
+  7: "竹丸和幸",  // 読売ジャイアンツ
   12: "立石正広"  // 広島カープ
 };
 
