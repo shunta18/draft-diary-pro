@@ -2123,31 +2123,30 @@ export default function AIDraft() {
                 }}
               >
                 <div 
-                  className="py-16 px-0.5 md:p-4"
+                  className="px-2 md:px-4"
                   style={{ 
                     transform: `scale(${zoomLevel})`,
                     transformOrigin: 'top left',
                     transition: 'transform 0.2s',
-                    display: 'inline-flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start'
+                    paddingTop: 'max(env(safe-area-inset-top, 0px) + 5rem, 6rem)',
+                    paddingBottom: '2rem'
                   }}
                 >
                   {/* ロゴとブランディング */}
-                  <div className="mb-2 md:mb-3 w-full flex justify-start">
-                    <div className="flex items-center gap-0.5 md:gap-2">
+                  <div className="mb-2 md:mb-3 flex justify-start">
+                    <div className="flex items-center gap-1 md:gap-2">
                       <img 
                         src="/mustache-logo.png" 
                         alt="BaaS Logo" 
-                        className="h-4 md:h-8 w-auto"
+                        className="h-6 md:h-8 w-auto"
                         loading="lazy"
                       />
-                      <span className="font-semibold text-sm md:text-lg text-black">BaaS 野球スカウトノート</span>
+                      <span className="font-semibold text-base md:text-lg text-black whitespace-nowrap">BaaS 野球スカウトノート</span>
                     </div>
                   </div>
                   
                   {/* テーブル */}
-                  <div className="w-full" style={{ minWidth: 'max-content' }}>
+                  <div style={{ minWidth: 'max-content' }}>
                     <div className="transition-transform duration-200">
                       <Table className="border-collapse text-[9px]">
                         <TableHeader>
