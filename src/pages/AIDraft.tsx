@@ -2122,11 +2122,20 @@ export default function AIDraft() {
                   touchAction: 'pan-x pan-y'
                 }}
               >
-                <div className="flex flex-col items-start w-full py-16 px-0.5 md:p-4 min-w-max">
+                <div 
+                  className="flex flex-col items-start py-16 px-0.5 md:p-4"
+                  style={{ 
+                    transform: `scale(${zoomLevel})`,
+                    transformOrigin: 'top left',
+                    width: `${100 / zoomLevel}%`,
+                    minWidth: 'max-content',
+                    transition: 'transform 0.2s'
+                  }}
+                >
                   {/* ロゴとブランディング */}
                   <div className="mb-2 md:mb-3 w-full flex justify-start">
-                    <div className="flex items-center gap-0.5 md:gap-2" style={{ zoom: zoomLevel }}>
-                      <img
+                    <div className="flex items-center gap-0.5 md:gap-2">
+                      <img 
                         src="/mustache-logo.png" 
                         alt="BaaS Logo" 
                         className="h-4 md:h-8 w-auto"
@@ -2138,7 +2147,7 @@ export default function AIDraft() {
                   
                   {/* テーブル */}
                   <div className="w-full" style={{ minWidth: 'max-content' }}>
-                    <div style={{ zoom: zoomLevel }} className="transition-transform duration-200">
+                    <div className="transition-transform duration-200">
                       <Table className="border-collapse text-[9px]">
                         <TableHeader>
                           <TableRow>
