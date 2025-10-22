@@ -696,7 +696,7 @@ export default function PublicPlayers() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                {user && (user.id === selectedPlayer.user_id || isAdmin) ? (
+                {user ? (
                   <>
                     <Button 
                       variant="outline" 
@@ -709,13 +709,15 @@ export default function PublicPlayers() {
                       <Pencil className="h-4 w-4 mr-2" />
                       編集
                     </Button>
-                    <Button 
-                      variant="destructive" 
-                      onClick={() => handleDelete(selectedPlayer)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      削除
-                    </Button>
+                    {isAdmin && (
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => handleDelete(selectedPlayer)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        削除
+                      </Button>
+                    )}
                   </>
                 ) : (
                   <Button onClick={() => handleImport(selectedPlayer)} className="flex-1">
@@ -820,7 +822,7 @@ export default function PublicPlayers() {
               </div>
 
               <div className="flex gap-2 pt-4">
-                {user && (user.id === selectedDiary.user_id || isAdmin) && (
+                {isAdmin && (
                   <Button 
                     variant="destructive" 
                     onClick={() => handleDeleteDiary(selectedDiary)}
