@@ -92,7 +92,7 @@ export default function PublicPlayers() {
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<PublicPlayer | null>(null);
   const [selectedDiary, setSelectedDiary] = useState<PublicDiaryEntry | null>(null);
-  const [sortBy, setSortBy] = useState<"latest" | "views" | "imports">("latest");
+  const [sortBy, setSortBy] = useState<"evaluation" | "position">("evaluation");
   const [activeTab, setActiveTab] = useState("players");
   const [selectedPlayerIds, setSelectedPlayerIds] = useState<Set<string>>(new Set());
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
@@ -125,13 +125,34 @@ export default function PublicPlayers() {
   });
 
   const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    if (sortBy === "views") {
-      return b.view_count - a.view_count;
-    } else if (sortBy === "imports") {
-      return b.import_count - a.import_count;
-    } else {
-      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (sortBy === "evaluation") {
+      // 評価順でソート（評価が高い順）
+      const aEval = a.evaluations && a.evaluations.length > 0 ? a.evaluations[0] : "";
+      const bEval = b.evaluations && b.evaluations.length > 0 ? b.evaluations[0] : "";
+      const aIndex = evaluationOrder.indexOf(aEval);
+      const bIndex = evaluationOrder.indexOf(bEval);
+      
+      // 評価がない場合は最後に
+      if (aIndex === -1 && bIndex === -1) return 0;
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      
+      return aIndex - bIndex;
+    } else if (sortBy === "position") {
+      // ポジション順でソート
+      const aPos = a.position.split(/[,、]/)[0]?.trim() || "";
+      const bPos = b.position.split(/[,、]/)[0]?.trim() || "";
+      const aIndex = positionOrder.indexOf(aPos);
+      const bIndex = positionOrder.indexOf(bPos);
+      
+      // ポジションが見つからない場合は最後に
+      if (aIndex === -1 && bIndex === -1) return 0;
+      if (aIndex === -1) return 1;
+      if (bIndex === -1) return -1;
+      
+      return aIndex - bIndex;
     }
+    return 0;
   });
 
   const handlePlayerClick = useCallback(async (player: PublicPlayer) => {
@@ -384,10 +405,11 @@ export default function PublicPlayers() {
 
   const resetFilters = () => {
     setSearchTerm("");
-    setSelectedYear("all");
+    setSelectedYear("2025");
     setSelectedCategories([]);
     setSelectedPositions([]);
     setSelectedEvaluations([]);
+    setSortBy("evaluation");
   };
 
   return (
@@ -416,97 +438,155 @@ export default function PublicPlayers() {
           {/* Search and Filter */}
           <Card>
             <CardContent className="p-4 space-y-4">
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                  <Input
-                    placeholder="選手名、チーム名で検索..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline">
-                      <Filter className="h-4 w-4 mr-2" />
-                      絞り込み
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div className="space-y-4">
-                      {/* Filters content */}
-                      <div className="space-y-2">
-                        <Label>年度</Label>
-                        <Select value={selectedYear} onValueChange={setSelectedYear}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="年度を選択" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="all">すべて</SelectItem>
-                            <SelectItem value="2028">2028年</SelectItem>
-                            <SelectItem value="2027">2027年</SelectItem>
-                            <SelectItem value="2026">2026年</SelectItem>
-                            <SelectItem value="2025">2025年</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label>カテゴリ</Label>
-                        {["高校", "大学", "社会人", "独立リーグ"].map((category) => (
-                          <div key={category} className="flex items-center space-x-2">
-                            <Checkbox
-                              id={`category-${category}`}
-                              checked={selectedCategories.includes(category)}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setSelectedCategories([...selectedCategories, category]);
-                                } else {
-                                  setSelectedCategories(selectedCategories.filter(c => c !== category));
-                                }
-                              }}
-                            />
-                            <label htmlFor={`category-${category}`} className="text-sm">{category}</label>
-                          </div>
-                        ))}
-                      </div>
-
-                      <Button variant="outline" onClick={resetFilters} className="w-full">
-                        フィルターをリセット
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
+              {/* 検索バー */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input
+                  placeholder="選手名・所属チーム名で検索"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 w-full">
-                  <Label className="text-sm whitespace-nowrap">並び替え:</Label>
+              {/* フィルターグリッド */}
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {/* 並び替え */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">並び替え</Label>
                   <Select value={sortBy} onValueChange={(value: any) => setSortBy(value)}>
-                    <SelectTrigger className="flex-1">
+                    <SelectTrigger className="h-10">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="latest">投稿日順</SelectItem>
-                      <SelectItem value="views">閲覧数順</SelectItem>
-                      <SelectItem value="imports">インポート数順</SelectItem>
+                    <SelectContent className="bg-card border shadow-lg z-50">
+                      <SelectItem value="evaluation">評価順</SelectItem>
+                      <SelectItem value="position">ポジション順</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                
-                {selectedPlayerIds.size > 0 && (
-                  <div className="flex items-center gap-2 flex-wrap w-full">
-                    <span className="text-sm text-muted-foreground">
-                      {selectedPlayerIds.size}名選択中
-                    </span>
-                    <Button onClick={handleBulkImport} size="sm" className="flex-1">
-                      <Download className="h-4 w-4 mr-2" />
-                      一括インポート
-                    </Button>
-                  </div>
-                )}
+
+                {/* 年度 */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">年度</Label>
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border shadow-lg z-50">
+                      <SelectItem value="all">すべて</SelectItem>
+                      <SelectItem value="2028">2028年度</SelectItem>
+                      <SelectItem value="2027">2027年度</SelectItem>
+                      <SelectItem value="2026">2026年度</SelectItem>
+                      <SelectItem value="2025">2025年度</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* ポジション */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">ポジション</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="h-10 w-full justify-between font-normal">
+                        <span className="truncate">
+                          {selectedPositions.length === 0 ? "全てのポジション" : `${selectedPositions.length}件選択`}
+                        </span>
+                        <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-52 p-3 bg-card border shadow-lg z-50" align="start">
+                      <div className="space-y-2">
+                        {positionOrder.map((position) => (
+                          <div key={position} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`position-${position}`}
+                              checked={selectedPositions.includes(position)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedPositions([...selectedPositions, position]);
+                                } else {
+                                  setSelectedPositions(selectedPositions.filter(p => p !== position));
+                                }
+                              }}
+                            />
+                            <label htmlFor={`position-${position}`} className="text-sm cursor-pointer flex-1">
+                              {position}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* 評価 */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">評価</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="h-10 w-full justify-between font-normal">
+                        <span className="truncate">
+                          {selectedEvaluations.length === 0 ? "全ての評価" : `${selectedEvaluations.length}件選択`}
+                        </span>
+                        <ChevronDown className="h-4 w-4 opacity-50 flex-shrink-0" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-52 p-3 bg-card border shadow-lg z-50" align="start">
+                      <div className="space-y-2">
+                        {evaluationOrder.map((evaluation) => (
+                          <div key={evaluation} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`evaluation-${evaluation}`}
+                              checked={selectedEvaluations.includes(evaluation)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedEvaluations([...selectedEvaluations, evaluation]);
+                                } else {
+                                  setSelectedEvaluations(selectedEvaluations.filter(e => e !== evaluation));
+                                }
+                              }}
+                            />
+                            <label htmlFor={`evaluation-${evaluation}`} className="text-sm cursor-pointer flex-1">
+                              {evaluation}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
+
+              {/* リセットボタン */}
+              <div className="flex justify-end">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={resetFilters}
+                  className="flex items-center gap-2"
+                >
+                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M3 21v-5h5" />
+                  </svg>
+                  リセット
+                </Button>
+              </div>
+
+              {/* 一括インポートボタン */}
+              {selectedPlayerIds.size > 0 && (
+                <div className="flex items-center gap-2 flex-wrap w-full pt-2 border-t">
+                  <span className="text-sm text-muted-foreground">
+                    {selectedPlayerIds.size}名選択中
+                  </span>
+                  <Button onClick={handleBulkImport} size="sm" className="flex-1">
+                    <Download className="h-4 w-4 mr-2" />
+                    一括インポート
+                  </Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
