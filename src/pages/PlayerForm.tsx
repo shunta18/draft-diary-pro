@@ -51,7 +51,7 @@ export default function PlayerForm() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const isPublicPlayer = location.pathname.startsWith('/public-players/');
   const isEditing = !!id;
 
@@ -97,6 +97,17 @@ export default function PlayerForm() {
           // 公開選手を読み込み
           const player = await getPublicPlayerById(id);
           if (player) {
+            // 権限チェック：自分の投稿または管理者のみ編集可能
+            if (user && player.user_id !== user.id && !isAdmin) {
+              toast({
+                title: "アクセス権限がありません",
+                description: "この選手を編集する権限がありません。",
+                variant: "destructive",
+              });
+              navigate("/public-players");
+              return;
+            }
+
             const careerPath = player.career_path && typeof player.career_path === 'object' 
               ? player.career_path as { middle_school?: string; high_school?: string; university?: string; corporate?: string }
               : { middle_school: "", high_school: "", university: "", corporate: "" };
@@ -125,7 +136,7 @@ export default function PlayerForm() {
             });
           }
         } else {
-          // プライベート選手を読み込み
+          // プライベート選手を読み込み（RLSで自動的に権限チェックされる）
           const player = await getPlayerById(parseInt(id));
           if (player) {
             const careerPath = player.career_path && typeof player.career_path === 'object' 
@@ -159,7 +170,7 @@ export default function PlayerForm() {
       };
       loadPlayer();
     }
-  }, [isEditing, id, isPublicPlayer]);
+  }, [isEditing, id, isPublicPlayer, user, isAdmin, navigate, toast]);
 
   // 認証状態を確認中はローディング表示
   if (loading) {
