@@ -328,10 +328,11 @@ export default function PublicPlayers() {
   }, [selectedPlayerIds]);
 
   const handleDelete = useCallback(async (player: PublicPlayer) => {
-    if (!user || user.id !== player.user_id) {
+    // ログインしていない、または（自分の投稿でない かつ 管理者でもない）場合はエラー
+    if (!user || (user.id !== player.user_id && !isAdmin)) {
       toast({
         title: "エラー",
-        description: "自分の投稿のみ削除できます。",
+        description: isAdmin ? "削除に失敗しました。" : "自分の投稿のみ削除できます。",
         variant: "destructive",
       });
       return;
@@ -356,7 +357,7 @@ export default function PublicPlayers() {
         variant: "destructive",
       });
     }
-  }, [user, invalidatePublicPlayers, toast]);
+  }, [user, isAdmin, invalidatePublicPlayers, toast]);
 
   const handleDeleteDiary = useCallback(async (diary: PublicDiaryEntry) => {
     if (!confirm('この観戦日記を削除してもよろしいですか?')) {
