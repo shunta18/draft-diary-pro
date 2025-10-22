@@ -2080,7 +2080,12 @@ export default function AIDraft() {
           {simulationResult && (
             <div className="h-full w-full flex flex-col relative">
               {/* ズームコントロールボタン */}
-              <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+              <div 
+                className="fixed right-4 z-50 flex flex-col gap-2"
+                style={{
+                  bottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)'
+                }}
+              >
                 <Button
                   onClick={handleZoomIn}
                   size="icon"
