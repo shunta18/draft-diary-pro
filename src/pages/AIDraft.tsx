@@ -2119,24 +2119,19 @@ export default function AIDraft() {
                 style={{ 
                   overscrollBehavior: 'contain',
                   WebkitOverflowScrolling: 'touch',
-                  touchAction: 'pan-x pan-y',
-                  display: 'flex',
-                  justifyContent: 'center'
+                  touchAction: 'pan-x pan-y'
                 }}
               >
                 <div 
                   className="py-8 px-2 md:py-16 md:px-4"
                   style={{ 
                     transform: `scale(${zoomLevel})`,
-                    transformOrigin: 'top center',
-                    transition: 'transform 0.2s',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center'
+                    transformOrigin: 'top left',
+                    transition: 'transform 0.2s'
                   }}
                 >
                   {/* ロゴとブランディング */}
-                  <div className="mb-2 md:mb-3 flex justify-center">
+                  <div className="mb-2 md:mb-3 flex justify-start">
                     <div className="flex items-center gap-1 md:gap-2">
                       <img 
                         src="/mustache-logo.png" 
