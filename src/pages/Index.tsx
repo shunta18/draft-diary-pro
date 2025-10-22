@@ -1,4 +1,4 @@
-import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight, Heart, Database, Vote } from "lucide-react";
+import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight, Heart, Database, Vote, Twitter } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
 import { SEO } from "@/components/SEO";
@@ -196,6 +196,33 @@ const Index = () => {
             </AlertDescription>
           </Alert>
         )}
+
+        {/* X(Twitter) Account Section */}
+        <Card className="gradient-card border-0 shadow-soft">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-blue-500/10 rounded-full flex items-center justify-center">
+                  <Twitter className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-primary">Xでアップデート情報を発信しています</p>
+                  <p className="text-xs text-muted-foreground">ぜひフォローしてください</p>
+                </div>
+              </div>
+              <a 
+                href="https://x.com/baas_baseball?s=21&t=UsHy6AF3bKSTyapHH0HEwQ" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" size="sm" className="flex items-center space-x-1">
+                  <Twitter className="h-4 w-4" />
+                  <span>フォロー</span>
+                </Button>
+              </a>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Main Navigation Cards */}
         <div className="grid grid-cols-1 gap-3">
