@@ -1811,7 +1811,7 @@ export default function AIDraft() {
                       <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                  <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
                     <div className="space-y-2">
                       {categories.map((category) => (
                         <div key={category} className="flex items-center space-x-2">
@@ -1850,7 +1850,7 @@ export default function AIDraft() {
                       <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                  <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
                     <div className="space-y-2">
                       {positionOrder.map((position) => (
                         <div key={position} className="flex items-center space-x-2">
@@ -1889,7 +1889,7 @@ export default function AIDraft() {
                       <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                  <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
                     <div className="space-y-2">
                       {evaluationOrder.map((evaluation) => (
                         <div key={evaluation} className="flex items-center space-x-2">
