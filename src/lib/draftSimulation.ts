@@ -105,6 +105,7 @@ export async function runDraftSimulation(
   maxRounds: number = 10,
   weightConfig: WeightConfig,
   draftYear: string = "2025",
+  playerRestrictions?: Map<string, 'none' | 'round1' | 'round2' | 'round3' | 'round4' | 'excluded'>,
   onRoundComplete?: (round: number, partialResult: SimulationResult | null) => void,
   userTeamIds?: number[],
   onUserTeamPick?: (round: number, teamId: number, availablePlayers: NormalizedPlayer[]) => Promise<number>,
@@ -123,6 +124,39 @@ export async function runDraftSimulation(
   const pickedPlayerIds = new Set(existingPicks.map(p => p.playerId));
   let availablePlayers = allPlayers.filter(p => !pickedPlayerIds.has(p.id));
   let unfulfilled1stRoundNeeds = new Map<number, string[]>();
+  
+  // 指名縛りをチェックする関数
+  const checkRestrictions = (round: number) => {
+    if (!playerRestrictions) return;
+    
+    // 各巡目終了後に、その巡目までの縛りがある選手をチェック
+    const restrictionMap: Record<string, number> = {
+      'round1': 1,
+      'round2': 2,
+      'round3': 3,
+      'round4': 4
+    };
+    
+    availablePlayers = availablePlayers.filter(player => {
+      if (!player.publicPlayerId) return true;
+      
+      const restriction = playerRestrictions.get(player.publicPlayerId);
+      if (!restriction || restriction === 'none') return true;
+      
+      // この選手の縛りの巡目を取得
+      const restrictionRound = restrictionMap[restriction];
+      if (!restrictionRound) return true;
+      
+      // 現在の巡目がその縛りの巡目を過ぎていたら除外
+      if (round >= restrictionRound) {
+        // この選手が指名済みかチェック
+        const isPicked = pickedPlayerIds.has(player.id);
+        return isPicked; // 指名済みなら残す、未指名なら除外
+      }
+      
+      return true; // まだ縛りの巡目に達していない
+    });
+  };
   
   for (let round = startFromRound; round <= maxRounds; round++) {
     const waiverOrder = getWaiverOrder(round);
@@ -458,6 +492,9 @@ export async function runDraftSimulation(
     if (onRoundComplete) {
       onRoundComplete(round, { picks, lostPicks, summary });
     }
+    
+    // 指名縛りのチェック（この巡目終了後）
+    checkRestrictions(round);
     
     if (availablePlayers.length === 0) break;
   }
