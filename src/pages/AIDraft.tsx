@@ -1784,69 +1784,31 @@ export default function AIDraft() {
           </DialogHeader>
           
           <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-            {/* Filters */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">選手名</label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="選手名で検索"
-                    value={searchName}
-                    onChange={(e) => setSearchName(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+            {/* 検索バー */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">選手名、チーム、ポジション検索</label>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="選手名、チーム、ポジションで検索"
+                  value={searchName}
+                  onChange={(e) => setSearchName(e.target.value)}
+                  className="pl-9"
+                />
               </div>
-              
+            </div>
+
+            {/* フィルター */}
+            <div className="grid grid-cols-3 gap-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">ポジション</label>
+                <label className="text-sm font-medium">所属</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-between">
                       <span className="truncate">
-                        {filterPositions.length === 0 ? "全ポジション" : `ポジション(${filterPositions.length})`}
+                        {filterCategories.length === 0 ? "すべて" : `${filterCategories.length}件選択中`}
                       </span>
-                      <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-56 p-3 bg-background z-50">
-                    <div className="space-y-2">
-                      {positionOrder.map((position) => (
-                        <div key={position} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`ai-position-${position}`}
-                            checked={filterPositions.includes(position)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setFilterPositions([...filterPositions, position]);
-                              } else {
-                                setFilterPositions(filterPositions.filter(p => p !== position));
-                              }
-                            }}
-                          />
-                          <label
-                            htmlFor={`ai-position-${position}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                          >
-                            {position}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-              
-              <div className="space-y-2">
-                <label className="text-sm font-medium">カテゴリ</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" className="w-full justify-between">
-                      <span className="truncate">
-                        {filterCategories.length === 0 ? "全カテゴリ" : `カテゴリ(${filterCategories.length})`}
-                      </span>
-                      <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                      <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-3 bg-background z-50">
@@ -1878,14 +1840,53 @@ export default function AIDraft() {
               </div>
               
               <div className="space-y-2">
+                <label className="text-sm font-medium">ポジション</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" className="w-full justify-between">
+                      <span className="truncate">
+                        {filterPositions.length === 0 ? "すべて" : `${filterPositions.length}件選択中`}
+                      </span>
+                      <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                    <div className="space-y-2">
+                      {positionOrder.map((position) => (
+                        <div key={position} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`ai-position-${position}`}
+                            checked={filterPositions.includes(position)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setFilterPositions([...filterPositions, position]);
+                              } else {
+                                setFilterPositions(filterPositions.filter(p => p !== position));
+                              }
+                            }}
+                          />
+                          <label
+                            htmlFor={`ai-position-${position}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {position}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+              
+              <div className="space-y-2">
                 <label className="text-sm font-medium">評価</label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button variant="outline" className="w-full justify-between">
                       <span className="truncate">
-                        {filterEvaluations.length === 0 ? "全評価" : `評価(${filterEvaluations.length})`}
+                        {filterEvaluations.length === 0 ? "すべて" : `${filterEvaluations.length}件選択中`}
                       </span>
-                      <ChevronDown className="h-4 w-4 ml-2 opacity-50" />
+                      <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-3 bg-background z-50">
@@ -1922,7 +1923,7 @@ export default function AIDraft() {
                 {filteredAvailablePlayers.length}件の選手が見つかりました
               </span>
               <Button variant="outline" size="sm" onClick={clearFilters}>
-                フィルターをクリア
+                リセット
               </Button>
             </div>
 
