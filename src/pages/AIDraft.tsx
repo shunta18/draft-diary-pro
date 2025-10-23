@@ -153,8 +153,9 @@ export default function AIDraft() {
   const [currentPicks, setCurrentPicks] = useState<DraftPick[]>([]);
   const [zoomLevel, setZoomLevel] = useState(0.55);
   
-  // 選手除外機能用のstate
-  const [excludedPlayerIds, setExcludedPlayerIds] = useState<Set<string>>(new Set());
+  // 選手指名縛り機能用のstate
+  type DraftRestriction = 'none' | 'round1' | 'round2' | 'round3' | 'round4' | 'excluded';
+  const [playerRestrictions, setPlayerRestrictions] = useState<Map<string, DraftRestriction>>(new Map());
   const [playerSearchQuery, setPlayerSearchQuery] = useState('');
   
   const handleZoomIn = () => {
@@ -526,10 +527,12 @@ export default function AIDraft() {
     setShouldStopSimulation(false);
     setInterruptedPickInfo(null); // 新しいシミュレーション開始時にクリア
 
-    // 除外選手をフィルタリング
-    const availablePlayers = players.filter(player => 
-      !player.publicPlayerId || !excludedPlayerIds.has(player.publicPlayerId)
-    );
+    // 「対象外」設定の選手を除外
+    const availablePlayers = players.filter(player => {
+      if (!player.publicPlayerId) return true;
+      const restriction = playerRestrictions.get(player.publicPlayerId);
+      return restriction !== 'excluded';
+    });
 
     try {
       const result = await runDraftSimulation(
@@ -537,6 +540,7 @@ export default function AIDraft() {
         maxRounds,
         weights,
         "2025",
+        playerRestrictions,
         (round, partialResult) => {
           setCurrentSimulationRound(round);
           // 各ラウンド終了後に部分結果を更新
@@ -1073,9 +1077,9 @@ export default function AIDraft() {
             <CardContent>
               <div className="space-y-4">
                 <div>
-                  <Label>ドラフト対象から除外する選手を選択</Label>
+                  <Label>指名縛りの設定</Label>
                   <p className="text-xs text-muted-foreground mt-1">
-                    実際に指名されないと思われる選手を対象から除外できます
+                    各選手に指名の制限を設定できます。設定した巡目までに指名されなければ自動的に対象外となります。
                   </p>
                 </div>
 
@@ -1089,7 +1093,10 @@ export default function AIDraft() {
                     />
                   </div>
                   <div className="text-sm text-muted-foreground whitespace-nowrap">
-                    対象: {players.length - excludedPlayerIds.size} / {players.length} 名
+                    対象: {players.filter(p => {
+                      const restriction = p.publicPlayerId ? playerRestrictions.get(p.publicPlayerId) : 'none';
+                      return restriction !== 'excluded';
+                    }).length} / {players.length} 名
                   </div>
                 </div>
 
@@ -1115,52 +1122,93 @@ export default function AIDraft() {
                         return a.name.localeCompare(b.name, 'ja');
                       })
                       .map((player) => {
-                        const isExcluded = player.publicPlayerId ? excludedPlayerIds.has(player.publicPlayerId) : false;
+                        const restriction = player.publicPlayerId ? (playerRestrictions.get(player.publicPlayerId) || 'none') : 'none';
+                        const restrictionLabel = {
+                          'none': '縛りなし',
+                          'round1': '1位縛り',
+                          'round2': '2位縛り',
+                          'round3': '3位縛り',
+                          'round4': '4位縛り',
+                          'excluded': '対象外'
+                        }[restriction];
+                        
                         return (
                           <div
                             key={player.publicPlayerId || player.id}
                             className={`
                               flex items-center justify-between p-3 rounded-lg border transition-all
-                              ${isExcluded ? 'bg-muted/50 opacity-60' : 'bg-card hover:bg-accent/5'}
+                              ${restriction === 'excluded' ? 'bg-muted/50 opacity-60' : 'bg-card hover:bg-accent/5'}
                             `}
                           >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <h3 className={`font-semibold ${isExcluded && 'line-through text-muted-foreground'}`}>
-                                  {player.name}
-                                </h3>
-                                <span className="text-sm text-muted-foreground">
-                                  {player.team}
-                                </span>
-                                <Badge variant="secondary" className="text-xs">
-                                  {player.position.join('/')}
-                                </Badge>
+                            <div className="flex-1 min-w-0 mr-3">
+                              <div className="font-medium">{player.name}</div>
+                              <div className="flex gap-2 mt-1 text-xs text-muted-foreground flex-wrap">
+                                <span>{player.team}</span>
+                                <span>•</span>
+                                <span>{Array.isArray(player.position) ? player.position.join(", ") : player.position}</span>
                                 {player.evaluations && player.evaluations.length > 0 && (
-                                  <span className="text-xs text-muted-foreground">
-                                    {player.evaluations[0]}
-                                  </span>
+                                  <>
+                                    <span>•</span>
+                                    <span>{player.evaluations[0]}</span>
+                                  </>
+                                )}
+                                {restriction !== 'none' && (
+                                  <>
+                                    <span>•</span>
+                                    <Badge variant="secondary" className="text-xs">
+                                      {restrictionLabel}
+                                    </Badge>
+                                  </>
                                 )}
                               </div>
                             </div>
-                            <Button
-                              variant={isExcluded ? "outline" : "default"}
-                              size="sm"
-                              onClick={() => {
-                                if (player.publicPlayerId) {
-                                  setExcludedPlayerIds(prev => {
-                                    const newSet = new Set(prev);
-                                    if (newSet.has(player.publicPlayerId!)) {
-                                      newSet.delete(player.publicPlayerId!);
-                                    } else {
-                                      newSet.add(player.publicPlayerId!);
-                                    }
-                                    return newSet;
-                                  });
-                                }
-                              }}
-                            >
-                              {isExcluded ? "対象に含める" : "対象から除外"}
-                            </Button>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="whitespace-nowrap"
+                                >
+                                  指名縛り
+                                  <ChevronDown className="ml-1 h-4 w-4" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-40 p-2 bg-card border shadow-lg z-50" align="end">
+                                <div className="space-y-1">
+                                  {[
+                                    { value: 'none', label: '縛りなし' },
+                                    { value: 'round1', label: '1位縛り' },
+                                    { value: 'round2', label: '2位縛り' },
+                                    { value: 'round3', label: '3位縛り' },
+                                    { value: 'round4', label: '4位縛り' },
+                                    { value: 'excluded', label: '対象外' }
+                                  ].map((option) => (
+                                    <button
+                                      key={option.value}
+                                      className={`
+                                        w-full text-left px-3 py-2 text-sm rounded hover:bg-accent transition-colors
+                                        ${restriction === option.value ? 'bg-accent font-medium' : ''}
+                                      `}
+                                      onClick={() => {
+                                        if (player.publicPlayerId) {
+                                          setPlayerRestrictions(prev => {
+                                            const newMap = new Map(prev);
+                                            if (option.value === 'none') {
+                                              newMap.delete(player.publicPlayerId!);
+                                            } else {
+                                              newMap.set(player.publicPlayerId!, option.value as DraftRestriction);
+                                            }
+                                            return newMap;
+                                          });
+                                        }
+                                      }}
+                                    >
+                                      {option.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
                           </div>
                         );
                       })}
@@ -1320,6 +1368,7 @@ export default function AIDraft() {
                       maxRounds,
                       weights,
                       "2025",
+                      playerRestrictions,
                       (round, partialResult) => {
                         setCurrentSimulationRound(round);
                         // 部分結果を即座に反映
