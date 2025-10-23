@@ -1100,16 +1100,164 @@ export default function AIDraft() {
                   </div>
                 </div>
 
+                {/* メイン画面用フィルター */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">所属</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          <span className="truncate">
+                            {filterCategories.length === 0 ? "すべて" : `${filterCategories.length}件選択中`}
+                          </span>
+                          <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
+                        <div className="space-y-2">
+                          {categories.map((category) => (
+                            <div key={category} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`main-category-${category}`}
+                                checked={filterCategories.includes(category)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setFilterCategories([...filterCategories, category]);
+                                  } else {
+                                    setFilterCategories(filterCategories.filter(c => c !== category));
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor={`main-category-${category}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {category}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">ポジション</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          <span className="truncate">
+                            {filterPositions.length === 0 ? "すべて" : `${filterPositions.length}件選択中`}
+                          </span>
+                          <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
+                        <div className="space-y-2">
+                          {positionOrder.map((position) => (
+                            <div key={position} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`main-position-${position}`}
+                                checked={filterPositions.includes(position)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setFilterPositions([...filterPositions, position]);
+                                  } else {
+                                    setFilterPositions(filterPositions.filter(p => p !== position));
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor={`main-position-${position}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {position}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">評価</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-between">
+                          <span className="truncate">
+                            {filterEvaluations.length === 0 ? "すべて" : `${filterEvaluations.length}件選択中`}
+                          </span>
+                          <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
+                        <div className="space-y-2">
+                          {evaluationOrder.map((evaluation) => (
+                            <div key={evaluation} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`main-evaluation-${evaluation}`}
+                                checked={filterEvaluations.includes(evaluation)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setFilterEvaluations([...filterEvaluations, evaluation]);
+                                  } else {
+                                    setFilterEvaluations(filterEvaluations.filter(e => e !== evaluation));
+                                  }
+                                }}
+                              />
+                              <label
+                                htmlFor={`main-evaluation-${evaluation}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                              >
+                                {evaluation}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+
+                {/* リセットボタン */}
+                <div className="flex justify-end">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setFilterCategories([]);
+                      setFilterPositions([]);
+                      setFilterEvaluations([]);
+                      setPlayerSearchQuery('');
+                    }}
+                  >
+                    リセット
+                  </Button>
+                </div>
+
                 <ScrollArea className="h-[400px] w-full border rounded-lg">
                   <div className="p-4 space-y-2">
                     {players
                       .filter(player => {
+                        // 検索クエリでフィルター
                         const searchLower = playerSearchQuery.toLowerCase();
-                        return (
+                        const matchesSearch = (
                           player.name.toLowerCase().includes(searchLower) ||
                           player.team.toLowerCase().includes(searchLower) ||
                           player.position.some(p => p.toLowerCase().includes(searchLower))
                         );
+                        
+                        // カテゴリでフィルター
+                        const matchesCategory = filterCategories.length === 0 || filterCategories.includes(player.category);
+                        
+                        // ポジションでフィルター
+                        const matchesPosition = filterPositions.length === 0 || player.position.some(p => filterPositions.includes(p));
+                        
+                        // 評価でフィルター
+                        const matchesEvaluation = filterEvaluations.length === 0 || player.evaluations.some(e => filterEvaluations.includes(e));
+                        
+                        return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation;
                       })
                       .sort((a, b) => {
                         const rankA = getHighestEvaluationRank(a.evaluations);
@@ -1811,7 +1959,7 @@ export default function AIDraft() {
                       <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                  <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
                     <div className="space-y-2">
                       {categories.map((category) => (
                         <div key={category} className="flex items-center space-x-2">
@@ -1850,7 +1998,7 @@ export default function AIDraft() {
                       <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                  <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
                     <div className="space-y-2">
                       {positionOrder.map((position) => (
                         <div key={position} className="flex items-center space-x-2">
@@ -1889,7 +2037,7 @@ export default function AIDraft() {
                       <ChevronDown className="h-4 w-4 ml-2 opacity-50 flex-shrink-0" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 p-3 bg-background z-50">
+                  <PopoverContent className="w-56 p-3 bg-popover border shadow-md z-[9999]">
                     <div className="space-y-2">
                       {evaluationOrder.map((evaluation) => (
                         <div key={evaluation} className="flex items-center space-x-2">
