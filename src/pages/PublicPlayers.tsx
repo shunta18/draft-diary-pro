@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry, type Player } from "@/lib/supabase-storage";
+import { importPlayerFromPublic, deletePublicPlayer, type PublicPlayer, deletePublicDiaryEntry, incrementDiaryViewCount, type PublicDiaryEntry, type Player } from "@/lib/supabase-storage";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -155,17 +155,15 @@ export default function PublicPlayers() {
     return 0;
   });
 
-  const handlePlayerClick = useCallback(async (player: PublicPlayer) => {
+  const handlePlayerClick = useCallback((player: PublicPlayer) => {
     setSelectedPlayer(player);
-    await incrementPublicPlayerViewCount(player.id);
-    invalidatePublicPlayers();
-  }, [invalidatePublicPlayers]);
+  }, []);
 
-  const handleDiaryClick = useCallback(async (diary: PublicDiaryEntry) => {
+  const handleDiaryClick = useCallback((diary: PublicDiaryEntry) => {
     setSelectedDiary(diary);
-    await incrementPublicDiaryViewCount(diary.id);
-    invalidatePublicDiaries();
-  }, [invalidatePublicDiaries]);
+    // Increment view count when diary is clicked
+    incrementDiaryViewCount(diary.id);
+  }, []);
 
 
   const checkForDuplicates = async (playerToImport: PublicPlayer) => {
@@ -822,26 +820,9 @@ export default function PublicPlayers() {
           </DialogHeader>
           {selectedDiary && (
             <div className="space-y-4">
-              <Link 
-                to={`/public-players/users/${selectedDiary.user_id}`}
-                className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
-                onClick={() => setSelectedDiary(null)}
-              >
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={selectedDiary.profile?.avatar_url} />
-                  <AvatarFallback><User /></AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-medium">{selectedDiary.profile?.display_name || "名無し"}</p>
-                  <p className="text-sm text-muted-foreground">投稿者</p>
-                </div>
-              </Link>
-
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">閲覧数: {selectedDiary.view_count}</span>
-                </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 bg-muted rounded-lg">
+                <Eye className="h-4 w-4" />
+                <span>{selectedDiary.view_count || 0} 閲覧</span>
               </div>
 
               <div className="space-y-4">

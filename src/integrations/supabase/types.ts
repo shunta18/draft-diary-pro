@@ -142,6 +142,7 @@ export type Database = {
           created_at: string
           data: Json
           id: string
+          team_name: string | null
           updated_at: string
           user_id: string
         }
@@ -149,6 +150,7 @@ export type Database = {
           created_at?: string
           data: Json
           id?: string
+          team_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -156,6 +158,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
+          team_name?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -399,7 +402,6 @@ export type Database = {
           created_at: string
           date: string
           id: string
-          import_count: number
           match_card: string
           original_diary_id: number | null
           overall_impression: string | null
@@ -417,7 +419,6 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
-          import_count?: number
           match_card: string
           original_diary_id?: number | null
           overall_impression?: string | null
@@ -425,7 +426,7 @@ export type Database = {
           score: string
           tournament_name?: string | null
           updated_at?: string
-          user_id: string
+          user_id?: string
           venue: string
           videos?: string[] | null
           view_count?: number
@@ -435,7 +436,6 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          import_count?: number
           match_card?: string
           original_diary_id?: number | null
           overall_impression?: string | null
@@ -453,26 +453,34 @@ export type Database = {
       public_diary_views: {
         Row: {
           created_at: string
+          diary_id: string
           id: string
-          public_diary_id: string
           session_id: string | null
           user_id: string | null
         }
         Insert: {
           created_at?: string
+          diary_id: string
           id?: string
-          public_diary_id: string
           session_id?: string | null
           user_id?: string | null
         }
         Update: {
           created_at?: string
+          diary_id?: string
           id?: string
-          public_diary_id?: string
           session_id?: string | null
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "public_diary_views_diary_id_fkey"
+            columns: ["diary_id"]
+            isOneToOne: false
+            referencedRelation: "public_diary_entries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       public_players: {
         Row: {
@@ -485,8 +493,6 @@ export type Database = {
           height: number | null
           hometown: string | null
           id: string
-          import_count: number
-          is_favorite: boolean
           main_position: string | null
           memo: string | null
           name: string
@@ -499,7 +505,6 @@ export type Database = {
           usage: string | null
           user_id: string
           videos: string[] | null
-          view_count: number
           weight: number | null
           year: number | null
         }
@@ -513,8 +518,6 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: string
-          import_count?: number
-          is_favorite?: boolean
           main_position?: string | null
           memo?: string | null
           name: string
@@ -527,7 +530,6 @@ export type Database = {
           usage?: string | null
           user_id: string
           videos?: string[] | null
-          view_count?: number
           weight?: number | null
           year?: number | null
         }
@@ -541,8 +543,6 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: string
-          import_count?: number
-          is_favorite?: boolean
           main_position?: string | null
           memo?: string | null
           name?: string
@@ -555,30 +555,8 @@ export type Database = {
           usage?: string | null
           user_id?: string
           videos?: string[] | null
-          view_count?: number
           weight?: number | null
           year?: number | null
-        }
-        Relationships: []
-      }
-      user_follows: {
-        Row: {
-          created_at: string
-          follower_id: string
-          following_id: string
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          follower_id: string
-          following_id: string
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          follower_id?: string
-          following_id?: string
-          id?: string
         }
         Relationships: []
       }
@@ -608,10 +586,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      delete_user: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      delete_user: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -619,14 +594,16 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_player_import_count: {
-        Args: { player_id: string }
-        Returns: undefined
-      }
-      increment_player_view_count: {
-        Args: { player_id: string }
-        Returns: undefined
-      }
+      increment_diary_view_count:
+        | {
+            Args: {
+              diary_id: string
+              p_session_id?: string
+              p_user_id?: string
+            }
+            Returns: undefined
+          }
+        | { Args: { diary_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

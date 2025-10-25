@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ArrowLeft, Download, Eye, User, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Download, User, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ import {
   getPublicPlayersByUserId, 
   getUserProfileById, 
   importPlayerFromPublic,
-  incrementPublicPlayerViewCount,
   getPlayers,
   type PublicPlayer,
   type Profile,
@@ -109,10 +108,8 @@ export default function UserPublicPlayers() {
     }
   };
 
-  const handlePlayerClick = async (player: PublicPlayer) => {
+  const handlePlayerClick = (player: PublicPlayer) => {
     setSelectedPlayer(player);
-    await incrementPublicPlayerViewCount(player.id);
-    loadData();
   };
 
   const checkForDuplicates = async (playerToImport: PublicPlayer) => {
@@ -287,8 +284,6 @@ export default function UserPublicPlayers() {
                   )}
                   <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
                     <span>{players.length} 選手を公開</span>
-                    <span>総閲覧数: {players.reduce((sum, p) => sum + p.view_count, 0)}</span>
-                    <span>総インポート数: {players.reduce((sum, p) => sum + p.import_count, 0)}</span>
                   </div>
                 </div>
               </div>
@@ -338,14 +333,6 @@ export default function UserPublicPlayers() {
                     </div>
 
                     <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-3 w-3" />
-                        <span>{player.view_count}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Download className="h-3 w-3" />
-                        <span>{player.import_count}</span>
-                      </div>
                     </div>
                   </div>
                 </CardContent>
