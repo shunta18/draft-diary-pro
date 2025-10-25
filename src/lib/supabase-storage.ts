@@ -869,6 +869,7 @@ export interface PublicDiaryEntry {
   player_comments?: string;
   overall_impression?: string;
   videos?: string[];
+  view_count?: number;
   created_at: string;
   updated_at: string;
   profile?: Profile;

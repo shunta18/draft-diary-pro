@@ -409,8 +409,10 @@ export type Database = {
           score: string
           tournament_name: string | null
           updated_at: string
+          user_id: string
           venue: string
           videos: string[] | null
+          view_count: number
         }
         Insert: {
           category: string
@@ -424,8 +426,10 @@ export type Database = {
           score: string
           tournament_name?: string | null
           updated_at?: string
+          user_id?: string
           venue: string
           videos?: string[] | null
+          view_count?: number
         }
         Update: {
           category?: string
@@ -439,8 +443,10 @@ export type Database = {
           score?: string
           tournament_name?: string | null
           updated_at?: string
+          user_id?: string
           venue?: string
           videos?: string[] | null
+          view_count?: number
         }
         Relationships: []
       }
