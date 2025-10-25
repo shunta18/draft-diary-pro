@@ -1116,19 +1116,8 @@ export const incrementPublicDiaryViewCount = async (diaryId: string): Promise<vo
       session_id: user ? null : sessionId
     });
 
-  // Get current count and increment
-  const { data: currentEntry } = await supabase
-    .from('public_diary_entries' as any)
-    .select('view_count')
-    .eq('id', diaryId)
-    .single();
-  
-  if (currentEntry) {
-    await supabase
-      .from('public_diary_entries' as any)
-      .update({ view_count: ((currentEntry as any).view_count || 0) + 1 })
-      .eq('id', diaryId);
-  }
+  // Atomically increment view count
+  await supabase.rpc('increment_diary_view_count', { diary_id: diaryId });
 };
 
 export const importDiaryFromPublic = async (publicDiaryId: string): Promise<void> => {

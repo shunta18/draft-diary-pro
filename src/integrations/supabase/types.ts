@@ -402,7 +402,6 @@ export type Database = {
           created_at: string
           date: string
           id: string
-          import_count: number
           match_card: string
           original_diary_id: number | null
           overall_impression: string | null
@@ -410,7 +409,6 @@ export type Database = {
           score: string
           tournament_name: string | null
           updated_at: string
-          user_id: string
           venue: string
           videos: string[] | null
           view_count: number
@@ -420,7 +418,6 @@ export type Database = {
           created_at?: string
           date: string
           id?: string
-          import_count?: number
           match_card: string
           original_diary_id?: number | null
           overall_impression?: string | null
@@ -428,7 +425,6 @@ export type Database = {
           score: string
           tournament_name?: string | null
           updated_at?: string
-          user_id: string
           venue: string
           videos?: string[] | null
           view_count?: number
@@ -438,7 +434,6 @@ export type Database = {
           created_at?: string
           date?: string
           id?: string
-          import_count?: number
           match_card?: string
           original_diary_id?: number | null
           overall_impression?: string | null
@@ -446,7 +441,6 @@ export type Database = {
           score?: string
           tournament_name?: string | null
           updated_at?: string
-          user_id?: string
           venue?: string
           videos?: string[] | null
           view_count?: number
@@ -488,8 +482,6 @@ export type Database = {
           height: number | null
           hometown: string | null
           id: string
-          import_count: number
-          is_favorite: boolean
           main_position: string | null
           memo: string | null
           name: string
@@ -502,7 +494,6 @@ export type Database = {
           usage: string | null
           user_id: string
           videos: string[] | null
-          view_count: number
           weight: number | null
           year: number | null
         }
@@ -516,8 +507,6 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: string
-          import_count?: number
-          is_favorite?: boolean
           main_position?: string | null
           memo?: string | null
           name: string
@@ -530,7 +519,6 @@ export type Database = {
           usage?: string | null
           user_id: string
           videos?: string[] | null
-          view_count?: number
           weight?: number | null
           year?: number | null
         }
@@ -544,8 +532,6 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: string
-          import_count?: number
-          is_favorite?: boolean
           main_position?: string | null
           memo?: string | null
           name?: string
@@ -558,30 +544,8 @@ export type Database = {
           usage?: string | null
           user_id?: string
           videos?: string[] | null
-          view_count?: number
           weight?: number | null
           year?: number | null
-        }
-        Relationships: []
-      }
-      user_follows: {
-        Row: {
-          created_at: string
-          follower_id: string
-          following_id: string
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          follower_id: string
-          following_id: string
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          follower_id?: string
-          following_id?: string
-          id?: string
         }
         Relationships: []
       }
@@ -618,6 +582,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_diary_view_count: {
+        Args: { diary_id: string }
+        Returns: undefined
       }
       increment_player_import_count: {
         Args: { player_id: string }
