@@ -820,20 +820,10 @@ export default function PublicPlayers() {
           </DialogHeader>
           {selectedDiary && (
             <div className="space-y-4">
-              <Link 
-                to={`/public-players/users/${selectedDiary.user_id}`}
-                className="flex items-center gap-3 p-3 bg-muted rounded-lg hover:bg-muted/80 transition-colors"
-                onClick={() => setSelectedDiary(null)}
-              >
-                <Avatar className="h-12 w-12">
-                  <AvatarImage src={selectedDiary.profile?.avatar_url} />
-                  <AvatarFallback><User /></AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <p className="font-medium">{selectedDiary.profile?.display_name || "名無し"}</p>
-                  <p className="text-sm text-muted-foreground">投稿者</p>
-                </div>
-              </Link>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground p-3 bg-muted rounded-lg">
+                <Eye className="h-4 w-4" />
+                <span>{selectedDiary.view_count || 0} 閲覧</span>
+              </div>
 
               <div className="space-y-4">
                 <div>

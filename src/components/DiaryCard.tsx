@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { User } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { PublicDiaryEntry } from "@/lib/supabase-storage";
@@ -32,8 +32,8 @@ export const DiaryCard = memo(function DiaryCard({
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground pt-2 border-t">
             <div className="flex items-center gap-1 ml-auto">
-              <User className="h-3 w-3" />
-              <span>{diary.profile?.display_name || "名無し"}</span>
+              <Eye className="h-3 w-3" />
+              <span>{diary.view_count || 0} 閲覧</span>
             </div>
           </div>
         </div>

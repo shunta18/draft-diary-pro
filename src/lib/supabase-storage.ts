@@ -928,8 +928,22 @@ export const deletePublicDiaryEntry = async (id: string): Promise<void> => {
 
 export const incrementDiaryViewCount = async (diaryId: string): Promise<void> => {
   try {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Get or create session ID for anonymous users
+    let sessionId: string | null = null;
+    if (!user) {
+      sessionId = localStorage.getItem('diary_session_id');
+      if (!sessionId) {
+        sessionId = crypto.randomUUID();
+        localStorage.setItem('diary_session_id', sessionId);
+      }
+    }
+
     const { error } = await supabase.rpc('increment_diary_view_count', {
-      diary_id: diaryId
+      diary_id: diaryId,
+      p_user_id: user?.id || null,
+      p_session_id: sessionId
     });
 
     if (error) {

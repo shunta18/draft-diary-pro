@@ -450,6 +450,38 @@ export type Database = {
         }
         Relationships: []
       }
+      public_diary_views: {
+        Row: {
+          created_at: string
+          diary_id: string
+          id: string
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          diary_id: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          diary_id?: string
+          id?: string
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_diary_views_diary_id_fkey"
+            columns: ["diary_id"]
+            isOneToOne: false
+            referencedRelation: "public_diary_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       public_players: {
         Row: {
           age: number | null
@@ -562,10 +594,16 @@ export type Database = {
         }
         Returns: boolean
       }
-      increment_diary_view_count: {
-        Args: { diary_id: string }
-        Returns: undefined
-      }
+      increment_diary_view_count:
+        | {
+            Args: {
+              diary_id: string
+              p_session_id?: string
+              p_user_id?: string
+            }
+            Returns: undefined
+          }
+        | { Args: { diary_id: string }; Returns: undefined }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"
