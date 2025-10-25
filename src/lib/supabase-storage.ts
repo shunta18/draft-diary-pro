@@ -926,6 +926,20 @@ export const deletePublicDiaryEntry = async (id: string): Promise<void> => {
 };
 
 
+export const incrementDiaryViewCount = async (diaryId: string): Promise<void> => {
+  try {
+    const { error } = await supabase.rpc('increment_diary_view_count', {
+      diary_id: diaryId
+    });
+
+    if (error) {
+      console.error('Failed to increment diary view count:', error);
+    }
+  } catch (error) {
+    console.error('Failed to increment diary view count:', error);
+  }
+};
+
 export const importDiaryFromPublic = async (publicDiaryId: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
   

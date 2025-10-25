@@ -562,6 +562,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_diary_view_count: {
+        Args: { diary_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "moderator" | "user"

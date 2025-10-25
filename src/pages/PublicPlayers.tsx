@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { importPlayerFromPublic, deletePublicPlayer, type PublicPlayer, deletePublicDiaryEntry, type PublicDiaryEntry, type Player } from "@/lib/supabase-storage";
+import { importPlayerFromPublic, deletePublicPlayer, type PublicPlayer, deletePublicDiaryEntry, incrementDiaryViewCount, type PublicDiaryEntry, type Player } from "@/lib/supabase-storage";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -161,6 +161,8 @@ export default function PublicPlayers() {
 
   const handleDiaryClick = useCallback((diary: PublicDiaryEntry) => {
     setSelectedDiary(diary);
+    // Increment view count when diary is clicked
+    incrementDiaryViewCount(diary.id);
   }, []);
 
 
