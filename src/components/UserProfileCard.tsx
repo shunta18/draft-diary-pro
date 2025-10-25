@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Eye, Upload, UserPlus, UserMinus, User } from "lucide-react";
+import { Upload, User } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -7,20 +7,14 @@ import { UserProfileWithStats } from "@/lib/supabase-storage";
 
 interface UserProfileCardProps {
   userProfile: UserProfileWithStats;
-  isFollowing: boolean;
   currentUserId?: string;
-  loading: boolean;
   onNavigate: () => void;
-  onFollow: (userId: string, e: React.MouseEvent) => void;
 }
 
 export const UserProfileCard = memo(function UserProfileCard({
   userProfile,
-  isFollowing,
   currentUserId,
-  loading,
   onNavigate,
-  onFollow,
 }: UserProfileCardProps) {
   return (
     <Card 
@@ -42,7 +36,7 @@ export const UserProfileCard = memo(function UserProfileCard({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+          <div className="grid grid-cols-1 gap-2 pt-2 border-t">
             <div className="text-center">
               <div className="flex items-center justify-center gap-1 text-muted-foreground">
                 <Upload className="h-3 w-3" />
@@ -50,35 +44,7 @@ export const UserProfileCard = memo(function UserProfileCard({
               <p className="text-lg font-bold">{userProfile.upload_count}</p>
               <p className="text-xs text-muted-foreground">アップロード</p>
             </div>
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1 text-muted-foreground">
-                <Eye className="h-3 w-3" />
-              </div>
-              <p className="text-lg font-bold">{userProfile.total_views}</p>
-              <p className="text-xs text-muted-foreground">総閲覧数</p>
-            </div>
           </div>
-
-          {currentUserId && currentUserId !== userProfile.user_id && (
-            <Button
-              variant={isFollowing ? "secondary" : "outline"}
-              size="sm"
-              className="w-full"
-              onClick={(e) => onFollow(userProfile.user_id, e)}
-            >
-              {isFollowing ? (
-                <>
-                  <UserMinus className="w-4 h-4 mr-1" />
-                  フォロー中
-                </>
-              ) : (
-                <>
-                  <UserPlus className="w-4 h-4 mr-1" />
-                  フォロー
-                </>
-              )}
-            </Button>
-          )}
         </div>
       </CardContent>
     </Card>

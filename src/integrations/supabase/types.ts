@@ -411,7 +411,6 @@ export type Database = {
           updated_at: string
           venue: string
           videos: string[] | null
-          view_count: number
         }
         Insert: {
           category: string
@@ -427,7 +426,6 @@ export type Database = {
           updated_at?: string
           venue: string
           videos?: string[] | null
-          view_count?: number
         }
         Update: {
           category?: string
@@ -443,31 +441,6 @@ export type Database = {
           updated_at?: string
           venue?: string
           videos?: string[] | null
-          view_count?: number
-        }
-        Relationships: []
-      }
-      public_diary_views: {
-        Row: {
-          created_at: string
-          id: string
-          public_diary_id: string
-          session_id: string | null
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          public_diary_id: string
-          session_id?: string | null
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          public_diary_id?: string
-          session_id?: string | null
-          user_id?: string | null
         }
         Relationships: []
       }
@@ -482,7 +455,6 @@ export type Database = {
           height: number | null
           hometown: string | null
           id: string
-          import_count: number
           main_position: string | null
           memo: string | null
           name: string
@@ -495,7 +467,6 @@ export type Database = {
           usage: string | null
           user_id: string
           videos: string[] | null
-          view_count: number
           weight: number | null
           year: number | null
         }
@@ -509,7 +480,6 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: string
-          import_count?: number
           main_position?: string | null
           memo?: string | null
           name: string
@@ -522,7 +492,6 @@ export type Database = {
           usage?: string | null
           user_id: string
           videos?: string[] | null
-          view_count?: number
           weight?: number | null
           year?: number | null
         }
@@ -536,7 +505,6 @@ export type Database = {
           height?: number | null
           hometown?: string | null
           id?: string
-          import_count?: number
           main_position?: string | null
           memo?: string | null
           name?: string
@@ -549,30 +517,8 @@ export type Database = {
           usage?: string | null
           user_id?: string
           videos?: string[] | null
-          view_count?: number
           weight?: number | null
           year?: number | null
-        }
-        Relationships: []
-      }
-      user_follows: {
-        Row: {
-          created_at: string
-          follower_id: string
-          following_id: string
-          id: string
-        }
-        Insert: {
-          created_at?: string
-          follower_id: string
-          following_id: string
-          id?: string
-        }
-        Update: {
-          created_at?: string
-          follower_id?: string
-          following_id?: string
-          id?: string
         }
         Relationships: []
       }
@@ -609,18 +555,6 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
-      }
-      increment_diary_view_count: {
-        Args: { diary_id: string }
-        Returns: undefined
-      }
-      increment_player_import_count: {
-        Args: { player_id: string }
-        Returns: undefined
-      }
-      increment_player_view_count: {
-        Args: { player_id: string }
-        Returns: undefined
       }
     }
     Enums: {

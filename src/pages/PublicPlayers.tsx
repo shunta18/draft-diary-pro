@@ -13,7 +13,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { importPlayerFromPublic, incrementPublicPlayerViewCount, deletePublicPlayer, type PublicPlayer, incrementPublicDiaryViewCount, deletePublicDiaryEntry, type PublicDiaryEntry, type Player } from "@/lib/supabase-storage";
+import { importPlayerFromPublic, deletePublicPlayer, type PublicPlayer, deletePublicDiaryEntry, type PublicDiaryEntry, type Player } from "@/lib/supabase-storage";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -155,17 +155,13 @@ export default function PublicPlayers() {
     return 0;
   });
 
-  const handlePlayerClick = useCallback(async (player: PublicPlayer) => {
+  const handlePlayerClick = useCallback((player: PublicPlayer) => {
     setSelectedPlayer(player);
-    await incrementPublicPlayerViewCount(player.id);
-    invalidatePublicPlayers();
-  }, [invalidatePublicPlayers]);
+  }, []);
 
-  const handleDiaryClick = useCallback(async (diary: PublicDiaryEntry) => {
+  const handleDiaryClick = useCallback((diary: PublicDiaryEntry) => {
     setSelectedDiary(diary);
-    await incrementPublicDiaryViewCount(diary.id);
-    invalidatePublicDiaries();
-  }, [invalidatePublicDiaries]);
+  }, []);
 
 
   const checkForDuplicates = async (playerToImport: PublicPlayer) => {
@@ -836,13 +832,6 @@ export default function PublicPlayers() {
                   <p className="text-sm text-muted-foreground">投稿者</p>
                 </div>
               </Link>
-
-              <div className="p-4 bg-muted rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm">閲覧数: {selectedDiary.view_count}</span>
-                </div>
-              </div>
 
               <div className="space-y-4">
                 <div>

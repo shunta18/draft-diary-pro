@@ -88,8 +88,6 @@ export interface PublicPlayer {
   videos?: string[];
   main_position?: string;
   is_favorite?: boolean;
-  view_count: number;
-  import_count: number;
   created_at: string;
   updated_at: string;
   profiles?: any;
@@ -102,8 +100,6 @@ export interface UserProfileWithStats {
   bio?: string;
   social_links?: SocialLink[];
   upload_count: number;
-  total_views: number;
-  total_imports: number;
 }
 
 // Player Functions
@@ -586,8 +582,6 @@ export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
     // プロフィール情報なしで返す
     return players.map(player => ({
       ...player,
-      view_count: (player as any).view_count || 0,
-      import_count: (player as any).import_count || 0,
       profiles: undefined,
       career_path: player.career_path as PublicPlayer['career_path']
     }));
@@ -618,8 +612,6 @@ export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | nu
     
     return {
       ...player,
-      view_count: (player as any).view_count || 0,
-      import_count: (player as any).import_count || 0,
       profiles: profile,
       career_path: player.career_path as PublicPlayer['career_path']
     };
@@ -635,32 +627,9 @@ export const importPlayerFromPublic = async (publicPlayerId: string): Promise<Pl
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // Check if already imported to prevent duplicates
-    const { data: existingImport } = await supabase
-      .from('public_player_imports' as any)
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('public_player_id', publicPlayerId)
-      .maybeSingle();
-
-    if (existingImport) {
-      console.log('Player already imported by this user');
-      throw new Error('この選手は既にインポート済みです');
-    }
-
     const publicPlayer = await getPublicPlayerById(publicPlayerId);
     if (!publicPlayer) throw new Error('Public player not found');
 
-    // インポート記録を追加
-    await supabase
-      .from('public_player_imports' as any)
-      .insert([{
-        user_id: user.id,
-        public_player_id: publicPlayerId
-      }]);
-
-    // インポート数をインクリメント
-    await supabase.rpc('increment_player_import_count', { player_id: publicPlayerId });
 
     // 自分の選手リストに追加
     const { data, error } = await supabase
@@ -733,8 +702,6 @@ export const updatePublicPlayer = async (id: string, playerData: Partial<PublicP
     if (error) throw error;
     return data ? {
       ...data,
-      view_count: (data as any).view_count || 0,
-      import_count: (data as any).import_count || 0,
       career_path: data.career_path as PublicPlayer['career_path']
     } : null;
   } catch (error) {
@@ -758,45 +725,6 @@ export const deletePublicPlayer = async (id: string): Promise<boolean> => {
   }
 };
 
-export const incrementPublicPlayerViewCount = async (publicPlayerId: string): Promise<boolean> => {
-  try {
-    const { data: { user } } = await supabase.auth.getUser();
-    const sessionId = sessionStorage.getItem('session_id') || Math.random().toString(36);
-    
-    if (!sessionStorage.getItem('session_id')) {
-      sessionStorage.setItem('session_id', sessionId);
-    }
-
-    // 既に閲覧済みかチェック
-    const { data: existingView } = await supabase
-      .from('public_player_views' as any)
-      .select('id')
-      .eq('public_player_id', publicPlayerId)
-      .or(user ? `user_id.eq.${user.id}` : `session_id.eq.${sessionId}`)
-      .maybeSingle();
-
-    if (existingView) {
-      return true; // 既に閲覧済み
-    }
-
-    // 閲覧記録を追加
-    await supabase
-      .from('public_player_views' as any)
-      .insert([{
-        public_player_id: publicPlayerId,
-        user_id: user?.id,
-        session_id: sessionId
-      }]);
-
-    // 閲覧数をインクリメント
-    await supabase.rpc('increment_player_view_count', { player_id: publicPlayerId });
-
-    return true;
-  } catch (error) {
-    console.error('Failed to increment view count:', error);
-    return false;
-  }
-};
 
 export const getPublicPlayersByUserId = async (userId: string): Promise<PublicPlayer[]> => {
   try {
@@ -820,8 +748,6 @@ export const getPublicPlayersByUserId = async (userId: string): Promise<PublicPl
     // すべての選手に同じプロフィールを追加
     return players.map(player => ({
       ...player,
-      view_count: (player as any).view_count || 0,
-      import_count: (player as any).import_count || 0,
       profiles: profile,
       career_path: player.career_path as PublicPlayer['career_path']
     }));
@@ -849,28 +775,20 @@ export const getUserProfiles = async (): Promise<UserProfileWithStats[]> => {
     // 全ユーザーのpublic_playersを一括取得（必要な列のみ）
     const { data: allPublicPlayers, error: playersError } = await supabase
       .from('public_players' as any)
-      .select('user_id, view_count, import_count');
+      .select('user_id');
     
     if (playersError) throw playersError;
     
     // user_idごとにグルーピング
-    const playersByUser = new Map<string, Array<{ view_count: number; import_count: number }>>();
+    const playersByUser = new Map<string, number>();
     (allPublicPlayers || []).forEach((player: any) => {
-      if (!playersByUser.has(player.user_id)) {
-        playersByUser.set(player.user_id, []);
-      }
-      playersByUser.get(player.user_id)!.push({
-        view_count: player.view_count || 0,
-        import_count: player.import_count || 0
-      });
+      const currentCount = playersByUser.get(player.user_id) || 0;
+      playersByUser.set(player.user_id, currentCount + 1);
     });
     
     // 統計を計算
     const profilesWithStats = (profiles || []).map(profile => {
-      const userPlayers = playersByUser.get(profile.user_id) || [];
-      const upload_count = userPlayers.length;
-      const total_views = userPlayers.reduce((sum, p) => sum + p.view_count, 0);
-      const total_imports = userPlayers.reduce((sum, p) => sum + p.import_count, 0);
+      const upload_count = playersByUser.get(profile.user_id) || 0;
       
       return {
         user_id: profile.user_id,
@@ -878,9 +796,7 @@ export const getUserProfiles = async (): Promise<UserProfileWithStats[]> => {
         avatar_url: profile.avatar_url,
         bio: profile.bio,
         social_links: (profile.social_links as any) || [],
-        upload_count,
-        total_views,
-        total_imports
+        upload_count
       };
     });
     
@@ -937,87 +853,6 @@ export async function updateLastActive() {
   return { success: true };
 }
 
-// Follow/Unfollow functions
-export const followUser = async (followingId: string): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('User must be logged in to follow');
-  }
-
-  const { error } = await supabase
-    .from('user_follows' as any)
-    .insert({
-      follower_id: user.id,
-      following_id: followingId
-    });
-
-  if (error) {
-    console.error('Error following user:', error);
-    throw error;
-  }
-};
-
-export const unfollowUser = async (followingId: string): Promise<void> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    throw new Error('User must be logged in to unfollow');
-  }
-
-  const { error } = await supabase
-    .from('user_follows' as any)
-    .delete()
-    .eq('follower_id', user.id)
-    .eq('following_id', followingId);
-
-  if (error) {
-    console.error('Error unfollowing user:', error);
-    throw error;
-  }
-};
-
-export const getFollowedUsers = async (): Promise<string[]> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return [];
-  }
-
-  const { data, error } = await supabase
-    .from('user_follows' as any)
-    .select('following_id')
-    .eq('follower_id', user.id);
-
-  if (error) {
-    console.error('Error fetching followed users:', error);
-    throw error;
-  }
-
-  return data?.map((f: any) => f.following_id) || [];
-};
-
-export const isFollowing = async (followingId: string): Promise<boolean> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  
-  if (!user) {
-    return false;
-  }
-
-  const { data, error } = await supabase
-    .from('user_follows' as any)
-    .select('id')
-    .eq('follower_id', user.id)
-    .eq('following_id', followingId)
-    .maybeSingle();
-
-  if (error) {
-    console.error('Error checking follow status:', error);
-    return false;
-  }
-
-  return !!data;
-};
 
 // ============= Public Diary Entries =============
 
@@ -1034,8 +869,6 @@ export interface PublicDiaryEntry {
   player_comments?: string;
   overall_impression?: string;
   videos?: string[];
-  view_count: number;
-  import_count: number;
   created_at: string;
   updated_at: string;
   profile?: Profile;
@@ -1091,42 +924,6 @@ export const deletePublicDiaryEntry = async (id: string): Promise<void> => {
   }
 };
 
-export const incrementPublicDiaryViewCount = async (diaryId: string): Promise<void> => {
-  const sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID();
-  sessionStorage.setItem('session_id', sessionId);
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  // Check if already viewed
-  let query = supabase
-    .from('public_diary_views' as any)
-    .select('id')
-    .eq('public_diary_id', diaryId);
-
-  if (user) {
-    query = query.eq('user_id', user.id);
-  } else {
-    query = query.eq('session_id', sessionId);
-  }
-
-  const { data: existingView } = await query.maybeSingle();
-
-  if (existingView) {
-    return;
-  }
-
-  // Record view
-  await supabase
-    .from('public_diary_views' as any)
-    .insert({
-      public_diary_id: diaryId,
-      user_id: user?.id,
-      session_id: user ? null : sessionId
-    });
-
-  // Atomically increment view count
-  await supabase.rpc('increment_diary_view_count', { diary_id: diaryId });
-};
 
 export const importDiaryFromPublic = async (publicDiaryId: string): Promise<void> => {
   const { data: { user } } = await supabase.auth.getUser();
@@ -1144,18 +941,6 @@ export const importDiaryFromPublic = async (publicDiaryId: string): Promise<void
 
   if (fetchError || !publicDiary) {
     throw new Error('観戦日記が見つかりません');
-  }
-
-  // Check if already imported
-  const { data: existingImport } = await supabase
-    .from('public_diary_imports' as any)
-    .select('id')
-    .eq('public_diary_id', publicDiaryId)
-    .eq('user_id', user.id)
-    .maybeSingle();
-
-  if (existingImport) {
-    throw new Error('この観戦日記は既にインポート済みです');
   }
 
   // Add to user's diary
@@ -1179,25 +964,4 @@ export const importDiaryFromPublic = async (publicDiaryId: string): Promise<void
     throw insertError;
   }
 
-  // Record import
-  await supabase
-    .from('public_diary_imports' as any)
-    .insert({
-      public_diary_id: publicDiaryId,
-      user_id: user.id
-    });
-
-  // Get current count and increment
-  const { data: currentEntry } = await supabase
-    .from('public_diary_entries' as any)
-    .select('import_count')
-    .eq('id', publicDiaryId)
-    .single();
-  
-  if (currentEntry) {
-    await supabase
-      .from('public_diary_entries' as any)
-      .update({ import_count: ((currentEntry as any).import_count || 0) + 1 })
-      .eq('id', publicDiaryId);
-  }
 };
