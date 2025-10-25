@@ -11,7 +11,7 @@ import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { getDraftData as getSupabaseDraftData, saveDraftData as saveSupabaseDraftData } from "@/lib/supabase-storage";
+import { getDraftData as getSupabaseDraftData, saveDraftData as saveSupabaseDraftData, saveTeamDraftData } from "@/lib/supabase-storage";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 
@@ -143,24 +143,26 @@ export default function Draft() {
 
   // Update team data
   const updateTeamData = async (teamName: string, updates: Partial<DraftData[string]>) => {
+    const newTeamData = {
+      plans: { "プランA": "プランA", "プランB": "プランB", "プランC": "プランC" },
+      strategyMemos: {},
+      draftPositions: {},
+      devPositions: {},
+      positionRequirements: {},
+      ...draftData[teamName],
+      ...updates
+    };
+    
     const newData = {
       ...draftData,
-      [teamName]: {
-        plans: { "プランA": "プランA", "プランB": "プランB", "プランC": "プランC" },
-        strategyMemos: {},
-        draftPositions: {},
-        devPositions: {},
-        positionRequirements: {},
-        ...draftData[teamName],
-        ...updates
-      }
+      [teamName]: newTeamData
     };
     setDraftData(newData);
     
     if (user) {
-      // Logged in: save to Supabase
+      // Logged in: save to Supabase (only this team's data)
       try {
-        await saveDraftData(newData);
+        await saveTeamDraftData(teamName, newTeamData);
       } catch (error) {
         console.error('Failed to save draft data:', error);
         toast({

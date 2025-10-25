@@ -417,13 +417,25 @@ export const getDraftData = async (): Promise<any> => {
     const { data, error } = await supabase
       .from('draft_data')
       .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .eq('user_id', user.id);
     
     if (error) throw error;
-    return data?.data || {};
+    
+    // Combine all team data into a single object
+    const combinedData: any = {};
+    if (data) {
+      data.forEach((record: any) => {
+        if (record.team_name && record.data) {
+          // Extract team data from JSONB (it's stored as {team_name: {...}})
+          const teamData = record.data[record.team_name];
+          if (teamData) {
+            combinedData[record.team_name] = teamData;
+          }
+        }
+      });
+    }
+    
+    return combinedData;
   } catch (error) {
     console.error('Failed to load draft data:', error);
     return {};
@@ -435,39 +447,42 @@ export const saveDraftData = async (draftData: any): Promise<boolean> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('User not authenticated');
 
-    // 既存のデータがあるかチェック
-    const { data: existingData } = await supabase
-      .from('draft_data')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
-    if (existingData) {
-      // 更新
-      const { error } = await supabase
-        .from('draft_data')
-        .update({
-          data: draftData,
-          updated_at: new Date().toISOString()
-        })
-        .eq('user_id', user.id);
-      
-      if (error) throw error;
-    } else {
-      // 新規作成
-      const { error } = await supabase
-        .from('draft_data')
-        .insert({
-          user_id: user.id,
-          data: draftData
-        });
-      
-      if (error) throw error;
-    }
+    // Save all team data (this is for backward compatibility)
+    // In practice, saveTeamDraftData should be used for individual team saves
+    const savePromises = Object.keys(draftData).map(teamName => 
+      saveTeamDraftData(teamName, draftData[teamName])
+    );
     
+    await Promise.all(savePromises);
     return true;
   } catch (error) {
     console.error('Failed to save draft data:', error);
+    return false;
+  }
+};
+
+// Save draft data for a specific team (UPSERT based on user_id + team_name)
+export const saveTeamDraftData = async (teamName: string, teamData: any): Promise<boolean> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
+    // UPSERT: Insert or update based on user_id + team_name unique constraint
+    const { error } = await supabase
+      .from('draft_data')
+      .upsert({
+        user_id: user.id,
+        team_name: teamName,
+        data: { [teamName]: teamData }, // Store in same format as before
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'user_id,team_name'
+      });
+    
+    if (error) throw error;
+    return true;
+  } catch (error) {
+    console.error(`Failed to save draft data for team ${teamName}:`, error);
     return false;
   }
 };

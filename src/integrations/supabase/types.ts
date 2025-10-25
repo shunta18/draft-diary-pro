@@ -142,6 +142,7 @@ export type Database = {
           created_at: string
           data: Json
           id: string
+          team_name: string | null
           updated_at: string
           user_id: string
         }
@@ -149,6 +150,7 @@ export type Database = {
           created_at?: string
           data: Json
           id?: string
+          team_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -156,6 +158,7 @@ export type Database = {
           created_at?: string
           data?: Json
           id?: string
+          team_name?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -608,10 +611,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      delete_user: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      delete_user: { Args: never; Returns: undefined }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
