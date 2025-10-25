@@ -586,6 +586,8 @@ export const getPublicPlayers = async (): Promise<PublicPlayer[]> => {
     // プロフィール情報なしで返す
     return players.map(player => ({
       ...player,
+      view_count: (player as any).view_count || 0,
+      import_count: (player as any).import_count || 0,
       profiles: undefined,
       career_path: player.career_path as PublicPlayer['career_path']
     }));
@@ -616,6 +618,8 @@ export const getPublicPlayerById = async (id: string): Promise<PublicPlayer | nu
     
     return {
       ...player,
+      view_count: (player as any).view_count || 0,
+      import_count: (player as any).import_count || 0,
       profiles: profile,
       career_path: player.career_path as PublicPlayer['career_path']
     };
@@ -729,6 +733,8 @@ export const updatePublicPlayer = async (id: string, playerData: Partial<PublicP
     if (error) throw error;
     return data ? {
       ...data,
+      view_count: (data as any).view_count || 0,
+      import_count: (data as any).import_count || 0,
       career_path: data.career_path as PublicPlayer['career_path']
     } : null;
   } catch (error) {
@@ -814,6 +820,8 @@ export const getPublicPlayersByUserId = async (userId: string): Promise<PublicPl
     // すべての選手に同じプロフィールを追加
     return players.map(player => ({
       ...player,
+      view_count: (player as any).view_count || 0,
+      import_count: (player as any).import_count || 0,
       profiles: profile,
       career_path: player.career_path as PublicPlayer['career_path']
     }));
@@ -840,14 +848,14 @@ export const getUserProfiles = async (): Promise<UserProfileWithStats[]> => {
     
     // 全ユーザーのpublic_playersを一括取得（必要な列のみ）
     const { data: allPublicPlayers, error: playersError } = await supabase
-      .from('public_players')
+      .from('public_players' as any)
       .select('user_id, view_count, import_count');
     
     if (playersError) throw playersError;
     
     // user_idごとにグルーピング
     const playersByUser = new Map<string, Array<{ view_count: number; import_count: number }>>();
-    (allPublicPlayers || []).forEach(player => {
+    (allPublicPlayers || []).forEach((player: any) => {
       if (!playersByUser.has(player.user_id)) {
         playersByUser.set(player.user_id, []);
       }
@@ -938,7 +946,7 @@ export const followUser = async (followingId: string): Promise<void> => {
   }
 
   const { error } = await supabase
-    .from('user_follows')
+    .from('user_follows' as any)
     .insert({
       follower_id: user.id,
       following_id: followingId
@@ -958,7 +966,7 @@ export const unfollowUser = async (followingId: string): Promise<void> => {
   }
 
   const { error } = await supabase
-    .from('user_follows')
+    .from('user_follows' as any)
     .delete()
     .eq('follower_id', user.id)
     .eq('following_id', followingId);
@@ -977,7 +985,7 @@ export const getFollowedUsers = async (): Promise<string[]> => {
   }
 
   const { data, error } = await supabase
-    .from('user_follows')
+    .from('user_follows' as any)
     .select('following_id')
     .eq('follower_id', user.id);
 
@@ -986,7 +994,7 @@ export const getFollowedUsers = async (): Promise<string[]> => {
     throw error;
   }
 
-  return data?.map(f => f.following_id) || [];
+  return data?.map((f: any) => f.following_id) || [];
 };
 
 export const isFollowing = async (followingId: string): Promise<boolean> => {
@@ -997,7 +1005,7 @@ export const isFollowing = async (followingId: string): Promise<boolean> => {
   }
 
   const { data, error } = await supabase
-    .from('user_follows')
+    .from('user_follows' as any)
     .select('id')
     .eq('follower_id', user.id)
     .eq('following_id', followingId)
