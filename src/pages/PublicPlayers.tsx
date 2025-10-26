@@ -680,6 +680,29 @@ export default function PublicPlayers() {
                     </div>
                   </div>
                 )}
+                {selectedPlayer.draft_status && selectedPlayer.draft_status !== "空欄" && (
+                  <div className="border-t pt-3 mt-3">
+                    <Label className="text-base font-semibold mb-2 block">ドラフト指名結果</Label>
+                    <div className="space-y-2">
+                      <div>
+                        <Label className="text-sm text-muted-foreground">指名状況</Label>
+                        <p className="font-medium">{selectedPlayer.draft_status}</p>
+                      </div>
+                      {selectedPlayer.draft_team && (
+                        <div>
+                          <Label className="text-sm text-muted-foreground">指名球団</Label>
+                          <p className="font-medium">{selectedPlayer.draft_team}</p>
+                        </div>
+                      )}
+                      {selectedPlayer.draft_rank && (
+                        <div>
+                          <Label className="text-sm text-muted-foreground">順位</Label>
+                          <p className="font-medium">{selectedPlayer.draft_rank}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {selectedPlayer.hometown && (
                   <div>
                     <Label>出身地</Label>

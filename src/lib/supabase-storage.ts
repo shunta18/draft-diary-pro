@@ -28,6 +28,9 @@ export interface Player {
   videos?: string[];
   is_favorite?: boolean;
   imported_from_public_player_id?: string;
+  draft_status?: string;
+  draft_team?: string;
+  draft_rank?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -88,6 +91,9 @@ export interface PublicPlayer {
   videos?: string[];
   main_position?: string;
   is_favorite?: boolean;
+  draft_status?: string;
+  draft_team?: string;
+  draft_rank?: string;
   created_at: string;
   updated_at: string;
   profiles?: any;
