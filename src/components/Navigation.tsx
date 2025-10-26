@@ -1,9 +1,10 @@
-import { Menu, Home, Users, Trophy, Calendar, Settings, Shuffle, HelpCircle, Mail, Info, BookOpen, Database, Vote } from "lucide-react";
+import { Menu, Home, Users, Trophy, Calendar, User, LogIn, Shuffle, HelpCircle, Mail, Info, BookOpen, Database, Vote } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import logoIcon from "@/assets/logo.png";
+import { useAuth } from "@/hooks/useAuth";
 
 interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
@@ -19,7 +20,6 @@ const navItems: NavItem[] = [
   { icon: Vote, label: "ドラフトアンケート", path: "/draft-predictions" },
   { icon: Shuffle, label: "仮想ドラフト", path: "/virtual-draft" },
   { icon: Calendar, label: "観戦日記", path: "/diary" },
-  { icon: Settings, label: "設定", path: "/settings" },
 ];
 
 const secondaryNavItems: NavItem[] = [
@@ -32,8 +32,15 @@ const secondaryNavItems: NavItem[] = [
 export const Navigation = () => {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { user } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
+
+  const accountNavItem: NavItem = user
+    ? { icon: User, label: "マイページ", path: "/settings" }
+    : { icon: LogIn, label: "ログイン / 登録", path: "/auth" };
+
+  const allNavItems = [...navItems, accountNavItem];
 
   return (
     <div className="bg-card border-b shadow-soft">
@@ -63,7 +70,7 @@ export const Navigation = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-64">
             <nav className="flex flex-col space-y-2 mt-8">
-              {navItems.map((item) => {
+              {allNavItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <Link
@@ -109,7 +116,7 @@ export const Navigation = () => {
 
         {/* Desktop Navigation */}
         <nav className="hidden lg:flex space-x-2">
-          {navItems.map((item) => {
+          {allNavItems.map((item) => {
             const Icon = item.icon;
             return (
               <Link key={item.path} to={item.path}>

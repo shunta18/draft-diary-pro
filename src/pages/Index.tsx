@@ -1,4 +1,4 @@
-import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight, Heart, Database, Vote, Twitter } from "lucide-react";
+import { Users, Trophy, Calendar, Settings, UserPlus, Shuffle, BookOpen, ArrowRight, Heart, Database, Vote, Twitter, User, LogIn } from "lucide-react";
 import { Navigation } from "@/components/Navigation";
 import { StatCard } from "@/components/StatCard";
 import { SEO } from "@/components/SEO";
@@ -329,12 +329,12 @@ const Index = () => {
           </Link>
         </div>
 
-        {/* Settings Section */}
+        {/* Account Section */}
         <div className="flex justify-center">
-          <Link to="/settings">
+          <Link to={user ? "/settings" : "/auth"}>
             <Button variant="outline" className="flex items-center space-x-2">
-              <Settings className="h-4 w-4" />
-              <span>設定</span>
+              {user ? <User className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
+              <span>{user ? "マイページ" : "ログイン / 登録"}</span>
             </Button>
           </Link>
         </div>
