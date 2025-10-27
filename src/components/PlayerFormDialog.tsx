@@ -30,6 +30,12 @@ const teams = [
   "埼玉西武ライオンズ", "東北楽天ゴールデンイーグルス", "オリックス・バファローズ"
 ];
 
+const draftStatusOptions = ["空欄", "支配下", "育成"];
+const draftTeams = [
+  "巨人", "阪神", "中日", "広島", "ヤクルト", "DeNA",
+  "ソフトバンク", "日本ハム", "ロッテ", "西武", "楽天", "オリックス"
+];
+
 const sortPositions = (positionsArray: string[]) => {
   return [...positionsArray].sort((a, b) => {
     const indexA = positions.indexOf(a);
@@ -73,6 +79,9 @@ export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerForm
     evaluations: [] as string[],
     recommended_teams: [] as string[],
     memo: "",
+    draftStatus: "空欄",
+    draftTeam: "",
+    draftRank: "",
   });
 
   const resetForm = () => {
@@ -96,6 +105,9 @@ export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerForm
       evaluations: [],
       recommended_teams: [],
       memo: "",
+      draftStatus: "空欄",
+      draftTeam: "",
+      draftRank: "",
     });
   };
 
@@ -213,6 +225,9 @@ export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerForm
         recommended_teams: formData.recommended_teams,
         memo: formData.memo,
         videos: [],
+        draft_status: formData.draftStatus,
+        draft_team: formData.draftStatus !== "空欄" ? formData.draftTeam : null,
+        draft_rank: formData.draftStatus !== "空欄" ? formData.draftRank : null,
       };
 
       if (!formData.name || !formData.category || !formData.team || formData.positions.length === 0 || formData.evaluations.length === 0) {
@@ -416,6 +431,70 @@ export function PlayerFormDialog({ isOpen, onOpenChange, onSuccess }: PlayerForm
                   rows={4}
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* ドラフト指名結果 */}
+          <Card>
+            <CardContent className="pt-6 space-y-4">
+              <h3 className="font-semibold text-lg mb-4">ドラフト指名結果</h3>
+              
+              <div>
+                <Label htmlFor="draftStatus">指名状況</Label>
+                <Select 
+                  value={formData.draftStatus} 
+                  onValueChange={(value) => {
+                    setFormData(prev => ({ 
+                      ...prev, 
+                      draftStatus: value,
+                      draftTeam: value === "空欄" ? "" : prev.draftTeam,
+                      draftRank: value === "空欄" ? "" : prev.draftRank
+                    }));
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {draftStatusOptions.map(status => (
+                      <SelectItem key={status} value={status}>{status}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.draftStatus !== "空欄" && (
+                <>
+                  <div>
+                    <Label htmlFor="draftTeam">指名球団</Label>
+                    <Select 
+                      value={formData.draftTeam} 
+                      onValueChange={(value) => 
+                        setFormData(prev => ({ ...prev, draftTeam: value }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="球団を選択" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {draftTeams.map(team => (
+                          <SelectItem key={team} value={team}>{team}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="draftRank">順位</Label>
+                    <Input
+                      id="draftRank"
+                      value={formData.draftRank}
+                      onChange={(e) => setFormData(prev => ({ ...prev, draftRank: e.target.value }))}
+                      placeholder="例: 1位、育成1位"
+                    />
+                  </div>
+                </>
+              )}
             </CardContent>
           </Card>
 

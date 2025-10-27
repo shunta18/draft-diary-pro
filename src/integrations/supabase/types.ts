@@ -489,6 +489,9 @@ export type Database = {
           career_path: Json | null
           category: string
           created_at: string
+          draft_rank: string | null
+          draft_status: string | null
+          draft_team: string | null
           evaluations: string[] | null
           height: number | null
           hometown: string | null
@@ -514,6 +517,9 @@ export type Database = {
           career_path?: Json | null
           category: string
           created_at?: string
+          draft_rank?: string | null
+          draft_status?: string | null
+          draft_team?: string | null
           evaluations?: string[] | null
           height?: number | null
           hometown?: string | null
@@ -539,6 +545,9 @@ export type Database = {
           career_path?: Json | null
           category?: string
           created_at?: string
+          draft_rank?: string | null
+          draft_status?: string | null
+          draft_team?: string | null
           evaluations?: string[] | null
           height?: number | null
           hometown?: string | null
