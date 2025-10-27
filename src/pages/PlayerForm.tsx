@@ -77,6 +77,9 @@ export default function PlayerForm() {
     recommended_teams: [] as string[],
     memo: "",
     videos: [] as string[],
+    draftStatus: "空欄",
+    draftTeam: "",
+    draftRank: "",
   });
 
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
@@ -122,6 +125,9 @@ export default function PlayerForm() {
               recommended_teams: player.recommended_teams || [],
               memo: player.memo || "",
               videos: player.videos || [],
+              draftStatus: player.draft_status || "空欄",
+              draftTeam: player.draft_team || "",
+              draftRank: player.draft_rank || "",
             });
           }
         } else {
@@ -153,6 +159,9 @@ export default function PlayerForm() {
               recommended_teams: player.recommended_teams || [],
               memo: player.memo || "",
               videos: player.videos || [],
+              draftStatus: player.draft_status || "空欄",
+              draftTeam: player.draft_team || "",
+              draftRank: player.draft_rank || "",
             });
           }
         }
@@ -269,6 +278,9 @@ export default function PlayerForm() {
         recommended_teams: formData.recommended_teams,
         memo: formData.memo,
         videos: videoUrls,
+        draft_status: formData.draftStatus,
+        draft_team: formData.draftStatus !== "空欄" ? formData.draftTeam : null,
+        draft_rank: formData.draftStatus !== "空欄" ? formData.draftRank : null,
       };
 
       // フォームバリデーション
@@ -724,6 +736,83 @@ export default function PlayerForm() {
               </div>
             </CardContent>
           </Card>
+
+          {/* ドラフト指名結果 */}
+          {isPublicPlayer && (
+            <Card className="gradient-card border-0 shadow-soft">
+              <CardHeader>
+                <CardTitle className="text-primary">ドラフト指名結果</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label htmlFor="draftStatus">指名状況</Label>
+                  <Select 
+                    value={formData.draftStatus} 
+                    onValueChange={(value) => {
+                      setFormData(prev => ({ 
+                        ...prev, 
+                        draftStatus: value,
+                        draftTeam: value === "空欄" ? "" : prev.draftTeam,
+                        draftRank: value === "空欄" ? "" : prev.draftRank
+                      }));
+                    }}
+                  >
+                    <SelectTrigger className="shadow-soft">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="空欄">空欄</SelectItem>
+                      <SelectItem value="支配下">支配下</SelectItem>
+                      <SelectItem value="育成">育成</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {formData.draftStatus !== "空欄" && (
+                  <>
+                    <div>
+                      <Label htmlFor="draftTeam">指名球団</Label>
+                      <Select 
+                        value={formData.draftTeam} 
+                        onValueChange={(value) => 
+                          setFormData(prev => ({ ...prev, draftTeam: value }))
+                        }
+                      >
+                        <SelectTrigger className="shadow-soft">
+                          <SelectValue placeholder="球団を選択" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="巨人">巨人</SelectItem>
+                          <SelectItem value="阪神">阪神</SelectItem>
+                          <SelectItem value="中日">中日</SelectItem>
+                          <SelectItem value="広島">広島</SelectItem>
+                          <SelectItem value="ヤクルト">ヤクルト</SelectItem>
+                          <SelectItem value="DeNA">DeNA</SelectItem>
+                          <SelectItem value="ソフトバンク">ソフトバンク</SelectItem>
+                          <SelectItem value="日本ハム">日本ハム</SelectItem>
+                          <SelectItem value="ロッテ">ロッテ</SelectItem>
+                          <SelectItem value="西武">西武</SelectItem>
+                          <SelectItem value="楽天">楽天</SelectItem>
+                          <SelectItem value="オリックス">オリックス</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="draftRank">順位</Label>
+                      <Input
+                        id="draftRank"
+                        value={formData.draftRank}
+                        onChange={(e) => setFormData(prev => ({ ...prev, draftRank: e.target.value }))}
+                        placeholder="例: 1位、育成1位"
+                        className="shadow-soft"
+                      />
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          )}
 
           {/* 動画情報 */}
           <Card className="gradient-card border-0 shadow-soft">
