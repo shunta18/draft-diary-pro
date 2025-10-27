@@ -92,17 +92,11 @@ export const PublicPlayerCard = memo(function PublicPlayerCard({
                 ))}
               </div>
             )}
-            {player.draft_status && player.draft_status !== "空欄" && (
+            {player.draft_status && player.draft_status !== "空欄" && player.draft_team && player.draft_rank && (
               <div className="flex items-center gap-2 mt-2 pt-2 border-t">
                 <Badge variant="secondary" className="bg-primary/10 text-primary">
-                  {player.draft_status}
+                  {player.draft_team} {player.draft_rank}
                 </Badge>
-                {player.draft_team && (
-                  <span className="text-sm font-medium">{player.draft_team}</span>
-                )}
-                {player.draft_rank && (
-                  <span className="text-sm text-muted-foreground">{player.draft_rank}</span>
-                )}
               </div>
             )}
           </div>
