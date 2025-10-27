@@ -229,6 +229,9 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
           videos: playerData.videos,
           main_position: playerData.main_position,
           is_favorite: playerData.is_favorite,
+          draft_status: playerData.draft_status,
+          draft_team: playerData.draft_team,
+          draft_rank: playerData.draft_rank,
         })
         .eq('user_id', user.id)
         .eq('original_player_id', id);
@@ -700,6 +703,9 @@ export const updatePublicPlayer = async (id: string, playerData: Partial<PublicP
         videos: playerData.videos,
         main_position: playerData.main_position,
         is_favorite: playerData.is_favorite,
+        draft_status: playerData.draft_status,
+        draft_team: playerData.draft_team,
+        draft_rank: playerData.draft_rank,
       })
       .eq('id', id)
       .select()
