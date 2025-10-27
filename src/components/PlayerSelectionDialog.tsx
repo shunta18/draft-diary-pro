@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Player as LocalPlayer } from "@/lib/playerStorage";
 import { Player as SupabasePlayer } from "@/lib/supabase-storage";
 import { Search, ChevronDown } from "lucide-react";
 import { PlayerFormDialog } from "@/components/PlayerFormDialog";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // Union type to handle both data formats
 type PlayerData = LocalPlayer | SupabasePlayer;
@@ -55,7 +56,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onP
   const categories = ["高校", "大学", "社会人", "独立リーグ", "その他"];
 
   // Helper function to get the highest evaluation rank
-  const getHighestEvaluationRank = (evaluations: string[] | undefined): number => {
+  const getHighestEvaluationRank = useCallback((evaluations: string[] | undefined): number => {
     if (!evaluations || evaluations.length === 0) return 999; // 評価なしは最後
     
     // 選手の評価の中で最も高い順位（evaluationOrderで最も早く出現する）を見つける
@@ -68,38 +69,43 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onP
     });
     
     return highestRank;
-  };
+  }, []);
 
-  // Filter players based on search criteria
-  const filteredPlayers = players.filter(player => {
-    const matchesSearch = player.name.toLowerCase().includes(searchName.toLowerCase());
-    const matchesCategory = filterCategories.length === 0 || filterCategories.includes(player.category);
-    
-    // ポジションフィルター：選手のポジションを分割してチェック
-    const positionStr = Array.isArray(player.position) ? player.position.join("、") : player.position;
-    const playerPositions = positionStr.split(/[,、]/).map(p => p.trim()).filter(p => p);
-    const matchesPosition = filterPositions.length === 0 || 
-      playerPositions.some(pos => filterPositions.includes(pos));
-    
-    const matchesEvaluation = filterEvaluations.length === 0 || 
-      (player.evaluations && player.evaluations.some(evaluation => filterEvaluations.includes(evaluation)));
-    
-    // 年度フィルター：draftYearが指定されている場合、その年度の選手のみ表示
-    const matchesYear = !draftYear || (player as any).draftYear === draftYear;
-    
-    return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation && matchesYear;
-  }).sort((a, b) => {
-    // 評価が高い順に並び替え（評価が同じ場合は名前順）
-    const rankA = getHighestEvaluationRank(a.evaluations);
-    const rankB = getHighestEvaluationRank(b.evaluations);
-    
-    if (rankA !== rankB) {
-      return rankA - rankB;
-    }
-    
-    // 評価が同じ場合は名前順
-    return a.name.localeCompare(b.name, 'ja');
-  });
+  // デバウンス処理でINP改善
+  const debouncedSearchName = useDebounce(searchName, 300);
+
+  // Filter players based on search criteria - useMemoでメモ化してINP改善
+  const filteredPlayers = useMemo(() => {
+    return players.filter(player => {
+      const matchesSearch = player.name.toLowerCase().includes(debouncedSearchName.toLowerCase());
+      const matchesCategory = filterCategories.length === 0 || filterCategories.includes(player.category);
+      
+      // ポジションフィルター：選手のポジションを分割してチェック
+      const positionStr = Array.isArray(player.position) ? player.position.join("、") : player.position;
+      const playerPositions = positionStr.split(/[,、]/).map(p => p.trim()).filter(p => p);
+      const matchesPosition = filterPositions.length === 0 || 
+        playerPositions.some(pos => filterPositions.includes(pos));
+      
+      const matchesEvaluation = filterEvaluations.length === 0 || 
+        (player.evaluations && player.evaluations.some(evaluation => filterEvaluations.includes(evaluation)));
+      
+      // 年度フィルター：draftYearが指定されている場合、その年度の選手のみ表示
+      const matchesYear = !draftYear || (player as any).draftYear === draftYear;
+      
+      return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation && matchesYear;
+    }).sort((a, b) => {
+      // 評価が高い順に並び替え（評価が同じ場合は名前順）
+      const rankA = getHighestEvaluationRank(a.evaluations);
+      const rankB = getHighestEvaluationRank(b.evaluations);
+      
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+      
+      // 評価が同じ場合は名前順
+      return a.name.localeCompare(b.name, 'ja');
+    });
+  }, [players, debouncedSearchName, filterCategories, filterPositions, filterEvaluations, draftYear, getHighestEvaluationRank]);
 
   const handleSelect = (playerId?: number) => {
     onSelect(playerId);
