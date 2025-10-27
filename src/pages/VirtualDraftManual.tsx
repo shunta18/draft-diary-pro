@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
@@ -18,6 +18,7 @@ import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { LotteryAnimation } from "@/components/LotteryAnimation";
 import mustacheLogo from "@/assets/mustache-logo.png";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {

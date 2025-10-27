@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Navigation } from "@/components/Navigation";
 import { SEO } from "@/components/SEO";
@@ -28,6 +28,7 @@ import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 import { Input } from "@/components/ui/input";
 import { LotteryAnimation } from "@/components/LotteryAnimation";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDebounce } from "@/hooks/useDebounce";
 
 // Supabaseから取得した生データの型
 interface RawSupabasePlayer {
@@ -396,7 +397,7 @@ export default function AIDraft() {
     setFilterEvaluations([]);
   };
 
-  const getHighestEvaluationRank = (evaluations: string[] | undefined): number => {
+  const getHighestEvaluationRank = useCallback((evaluations: string[] | undefined): number => {
     if (!evaluations || evaluations.length === 0) return 999;
     let highestRank = 999;
     evaluations.forEach(evaluation => {
@@ -406,31 +407,36 @@ export default function AIDraft() {
       }
     });
     return highestRank;
-  };
+  }, []);
 
-  const filteredAvailablePlayers = availablePlayersForSelection.filter(player => {
-    const matchesSearch = player.name.toLowerCase().includes(searchName.toLowerCase());
-    const matchesCategory = filterCategories.length === 0 || filterCategories.includes(player.category);
-    
-    const positionStr = Array.isArray(player.position) ? player.position.join("、") : player.position;
-    const playerPositions = positionStr.split(/[,、]/).map(p => p.trim()).filter(p => p);
-    const matchesPosition = filterPositions.length === 0 || 
-      playerPositions.some(pos => filterPositions.includes(pos));
-    
-    const matchesEvaluation = filterEvaluations.length === 0 || 
-      (player.evaluations && player.evaluations.some(evaluation => filterEvaluations.includes(evaluation)));
-    
-    return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation;
-  }).sort((a, b) => {
-    const rankA = getHighestEvaluationRank(a.evaluations);
-    const rankB = getHighestEvaluationRank(b.evaluations);
-    
-    if (rankA !== rankB) {
-      return rankA - rankB;
-    }
-    
-    return a.name.localeCompare(b.name, 'ja');
-  });
+  // デバウンス処理でINP改善
+  const debouncedSearchName = useDebounce(searchName, 300);
+
+  const filteredAvailablePlayers = useMemo(() => {
+    return availablePlayersForSelection.filter(player => {
+      const matchesSearch = player.name.toLowerCase().includes(debouncedSearchName.toLowerCase());
+      const matchesCategory = filterCategories.length === 0 || filterCategories.includes(player.category);
+      
+      const positionStr = Array.isArray(player.position) ? player.position.join("、") : player.position;
+      const playerPositions = positionStr.split(/[,、]/).map(p => p.trim()).filter(p => p);
+      const matchesPosition = filterPositions.length === 0 || 
+        playerPositions.some(pos => filterPositions.includes(pos));
+      
+      const matchesEvaluation = filterEvaluations.length === 0 || 
+        (player.evaluations && player.evaluations.some(evaluation => filterEvaluations.includes(evaluation)));
+      
+      return matchesSearch && matchesCategory && matchesPosition && matchesEvaluation;
+    }).sort((a, b) => {
+      const rankA = getHighestEvaluationRank(a.evaluations);
+      const rankB = getHighestEvaluationRank(b.evaluations);
+      
+      if (rankA !== rankB) {
+        return rankA - rankB;
+      }
+      
+      return a.name.localeCompare(b.name, 'ja');
+    });
+  }, [availablePlayersForSelection, debouncedSearchName, filterCategories, filterPositions, filterEvaluations, getHighestEvaluationRank]);
 
   const saveWeights = async (newWeights: WeightConfig) => {
     const sum = newWeights.voteWeight + newWeights.teamNeedsWeight + 

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Search, Filter, Eye, Download, User, Calendar, ChevronDown, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,7 @@ import { calculateSimilarity } from "@/lib/utils";
 import { usePublicPlayers, usePublicDiaryEntries, usePlayers, useInvalidateQueries } from "@/hooks/usePlayerQueries";
 import { PublicPlayerCard } from "@/components/PublicPlayerCard";
 import { DiaryCard } from "@/components/DiaryCard";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const evaluationColors = {
   "1位競合": "bg-red-500 text-white",
@@ -108,52 +109,59 @@ export default function PublicPlayers() {
 
   const loading = activeTab === "players" ? playersLoading : diariesLoading;
 
-  const filteredPlayers = players.filter((player) => {
-    const matchesSearch = player.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         player.team.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
-    const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(player.category);
-    
-    const playerPositions = player.position.split(/[,、]/).map(p => p.trim());
-    const matchesPosition = selectedPositions.length === 0 || 
-      playerPositions.some(pos => selectedPositions.includes(pos));
-    
-    const matchesEvaluation = selectedEvaluations.length === 0 || 
-      (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
-    
-    return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
-  });
+  // デバウンス処理でINP改善
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
-  const sortedPlayers = [...filteredPlayers].sort((a, b) => {
-    if (sortBy === "evaluation") {
-      // 評価順でソート（評価が高い順）
-      const aEval = a.evaluations && a.evaluations.length > 0 ? a.evaluations[0] : "";
-      const bEval = b.evaluations && b.evaluations.length > 0 ? b.evaluations[0] : "";
-      const aIndex = evaluationOrder.indexOf(aEval);
-      const bIndex = evaluationOrder.indexOf(bEval);
+  const filteredPlayers = useMemo(() => {
+    return players.filter((player) => {
+      const matchesSearch = player.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+                           player.team.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+      const matchesYear = selectedYear === "all" || player.year?.toString() === selectedYear;
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(player.category);
       
-      // 評価がない場合は最後に
-      if (aIndex === -1 && bIndex === -1) return 0;
-      if (aIndex === -1) return 1;
-      if (bIndex === -1) return -1;
+      const playerPositions = player.position.split(/[,、]/).map(p => p.trim());
+      const matchesPosition = selectedPositions.length === 0 || 
+        playerPositions.some(pos => selectedPositions.includes(pos));
       
-      return aIndex - bIndex;
-    } else if (sortBy === "position") {
-      // ポジション順でソート
-      const aPos = a.position.split(/[,、]/)[0]?.trim() || "";
-      const bPos = b.position.split(/[,、]/)[0]?.trim() || "";
-      const aIndex = positionOrder.indexOf(aPos);
-      const bIndex = positionOrder.indexOf(bPos);
+      const matchesEvaluation = selectedEvaluations.length === 0 || 
+        (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
       
-      // ポジションが見つからない場合は最後に
-      if (aIndex === -1 && bIndex === -1) return 0;
-      if (aIndex === -1) return 1;
-      if (bIndex === -1) return -1;
-      
-      return aIndex - bIndex;
-    }
-    return 0;
-  });
+      return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
+    });
+  }, [players, debouncedSearchTerm, selectedYear, selectedCategories, selectedPositions, selectedEvaluations]);
+
+  const sortedPlayers = useMemo(() => {
+    return [...filteredPlayers].sort((a, b) => {
+      if (sortBy === "evaluation") {
+        // 評価順でソート（評価が高い順）
+        const aEval = a.evaluations && a.evaluations.length > 0 ? a.evaluations[0] : "";
+        const bEval = b.evaluations && b.evaluations.length > 0 ? b.evaluations[0] : "";
+        const aIndex = evaluationOrder.indexOf(aEval);
+        const bIndex = evaluationOrder.indexOf(bEval);
+        
+        // 評価がない場合は最後に
+        if (aIndex === -1 && bIndex === -1) return 0;
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        
+        return aIndex - bIndex;
+      } else if (sortBy === "position") {
+        // ポジション順でソート
+        const aPos = a.position.split(/[,、]/)[0]?.trim() || "";
+        const bPos = b.position.split(/[,、]/)[0]?.trim() || "";
+        const aIndex = positionOrder.indexOf(aPos);
+        const bIndex = positionOrder.indexOf(bPos);
+        
+        // ポジションが見つからない場合は最後に
+        if (aIndex === -1 && bIndex === -1) return 0;
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        
+        return aIndex - bIndex;
+      }
+      return 0;
+    });
+  }, [filteredPlayers, sortBy]);
 
   const handlePlayerClick = useCallback((player: PublicPlayer) => {
     setSelectedPlayer(player);
