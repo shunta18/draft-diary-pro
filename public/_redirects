@@ -1,1 +1,9 @@
+# Force HTTPS
+http://baas-baseball.com/*    https://baas-baseball.com/:splat 301!
+http://www.baas-baseball.com/*    https://baas-baseball.com/:splat 301!
+
+# Force non-www
+https://www.baas-baseball.com/*    https://baas-baseball.com/:splat 301!
+
+# SPA routing (must be last)
 /*    /index.html   200
