@@ -2,116 +2,134 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://baas-baseball.com/</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/players</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/public-players</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/public-players/users</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/draft</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/virtual-draft</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://baas-baseball.com/virtual-draft/manual</loc>
+    <lastmod>2025-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://baas-baseball.com/virtual-draft/ai</loc>
+    <lastmod>2025-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://baas-baseball.com/diary</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/about</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/faq</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/help</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/blog</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/blog/draft-history-and-evaluation</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/blog/how-to-use-baas</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/blog/high-school-college-corporate-baseball-differences</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/blog/draft-strategy-and-mechanics</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/contact</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/settings</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/terms</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://baas-baseball.com/privacy</loc>
-    <lastmod>2025-10-15</lastmod>
+    <lastmod>2025-10-27</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
+  </url>
+  <url>
+    <loc>https://baas-baseball.com/draft-predictions</loc>
+    <lastmod>2025-10-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
   </url>
 </urlset>
