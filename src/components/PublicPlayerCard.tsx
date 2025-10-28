@@ -81,7 +81,7 @@ export const PublicPlayerCard = memo(function PublicPlayerCard({
 
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">
-              {sortPositions(player.position)}
+              {player.main_position || sortPositions(player.position)}
             </p>
             {player.evaluations && player.evaluations.length > 0 && (
               <div className="flex flex-wrap gap-1">
