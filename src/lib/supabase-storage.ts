@@ -190,7 +190,8 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
       .from('players')
       .update({
         ...playerData,
-        position: Array.isArray(playerData.position) ? playerData.position[0] : playerData.position
+        position: Array.isArray(playerData.position) ? playerData.position[0] : playerData.position,
+        main_position: playerData.main_position || null
       })
       .eq('id', id)
       .eq('user_id', user.id)
@@ -701,7 +702,7 @@ export const updatePublicPlayer = async (id: string, playerData: Partial<PublicP
         career_path: playerData.career_path,
         usage: playerData.usage,
         videos: playerData.videos,
-        main_position: playerData.main_position,
+        main_position: playerData.main_position || null,
         is_favorite: playerData.is_favorite,
         draft_status: playerData.draft_status,
         draft_team: playerData.draft_team,
