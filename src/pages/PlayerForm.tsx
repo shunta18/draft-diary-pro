@@ -454,7 +454,7 @@ export default function PlayerForm() {
       <div className="bg-card border-b shadow-soft">
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-center space-x-4">
-            <Link to="/players">
+            <Link to={isPublicPlayer ? "/public-players" : "/players"}>
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
@@ -465,7 +465,7 @@ export default function PlayerForm() {
           </div>
           
           <div className="flex items-center gap-2 flex-wrap">
-            <Link to="/players" className="flex-1 sm:flex-none">
+            <Link to={isPublicPlayer ? "/public-players" : "/players"} className="flex-1 sm:flex-none">
               <Button variant="outline" className="h-10 w-full">
                 キャンセル
               </Button>
