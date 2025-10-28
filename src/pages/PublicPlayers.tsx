@@ -91,6 +91,7 @@ export default function PublicPlayers() {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPositions, setSelectedPositions] = useState<string[]>([]);
   const [selectedEvaluations, setSelectedEvaluations] = useState<string[]>([]);
+  const [selectedDraftStatus, setSelectedDraftStatus] = useState<string>("all");
   const [selectedPlayer, setSelectedPlayer] = useState<PublicPlayer | null>(null);
   const [selectedDiary, setSelectedDiary] = useState<PublicDiaryEntry | null>(null);
   const [sortBy, setSortBy] = useState<"evaluation" | "position">("evaluation");
@@ -126,9 +127,13 @@ export default function PublicPlayers() {
       const matchesEvaluation = selectedEvaluations.length === 0 || 
         (player.evaluations && player.evaluations.some(evaluation => selectedEvaluations.includes(evaluation)));
       
-      return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation;
+      const matchesDraftStatus = selectedDraftStatus === "all" || 
+        (selectedDraftStatus === "drafted" && player.draft_status && player.draft_status !== "空欄") ||
+        (selectedDraftStatus === "not-drafted" && (!player.draft_status || player.draft_status === "空欄"));
+      
+      return matchesSearch && matchesYear && matchesCategory && matchesPosition && matchesEvaluation && matchesDraftStatus;
     });
-  }, [players, debouncedSearchTerm, selectedYear, selectedCategories, selectedPositions, selectedEvaluations]);
+  }, [players, debouncedSearchTerm, selectedYear, selectedCategories, selectedPositions, selectedEvaluations, selectedDraftStatus]);
 
   const sortedPlayers = useMemo(() => {
     return [...filteredPlayers].sort((a, b) => {
@@ -415,6 +420,7 @@ export default function PublicPlayers() {
     setSelectedCategories([]);
     setSelectedPositions([]);
     setSelectedEvaluations([]);
+    setSelectedDraftStatus("all");
     setSortBy("evaluation");
   };
 
@@ -456,7 +462,7 @@ export default function PublicPlayers() {
               </div>
 
               {/* フィルターグリッド */}
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
                 {/* 並び替え */}
                 <div className="space-y-1">
                   <Label className="text-xs text-muted-foreground">並び替え</Label>
@@ -484,6 +490,21 @@ export default function PublicPlayers() {
                       <SelectItem value="2027">2027年度</SelectItem>
                       <SelectItem value="2026">2026年度</SelectItem>
                       <SelectItem value="2025">2025年度</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* 指名有無 */}
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">指名有無</Label>
+                  <Select value={selectedDraftStatus} onValueChange={setSelectedDraftStatus}>
+                    <SelectTrigger className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card border shadow-lg z-50">
+                      <SelectItem value="all">すべて</SelectItem>
+                      <SelectItem value="drafted">指名あり</SelectItem>
+                      <SelectItem value="not-drafted">指名なし</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

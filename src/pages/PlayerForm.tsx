@@ -305,6 +305,37 @@ export default function PlayerForm() {
           console.log("Update public player result:", result ? "success" : "failed");
           
           if (result) {
+            // APIレスポンスから返された最新データでフォームを即座に更新（リロード不要）
+            const careerPath = result.career_path && typeof result.career_path === 'object'
+              ? result.career_path as { middle_school?: string; high_school?: string; university?: string; corporate?: string }
+              : { middle_school: "", high_school: "", university: "", corporate: "" };
+            
+            setFormData({
+              name: result.name,
+              draftYear: result.year?.toString() || "2025",
+              category: result.category,
+              team: result.team,
+              positions: sortPositions(Array.isArray(result.position) ? result.position : result.position.split(/[,、]/).map(p => p.trim()).filter(p => p)),
+              mainPosition: result.main_position || "",
+              battingThrowing: `${result.throwing_hand || ""}投${result.batting_hand || ""}打`,
+              hometown: result.hometown || "",
+              age: result.age,
+              careerPath: {
+                middle_school: careerPath.middle_school || "",
+                high_school: careerPath.high_school || "",
+                university: careerPath.university || "",
+                corporate: careerPath.corporate || "",
+              },
+              usage: result.usage || "",
+              evaluations: result.evaluations || [],
+              recommended_teams: result.recommended_teams || [],
+              memo: result.memo || "",
+              videos: result.videos || [],
+              draftStatus: result.draft_status || "空欄",
+              draftTeam: result.draft_team || "",
+              draftRank: result.draft_rank || "",
+            });
+            
             toast({
               title: "選手情報を更新しました",
               description: `${formData.name}の情報が正常に更新されました。`,
@@ -313,11 +344,7 @@ export default function PlayerForm() {
             // メモリリークを防止: URL.createObjectURLで作成したURLを解放
             createdUrls.forEach(url => URL.revokeObjectURL(url));
             
-            // ナビゲーション前に少し遅延を入れる（Android端末での問題対策）
-            console.log("Preparing to navigate...");
-            await new Promise(resolve => setTimeout(resolve, 100));
-            console.log("Navigating to /public-players");
-            navigate("/public-players");
+            setIsSubmitting(false);
           } else {
             throw new Error("Failed to update public player");
           }
@@ -327,6 +354,37 @@ export default function PlayerForm() {
           console.log("Update result:", result ? "success" : "failed");
           
           if (result) {
+            // APIレスポンスから返された最新データでフォームを即座に更新（リロード不要）
+            const careerPath = result.career_path && typeof result.career_path === 'object' 
+              ? result.career_path as { middle_school?: string; high_school?: string; university?: string; corporate?: string }
+              : { middle_school: "", high_school: "", university: "", corporate: "" };
+            
+            setFormData({
+              name: result.name,
+              draftYear: result.year?.toString() || "2025",
+              category: result.category,
+              team: result.team,
+              positions: sortPositions(Array.isArray(result.position) ? result.position : result.position.split(/[,、]/).map(p => p.trim()).filter(p => p)),
+              mainPosition: result.main_position || "",
+              battingThrowing: `${result.throwing_hand || ""}投${result.batting_hand || ""}打`,
+              hometown: result.hometown || "",
+              age: result.age,
+              careerPath: {
+                middle_school: careerPath.middle_school || "",
+                high_school: careerPath.high_school || "",
+                university: careerPath.university || "",
+                corporate: careerPath.corporate || "",
+              },
+              usage: result.usage || "",
+              evaluations: result.evaluations || [],
+              recommended_teams: result.recommended_teams || [],
+              memo: result.memo || "",
+              videos: result.videos || [],
+              draftStatus: result.draft_status || "空欄",
+              draftTeam: result.draft_team || "",
+              draftRank: result.draft_rank || "",
+            });
+            
             toast({
               title: "選手情報を更新しました",
               description: `${formData.name}の情報が正常に更新されました。`,
@@ -335,11 +393,7 @@ export default function PlayerForm() {
             // メモリリークを防止: URL.createObjectURLで作成したURLを解放
             createdUrls.forEach(url => URL.revokeObjectURL(url));
             
-            // ナビゲーション前に少し遅延を入れる（Android端末での問題対策）
-            console.log("Preparing to navigate...");
-            await new Promise(resolve => setTimeout(resolve, 100));
-            console.log("Navigating to /players");
-            navigate("/players");
+            setIsSubmitting(false);
           } else {
             throw new Error("Failed to update player");
           }
