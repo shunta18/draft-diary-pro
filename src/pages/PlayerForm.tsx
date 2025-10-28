@@ -648,6 +648,7 @@ export default function PlayerForm() {
               <div>
                 <Label>メインポジション *</Label>
                 <Select 
+                  key={`main-position-${formData.mainPosition}-${formData.positions.join(',')}`}
                   value={formData.mainPosition} 
                   onValueChange={(value) => setFormData(prev => ({ ...prev, mainPosition: value }))}
                   disabled={formData.positions.length === 0}
