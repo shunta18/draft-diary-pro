@@ -108,6 +108,15 @@ export interface UserProfileWithStats {
   upload_count: number;
 }
 
+export interface PublicPlayerMemo {
+  note_id: string;
+  player_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Player Functions
 export const getPlayers = async (): Promise<Player[]> => {
   try {
@@ -1006,4 +1015,75 @@ export const importDiaryFromPublic = async (publicDiaryId: string): Promise<void
     throw insertError;
   }
 
+};
+
+// ============= Public Player Memos =============
+
+export const getPublicPlayerMemos = async (playerId: string): Promise<PublicPlayerMemo[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('public_players_memo')
+      .select('*')
+      .eq('player_id', playerId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return (data as any) || [];
+  } catch (error) {
+    console.error('Failed to load public player memos:', error);
+    return [];
+  }
+};
+
+export const addPublicPlayerMemo = async (playerId: string, content: string): Promise<PublicPlayerMemo> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('ログインが必要です');
+  }
+
+  const { data, error } = await supabase
+    .from('public_players_memo')
+    .insert({
+      player_id: playerId,
+      user_id: user.id,
+      content: content
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Failed to add memo:', error);
+    throw error;
+  }
+
+  return data as any;
+};
+
+export const updatePublicPlayerMemo = async (noteId: string, content: string): Promise<PublicPlayerMemo> => {
+  const { data, error } = await supabase
+    .from('public_players_memo')
+    .update({ content: content })
+    .eq('note_id', noteId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Failed to update memo:', error);
+    throw error;
+  }
+
+  return data as any;
+};
+
+export const deletePublicPlayerMemo = async (noteId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('public_players_memo')
+    .delete()
+    .eq('note_id', noteId);
+
+  if (error) {
+    console.error('Failed to delete memo:', error);
+    throw error;
+  }
 };
