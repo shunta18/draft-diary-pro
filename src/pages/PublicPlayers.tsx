@@ -13,11 +13,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useNavigate } from "react-router-dom";
-import { importPlayerFromPublic, deletePublicPlayer, type PublicPlayer, deletePublicDiaryEntry, incrementDiaryViewCount, type PublicDiaryEntry, type Player } from "@/lib/supabase-storage";
+import { importPlayerFromPublic, deletePublicPlayer, type PublicPlayer, deletePublicDiaryEntry, incrementDiaryViewCount, type PublicDiaryEntry, type Player, getPublicPlayerMemos, addPublicPlayerMemo, updatePublicPlayerMemo, deletePublicPlayerMemo, type PublicPlayerMemo } from "@/lib/supabase-storage";
 import { supabase } from "@/integrations/supabase/client";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
 import { calculateSimilarity } from "@/lib/utils";
@@ -100,6 +101,12 @@ export default function PublicPlayers() {
   const [showDuplicateAlert, setShowDuplicateAlert] = useState(false);
   const [similarPlayers, setSimilarPlayers] = useState<Array<{ player: Player; similarity: number }>>([]);
   const [pendingImportPlayer, setPendingImportPlayer] = useState<PublicPlayer | null>(null);
+  
+  // Memo states for 2026+ players
+  const [memos, setMemos] = useState<PublicPlayerMemo[]>([]);
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
+  const [editingMemoContent, setEditingMemoContent] = useState("");
+  const [newMemoContent, setNewMemoContent] = useState("");
 
   const { invalidatePublicPlayers, invalidatePublicDiaries, invalidatePlayers } = useInvalidateQueries();
 
@@ -170,7 +177,95 @@ export default function PublicPlayers() {
 
   const handlePlayerClick = useCallback((player: PublicPlayer) => {
     setSelectedPlayer(player);
+    // Load memos for 2026+ players
+    if (player.year && player.year >= 2026) {
+      loadMemos(player.id);
+    }
   }, []);
+  
+  const loadMemos = async (playerId: string) => {
+    try {
+      const playerMemos = await getPublicPlayerMemos(playerId);
+      setMemos(playerMemos);
+    } catch (error) {
+      console.error("Failed to load memos:", error);
+      setMemos([]);
+    }
+  };
+  
+  // Memo functions for 2026+ players
+  const handleAddMemo = async () => {
+    if (!newMemoContent.trim() || !selectedPlayer) return;
+    
+    try {
+      const memo = await addPublicPlayerMemo(selectedPlayer.id, newMemoContent.trim());
+      setMemos(prev => [...prev, memo]);
+      setNewMemoContent("");
+      toast({
+        title: "メモを追加しました",
+        description: "メモが正常に追加されました。",
+      });
+    } catch (error) {
+      console.error("Failed to add memo:", error);
+      toast({
+        title: "エラー",
+        description: "メモの追加に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStartEdit = (memo: PublicPlayerMemo) => {
+    setEditingMemoId(memo.note_id);
+    setEditingMemoContent(memo.content);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMemoId(null);
+    setEditingMemoContent("");
+  };
+
+  const handleUpdateMemo = async (noteId: string) => {
+    if (!editingMemoContent.trim()) return;
+    
+    try {
+      const updatedMemo = await updatePublicPlayerMemo(noteId, editingMemoContent.trim());
+      setMemos(prev => prev.map(m => m.note_id === noteId ? updatedMemo : m));
+      setEditingMemoId(null);
+      setEditingMemoContent("");
+      toast({
+        title: "メモを更新しました",
+        description: "メモが正常に更新されました。",
+      });
+    } catch (error) {
+      console.error("Failed to update memo:", error);
+      toast({
+        title: "エラー",
+        description: "メモの更新に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteMemo = async (noteId: string) => {
+    if (!confirm("このメモを削除してもよろしいですか？")) return;
+    
+    try {
+      await deletePublicPlayerMemo(noteId);
+      setMemos(prev => prev.filter(m => m.note_id !== noteId));
+      toast({
+        title: "メモを削除しました",
+        description: "メモが正常に削除されました。",
+      });
+    } catch (error) {
+      console.error("Failed to delete memo:", error);
+      toast({
+        title: "エラー",
+        description: "メモの削除に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleDiaryClick = useCallback((diary: PublicDiaryEntry) => {
     setSelectedDiary(diary);
@@ -799,12 +894,118 @@ export default function PublicPlayers() {
                     <p>{selectedPlayer.usage}</p>
                   </div>
                 )}
-                {selectedPlayer.memo && (
+                
+                {/* Memo section - different display based on year */}
+                {selectedPlayer.year && selectedPlayer.year <= 2025 && selectedPlayer.memo && (
                   <div>
                     <Label>メモ</Label>
                     <p className="text-sm whitespace-pre-wrap">{selectedPlayer.memo}</p>
                   </div>
                 )}
+                
+                {/* New memo system for 2026+ players */}
+                {selectedPlayer.year && selectedPlayer.year >= 2026 && (
+                  <div className="space-y-4 border-t pt-4">
+                    <Label className="text-base font-semibold">共有メモ</Label>
+                    
+                    {/* Display existing memos */}
+                    <div className="space-y-3 p-4 border rounded-md bg-muted/30 max-h-[300px] overflow-y-auto">
+                      {memos.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center py-4">
+                          まだメモがありません
+                        </p>
+                      ) : (
+                        memos.map((memo) => {
+                          const isOwner = memo.user_id === user?.id;
+                          const canEdit = isAdmin || isOwner;
+                          const isEditing = editingMemoId === memo.note_id;
+                          
+                          return (
+                            <div key={memo.note_id} className="p-3 bg-background rounded-md border shadow-sm">
+                              {isEditing ? (
+                                <div className="space-y-2">
+                                  <Textarea
+                                    value={editingMemoContent}
+                                    onChange={(e) => setEditingMemoContent(e.target.value)}
+                                    rows={3}
+                                    className="shadow-soft"
+                                  />
+                                  <div className="flex gap-2">
+                                    <Button 
+                                      size="sm"
+                                      onClick={() => handleUpdateMemo(memo.note_id)}
+                                      disabled={!editingMemoContent.trim()}
+                                    >
+                                      保存
+                                    </Button>
+                                    <Button 
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={handleCancelEdit}
+                                    >
+                                      キャンセル
+                                    </Button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <p className="text-sm whitespace-pre-wrap mb-2">{memo.content}</p>
+                                  <div className="flex justify-between items-center text-xs text-muted-foreground">
+                                    <span>{new Date(memo.created_at).toLocaleString('ja-JP')}</span>
+                                    {canEdit && (
+                                      <div className="flex gap-2">
+                                        <Button 
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 px-2"
+                                          onClick={() => handleStartEdit(memo)}
+                                        >
+                                          編集
+                                        </Button>
+                                        <Button 
+                                          size="sm"
+                                          variant="ghost"
+                                          className="h-6 px-2 text-destructive"
+                                          onClick={() => handleDeleteMemo(memo.note_id)}
+                                        >
+                                          削除
+                                        </Button>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                    
+                    {/* Add new memo (logged in users only) */}
+                    {user && (
+                      <div className="space-y-2">
+                        <Label htmlFor="newMemoModal">新しいメモを追加</Label>
+                        <Textarea
+                          id="newMemoModal"
+                          value={newMemoContent}
+                          onChange={(e) => setNewMemoContent(e.target.value)}
+                          placeholder="メモを入力..."
+                          rows={3}
+                          className="shadow-soft"
+                        />
+                        <Button 
+                          type="button"
+                          onClick={handleAddMemo}
+                          disabled={!newMemoContent.trim()}
+                          className="w-full"
+                        >
+                          メモを追加
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                )}
+                
                 {selectedPlayer.videos && selectedPlayer.videos.length > 0 && (
                   <div>
                     <Label>動画</Label>

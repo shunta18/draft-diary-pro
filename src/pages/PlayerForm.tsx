@@ -875,132 +875,29 @@ export default function PlayerForm() {
                 </div>
               </div>
 
-              {/* Memo section with year-based logic */}
-              {isPublicPlayer ? (
-                parseInt(formData.draftYear) <= 2025 ? (
-                  // 2025年度以前：既存のmemoカラムを表示、管理者のみ編集可能
-                  <div>
-                    <Label htmlFor="memo">メモ</Label>
-                    {isAdmin ? (
-                      <Textarea
-                        id="memo"
-                        value={formData.memo}
-                        onChange={(e) => setFormData(prev => ({ ...prev, memo: e.target.value }))}
-                        placeholder="選手の特徴やメモを入力（管理者のみ編集可能）"
-                        rows={4}
-                        className="shadow-soft"
-                      />
-                    ) : (
-                      <div className="p-4 border rounded-md bg-muted/50 min-h-[100px]">
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">
-                          {formData.memo || "メモはありません"}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  // 2026年度以降：新しいメモシステム（匿名共有メモ）
-                  <div className="space-y-4">
-                    <Label>共有メモ</Label>
-                    
-                    {/* Display existing memos */}
-                    <div className="space-y-3 p-4 border rounded-md bg-muted/30 max-h-[400px] overflow-y-auto">
-                      {memos.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          まだメモがありません
-                        </p>
-                      ) : (
-                        memos.map((memo) => {
-                          const isOwner = memo.user_id === user?.id;
-                          const canEdit = isAdmin || isOwner;
-                          const isEditing = editingMemoId === memo.note_id;
-                          
-                          return (
-                            <div key={memo.note_id} className="p-3 bg-background rounded-md border shadow-sm">
-                              {isEditing ? (
-                                <div className="space-y-2">
-                                  <Textarea
-                                    value={editingMemoContent}
-                                    onChange={(e) => setEditingMemoContent(e.target.value)}
-                                    rows={3}
-                                    className="shadow-soft"
-                                  />
-                                  <div className="flex gap-2">
-                                    <Button 
-                                      size="sm"
-                                      onClick={() => handleUpdateMemo(memo.note_id)}
-                                      disabled={!editingMemoContent.trim()}
-                                    >
-                                      保存
-                                    </Button>
-                                    <Button 
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={handleCancelEdit}
-                                    >
-                                      キャンセル
-                                    </Button>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div>
-                                  <p className="text-sm whitespace-pre-wrap mb-2">{memo.content}</p>
-                                  <div className="flex justify-between items-center text-xs text-muted-foreground">
-                                    <span>{new Date(memo.created_at).toLocaleString('ja-JP')}</span>
-                                    {canEdit && (
-                                      <div className="flex gap-2">
-                                        <Button 
-                                          size="sm"
-                                          variant="ghost"
-                                          className="h-6 px-2"
-                                          onClick={() => handleStartEdit(memo)}
-                                        >
-                                          編集
-                                        </Button>
-                                        <Button 
-                                          size="sm"
-                                          variant="ghost"
-                                          className="h-6 px-2 text-destructive"
-                                          onClick={() => handleDeleteMemo(memo.note_id)}
-                                        >
-                                          削除
-                                        </Button>
-                                      </div>
-                                    )}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                      )}
+              {/* Memo section - only for 2025 and earlier or private players */}
+              {isPublicPlayer && parseInt(formData.draftYear) <= 2025 ? (
+                // 2025年度以前：既存のmemoカラムを表示、管理者のみ編集可能
+                <div>
+                  <Label htmlFor="memo">メモ</Label>
+                  {isAdmin ? (
+                    <Textarea
+                      id="memo"
+                      value={formData.memo}
+                      onChange={(e) => setFormData(prev => ({ ...prev, memo: e.target.value }))}
+                      placeholder="選手の特徴やメモを入力（管理者のみ編集可能）"
+                      rows={4}
+                      className="shadow-soft"
+                    />
+                  ) : (
+                    <div className="p-4 border rounded-md bg-muted/50 min-h-[100px]">
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {formData.memo || "メモはありません"}
+                      </p>
                     </div>
-                    
-                    {/* Add new memo (logged in users only) */}
-                    {user && (
-                      <div className="space-y-2">
-                        <Label htmlFor="newMemo">新しいメモを追加</Label>
-                        <Textarea
-                          id="newMemo"
-                          value={newMemoContent}
-                          onChange={(e) => setNewMemoContent(e.target.value)}
-                          placeholder="メモを入力..."
-                          rows={3}
-                          className="shadow-soft"
-                        />
-                        <Button 
-                          type="button"
-                          onClick={handleAddMemo}
-                          disabled={!newMemoContent.trim()}
-                          className="w-full"
-                        >
-                          メモを追加
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                )
-              ) : (
+                  )}
+                </div>
+              ) : !isPublicPlayer ? (
                 // Private player: regular memo field
                 <div>
                   <Label htmlFor="memo">メモ</Label>
@@ -1013,7 +910,7 @@ export default function PlayerForm() {
                     className="shadow-soft"
                   />
                 </div>
-              )}
+              ) : null}
             </CardContent>
           </Card>
 
