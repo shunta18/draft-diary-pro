@@ -569,6 +569,41 @@ export type Database = {
         }
         Relationships: []
       }
+      public_players_memo: {
+        Row: {
+          content: string
+          created_at: string
+          note_id: string
+          player_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          note_id?: string
+          player_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          note_id?: string
+          player_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "public_players_memo_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "public_players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string

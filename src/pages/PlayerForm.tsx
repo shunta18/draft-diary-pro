@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
-import { addPlayer, updatePlayer, getPlayerById, getPublicPlayerById, updatePublicPlayer } from "@/lib/supabase-storage";
+import { addPlayer, updatePlayer, getPlayerById, getPublicPlayerById, updatePublicPlayer, getPublicPlayerMemos, addPublicPlayerMemo, updatePublicPlayerMemo, deletePublicPlayerMemo, PublicPlayerMemo } from "@/lib/supabase-storage";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigation } from "@/components/Navigation";
@@ -85,13 +85,20 @@ export default function PlayerForm() {
   const [videoFiles, setVideoFiles] = useState<FileList | null>(null);
   const [videoUrl, setVideoUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Memo states for 2026+ players
+  const [memos, setMemos] = useState<PublicPlayerMemo[]>([]);
+  const [editingMemoId, setEditingMemoId] = useState<string | null>(null);
+  const [editingMemoContent, setEditingMemoContent] = useState("");
+  const [newMemoContent, setNewMemoContent] = useState("");
 
-  // 未認証の場合は認証ページにリダイレクト
+  // 非ログインユーザーは編集不可だが、閲覧は可能
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !isEditing) {
+      // 新規追加の場合のみ認証ページにリダイレクト
       navigate("/auth");
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, navigate, isEditing]);
 
   useEffect(() => {
     if (isEditing && id) {
@@ -170,6 +177,17 @@ export default function PlayerForm() {
     }
   }, [isEditing, id, isPublicPlayer, user, isAdmin, navigate, toast]);
 
+  // Load memos for 2026+ players
+  useEffect(() => {
+    if (isEditing && id && isPublicPlayer && parseInt(formData.draftYear) >= 2026) {
+      const loadMemos = async () => {
+        const memoData = await getPublicPlayerMemos(id);
+        setMemos(memoData);
+      };
+      loadMemos();
+    }
+  }, [isEditing, id, isPublicPlayer, formData.draftYear]);
+
   // 認証状態を確認中はローディング表示
   if (loading) {
     return (
@@ -181,10 +199,8 @@ export default function PlayerForm() {
     );
   }
 
-  // 未認証の場合は何も表示しない（リダイレクト処理中）
-  if (!user) {
-    return null;
-  }
+  // Determine edit permissions
+  const canEditFields = user && (!isPublicPlayer || isAdmin);
 
   const toggleEvaluation = (evaluation: string) => {
     setFormData(prev => ({
@@ -232,6 +248,80 @@ export default function PlayerForm() {
       ...prev,
       videos: prev.videos.filter((_, i) => i !== index)
     }));
+  };
+
+  // Memo functions for 2026+ players
+  const handleAddMemo = async () => {
+    if (!newMemoContent.trim() || !id) return;
+    
+    try {
+      const memo = await addPublicPlayerMemo(id, newMemoContent.trim());
+      setMemos(prev => [...prev, memo]);
+      setNewMemoContent("");
+      toast({
+        title: "メモを追加しました",
+        description: "メモが正常に追加されました。",
+      });
+    } catch (error) {
+      console.error("Failed to add memo:", error);
+      toast({
+        title: "エラー",
+        description: "メモの追加に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleStartEdit = (memo: PublicPlayerMemo) => {
+    setEditingMemoId(memo.note_id);
+    setEditingMemoContent(memo.content);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingMemoId(null);
+    setEditingMemoContent("");
+  };
+
+  const handleUpdateMemo = async (noteId: string) => {
+    if (!editingMemoContent.trim()) return;
+    
+    try {
+      const updatedMemo = await updatePublicPlayerMemo(noteId, editingMemoContent.trim());
+      setMemos(prev => prev.map(m => m.note_id === noteId ? updatedMemo : m));
+      setEditingMemoId(null);
+      setEditingMemoContent("");
+      toast({
+        title: "メモを更新しました",
+        description: "メモが正常に更新されました。",
+      });
+    } catch (error) {
+      console.error("Failed to update memo:", error);
+      toast({
+        title: "エラー",
+        description: "メモの更新に失敗しました。",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteMemo = async (noteId: string) => {
+    if (!confirm("このメモを削除してもよろしいですか？")) return;
+    
+    try {
+      await deletePublicPlayerMemo(noteId);
+      setMemos(prev => prev.filter(m => m.note_id !== noteId));
+      toast({
+        title: "メモを削除しました",
+        description: "メモが正常に削除されました。",
+      });
+    } catch (error) {
+      console.error("Failed to delete memo:", error);
+      toast({
+        title: "エラー",
+        description: "メモの削除に失敗しました。",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -467,19 +557,21 @@ export default function PlayerForm() {
           <div className="flex items-center gap-2 flex-wrap">
             <Link to={isPublicPlayer ? "/public-players" : "/players"} className="flex-1 sm:flex-none">
               <Button variant="outline" className="h-10 w-full">
-                キャンセル
+                {user ? "キャンセル" : "戻る"}
               </Button>
             </Link>
-            <Button 
-              type="submit" 
-              form="player-form"
-              variant="secondary"
-              className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth h-10 flex-1 sm:flex-none"
-              disabled={isSubmitting}
-            >
-              <Save className="h-4 w-4 mr-2" />
-              {isSubmitting ? "保存中..." : "保存"}
-            </Button>
+            {user && (
+              <Button 
+                type="submit" 
+                form="player-form"
+                variant="secondary"
+                className="gradient-accent text-white border-0 shadow-soft hover:shadow-glow transition-smooth h-10 flex-1 sm:flex-none"
+                disabled={isSubmitting}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                {isSubmitting ? "保存中..." : "保存"}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -501,15 +593,18 @@ export default function PlayerForm() {
                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                     placeholder="選手名を入力"
                     required
+                    disabled={!canEditFields}
                     className="shadow-soft"
                   />
                 </div>
                 
                 <div>
                   <Label htmlFor="draftYear">ドラフト年度 *</Label>
-                  <Select value={formData.draftYear} onValueChange={(value) => 
-                    setFormData(prev => ({ ...prev, draftYear: value }))
-                  }>
+                  <Select 
+                    value={formData.draftYear} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, draftYear: value }))}
+                    disabled={!canEditFields}
+                  >
                     <SelectTrigger className="shadow-soft">
                       <SelectValue />
                     </SelectTrigger>
@@ -533,7 +628,8 @@ export default function PlayerForm() {
                         type="button"
                         variant={formData.category === category ? "default" : "outline"}
                         size="sm"
-                        onClick={() => setFormData(prev => ({ ...prev, category }))}
+                        onClick={() => canEditFields && setFormData(prev => ({ ...prev, category }))}
+                        disabled={!canEditFields}
                         className="transition-smooth"
                       >
                         {category}
@@ -550,6 +646,7 @@ export default function PlayerForm() {
                     onChange={(e) => setFormData(prev => ({ ...prev, team: e.target.value }))}
                     placeholder="現在の所属チーム名を入力"
                     required
+                    disabled={!canEditFields}
                     className="shadow-soft"
                   />
                 </div>
@@ -778,17 +875,42 @@ export default function PlayerForm() {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="memo">メモ</Label>
-                <Textarea
-                  id="memo"
-                  value={formData.memo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, memo: e.target.value }))}
-                  placeholder="選手の特徴やメモを入力"
-                  rows={4}
-                  className="shadow-soft"
-                />
-              </div>
+              {/* Memo section - only for 2025 and earlier or private players */}
+              {isPublicPlayer && parseInt(formData.draftYear) <= 2025 ? (
+                // 2025年度以前：既存のmemoカラムを表示、管理者のみ編集可能
+                <div>
+                  <Label htmlFor="memo">メモ</Label>
+                  {isAdmin ? (
+                    <Textarea
+                      id="memo"
+                      value={formData.memo}
+                      onChange={(e) => setFormData(prev => ({ ...prev, memo: e.target.value }))}
+                      placeholder="選手の特徴やメモを入力（管理者のみ編集可能）"
+                      rows={4}
+                      className="shadow-soft"
+                    />
+                  ) : (
+                    <div className="p-4 border rounded-md bg-muted/50 min-h-[100px]">
+                      <p className="text-sm text-muted-foreground whitespace-pre-wrap">
+                        {formData.memo || "メモはありません"}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ) : !isPublicPlayer ? (
+                // Private player: regular memo field
+                <div>
+                  <Label htmlFor="memo">メモ</Label>
+                  <Textarea
+                    id="memo"
+                    value={formData.memo}
+                    onChange={(e) => setFormData(prev => ({ ...prev, memo: e.target.value }))}
+                    placeholder="選手の特徴やメモを入力"
+                    rows={4}
+                    className="shadow-soft"
+                  />
+                </div>
+              ) : null}
             </CardContent>
           </Card>
 
