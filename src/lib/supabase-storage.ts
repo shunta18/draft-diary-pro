@@ -183,17 +183,18 @@ export const addPlayer = async (playerData: Omit<Player, 'id'>): Promise<Player 
   }
 };
 
-export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): Promise<Player | null> => {
+// プライベート選手（playersテーブル）専用の更新関数
+export const updatePrivatePlayer = async (id: number, playerData: Omit<Player, 'id'>): Promise<Player | null> => {
   try {
-    console.log('[updatePlayer] Starting player update for ID:', id);
+    console.log('[updatePrivatePlayer] Starting private player update for ID:', id);
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error('[updatePlayer] User not authenticated');
+      console.error('[updatePrivatePlayer] User not authenticated');
       throw new Error('User not authenticated');
     }
     
-    console.log('[updatePlayer] User authenticated, updating player data...');
+    console.log('[updatePrivatePlayer] User authenticated, updating private player data...');
 
     const { data, error } = await supabase
       .from('players')
@@ -208,18 +209,18 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
       .single();
     
     if (error) {
-      console.error('[updatePlayer] Database error:', error);
+      console.error('[updatePrivatePlayer] Database error:', error);
       throw error;
     }
     
-    console.log('[updatePlayer] Player updated successfully');
+    console.log('[updatePrivatePlayer] Private player updated successfully');
     
     return data ? {
       ...data,
       career_path: data.career_path as Player['career_path']
     } : null;
   } catch (error) {
-    console.error('[updatePlayer] Failed to update player:', error);
+    console.error('[updatePrivatePlayer] Failed to update private player:', error);
     throw error;
   }
 };
