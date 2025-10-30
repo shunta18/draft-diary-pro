@@ -214,45 +214,6 @@ export const updatePlayer = async (id: number, playerData: Omit<Player, 'id'>): 
     
     console.log('[updatePlayer] Player updated successfully');
     
-    // 公開選手データベースの同一選手も更新
-    if (data) {
-      console.log('[updatePlayer] Updating public player if exists...');
-      const { error: publicUpdateError } = await supabase
-        .from('public_players')
-        .update({
-          name: playerData.name,
-          team: playerData.team,
-          position: Array.isArray(playerData.position) ? playerData.position[0] : playerData.position,
-          category: playerData.category,
-          evaluations: playerData.evaluations,
-          recommended_teams: playerData.recommended_teams,
-          year: playerData.year,
-          batting_hand: playerData.batting_hand,
-          throwing_hand: playerData.throwing_hand,
-          height: playerData.height,
-          weight: playerData.weight,
-          age: playerData.age,
-          memo: playerData.memo,
-          hometown: playerData.hometown,
-          career_path: playerData.career_path,
-          usage: playerData.usage,
-          videos: playerData.videos,
-          main_position: playerData.main_position,
-          is_favorite: playerData.is_favorite,
-          draft_status: playerData.draft_status,
-          draft_team: playerData.draft_team,
-          draft_rank: playerData.draft_rank,
-        })
-        .eq('user_id', user.id)
-        .eq('original_player_id', id);
-      
-      if (publicUpdateError) {
-        console.log('[updatePlayer] Public player update skipped or failed:', publicUpdateError);
-      } else {
-        console.log('[updatePlayer] Public player updated successfully');
-      }
-    }
-    
     return data ? {
       ...data,
       career_path: data.career_path as Player['career_path']
