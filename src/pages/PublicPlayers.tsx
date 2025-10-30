@@ -993,6 +993,9 @@ export default function PublicPlayers() {
                           rows={3}
                           className="shadow-soft"
                         />
+                        <p className="text-sm text-muted-foreground">
+                          こちらのメモは全ユーザーに公開されます
+                        </p>
                         <Button 
                           type="button"
                           onClick={handleAddMemo}
