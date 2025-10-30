@@ -196,12 +196,15 @@ export const updatePrivatePlayer = async (id: number, playerData: Omit<Player, '
     
     console.log('[updatePrivatePlayer] User authenticated, updating private player data...');
 
+    // playersテーブルに存在しないカラム（public_players専用）を除外
+    const { draft_rank, draft_status, draft_team, ...privatePlayerData } = playerData as any;
+
     const { data, error } = await supabase
       .from('players')
       .update({
-        ...playerData,
-        position: Array.isArray(playerData.position) ? playerData.position[0] : playerData.position,
-        main_position: playerData.main_position || null
+        ...privatePlayerData,
+        position: Array.isArray(privatePlayerData.position) ? privatePlayerData.position[0] : privatePlayerData.position,
+        main_position: privatePlayerData.main_position || null
       })
       .eq('id', id)
       .eq('user_id', user.id)
