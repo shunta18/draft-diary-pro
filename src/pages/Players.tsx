@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link, useNavigate } from "react-router-dom";
-import { deletePlayer, addPlayer, updatePlayer, type Player } from "@/lib/supabase-storage";
+import { deletePlayer, addPlayer, updatePrivatePlayer, type Player } from "@/lib/supabase-storage";
 import { getDefaultPlayers } from "@/lib/playerStorage";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -179,7 +179,7 @@ export default function Players() {
     }
 
     try {
-      const updatedPlayer = await updatePlayer(player.id!, {
+      const updatedPlayer = await updatePrivatePlayer(player.id!, {
         ...player,
         is_favorite: !player.is_favorite
       });

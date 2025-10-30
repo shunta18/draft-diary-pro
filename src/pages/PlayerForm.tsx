@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link, useParams, useNavigate, useLocation } from "react-router-dom";
-import { addPlayer, updatePlayer, getPlayerById, getPublicPlayerById, updatePublicPlayer, getPublicPlayerMemos, addPublicPlayerMemo, updatePublicPlayerMemo, deletePublicPlayerMemo, PublicPlayerMemo } from "@/lib/supabase-storage";
+import { addPlayer, updatePrivatePlayer, getPlayerById, getPublicPlayerById, updatePublicPlayer, getPublicPlayerMemos, addPublicPlayerMemo, updatePublicPlayerMemo, deletePublicPlayerMemo, PublicPlayerMemo } from "@/lib/supabase-storage";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigation } from "@/components/Navigation";
@@ -439,9 +439,9 @@ export default function PlayerForm() {
             throw new Error("Failed to update public player");
           }
         } else {
-          // プライベート選手を更新
-          const result = await updatePlayer(parseInt(id), playerData);
-          console.log("Update result:", result ? "success" : "failed");
+          // プライベート選手を更新（playersテーブルのみ）
+          const result = await updatePrivatePlayer(parseInt(id), playerData);
+          console.log("Update private player result:", result ? "success" : "failed");
           
           if (result) {
             // APIレスポンスから返された最新データでフォームを即座に更新（リロード不要）
