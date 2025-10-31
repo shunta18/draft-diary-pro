@@ -599,14 +599,23 @@ export default function Players() {
           {filteredPlayers.length === 0 && (
             <Card className="gradient-card border-0 shadow-soft">
               <CardContent className="p-8 text-center">
-                <p className="text-muted-foreground">該当する選手が見つかりません</p>
+                {!user && players.length === 0 ? (
+                  <p className="text-muted-foreground">
+                    <Link to="https://baas-baseball.com/auth" className="text-primary hover:underline font-semibold">
+                      アカウント登録
+                    </Link>
+                    をすると、自分の選手を追加することができます
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">該当する選手が見つかりません</p>
+                )}
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* About Section - SEO & AdSense対策（非ログイン時のみ表示） */}
-        {!user && (
+        {/* About Section - SEO & AdSense対策（非ログイン時のみ表示、選手がいる場合のみ） */}
+        {!user && players.length > 0 && (
           <section className="bg-card/30 border border-border/30 rounded-lg p-6 space-y-4 mt-6">
             <h2 className="text-xl font-bold text-primary">選手リスト機能について</h2>
             
