@@ -254,22 +254,22 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
 };
 
 // 全選手の投票数を取得（投票ページ表示用）
-export const getPlayerVoteCounts = async (draftYear: string = "2025") => {
+// RPCを使用してデータベース側で集計を実行
+export const getPlayerVoteCounts = async (draftYear: string = "2025", teamId?: number) => {
   try {
-    // 十分大きな制限を設定して全データを取得
-    const { data, error } = await supabase
-      .from("draft_team_player_votes")
-      .select("team_id, public_player_id")
-      .eq("draft_year", draftYear)
-      .limit(50000); // デフォルト制限を回避するため大きな値を設定
+    // RPCを呼び出してデータベース側で集計
+    const { data, error } = await supabase.rpc("get_player_vote_counts_by_team", {
+      p_draft_year: draftYear,
+      p_team_id: teamId || null,
+    });
 
     if (error) throw error;
 
-    // team_id, public_player_id ごとに集計
+    // RPCの結果をRecord<string, number>形式に変換
     const voteCounts: Record<string, number> = {};
-    (data || []).forEach((vote) => {
-      const key = `${vote.team_id}_${vote.public_player_id}`;
-      voteCounts[key] = (voteCounts[key] || 0) + 1;
+    (data || []).forEach((row: any) => {
+      const key = `${row.team_id}_${row.public_player_id}`;
+      voteCounts[key] = parseInt(row.vote_count, 10);
     });
 
     return { voteCounts, error: null };

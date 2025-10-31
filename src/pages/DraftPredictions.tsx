@@ -134,8 +134,8 @@ export default function DraftPredictions() {
     setUserPlayerVotes(playerVotes);
     setUserPositionVotes(positionVotes);
 
-    // 全体の投票数を読み込み
-    const { voteCounts: playerCounts } = await getPlayerVoteCounts(selectedYear);
+    // 全体の投票数を読み込み（選択された球団のみ）
+    const { voteCounts: playerCounts } = await getPlayerVoteCounts(selectedYear, selectedTeam);
     setPlayerVoteCounts(playerCounts);
 
     const { voteCounts: positionCounts } = await getPositionVoteCounts(selectedYear);
@@ -143,6 +143,15 @@ export default function DraftPredictions() {
 
     setIsLoading(false);
   };
+
+  // 球団変更時に投票数を再読み込み
+  useEffect(() => {
+    const reloadVoteCounts = async () => {
+      const { voteCounts: playerCounts } = await getPlayerVoteCounts(selectedYear, selectedTeam);
+      setPlayerVoteCounts(playerCounts);
+    };
+    reloadVoteCounts();
+  }, [selectedTeam, selectedYear]);
 
   // Realtime更新のリスナー設定
   useEffect(() => {
@@ -156,8 +165,8 @@ export default function DraftPredictions() {
           table: "draft_team_player_votes",
         },
         async () => {
-          // 全体の投票数とユーザーの投票状態を更新
-          const { voteCounts } = await getPlayerVoteCounts(selectedYear);
+          // 全体の投票数とユーザーの投票状態を更新（選択された球団のみ）
+          const { voteCounts } = await getPlayerVoteCounts(selectedYear, selectedTeam);
           setPlayerVoteCounts(voteCounts);
           
           const { playerVotes } = await getUserVotes(selectedYear);
@@ -212,8 +221,8 @@ export default function DraftPredictions() {
 
     console.log('Vote success');
 
-    // 投票数を即座に再読み込み
-    const { voteCounts } = await getPlayerVoteCounts(selectedYear);
+    // 投票数を即座に再読み込み（選択された球団のみ）
+    const { voteCounts } = await getPlayerVoteCounts(selectedYear, selectedTeam);
     console.log('Updated vote counts:', voteCounts);
     setPlayerVoteCounts(voteCounts);
 

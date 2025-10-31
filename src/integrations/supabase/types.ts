@@ -631,6 +631,14 @@ export type Database = {
     }
     Functions: {
       delete_user: { Args: never; Returns: undefined }
+      get_player_vote_counts_by_team: {
+        Args: { p_draft_year?: string; p_team_id?: number }
+        Returns: {
+          public_player_id: string
+          team_id: number
+          vote_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
