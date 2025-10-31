@@ -256,10 +256,12 @@ export const fetchDraftPredictions = async (draftYear: string = "2025"): Promise
 // 全選手の投票数を取得（投票ページ表示用）
 export const getPlayerVoteCounts = async (draftYear: string = "2025") => {
   try {
+    // 十分大きな制限を設定して全データを取得
     const { data, error } = await supabase
       .from("draft_team_player_votes")
       .select("team_id, public_player_id")
-      .eq("draft_year", draftYear);
+      .eq("draft_year", draftYear)
+      .limit(50000); // デフォルト制限を回避するため大きな値を設定
 
     if (error) throw error;
 
@@ -280,10 +282,12 @@ export const getPlayerVoteCounts = async (draftYear: string = "2025") => {
 // 全ポジションの投票数を取得（投票ページ表示用、ドラフト順位ごと）
 export const getPositionVoteCounts = async (draftYear: string = "2025") => {
   try {
+    // 十分大きな制限を設定して全データを取得
     const { data, error } = await supabase
       .from("draft_team_position_votes")
       .select("team_id, position, draft_round")
-      .eq("draft_year", draftYear);
+      .eq("draft_year", draftYear)
+      .limit(50000); // デフォルト制限を回避するため大きな値を設定
 
     if (error) throw error;
 
