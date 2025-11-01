@@ -6,18 +6,18 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
 import { Player as LocalPlayer } from "@/lib/playerStorage";
-import { Player as SupabasePlayer } from "@/lib/supabase-storage";
+import { Player as SupabasePlayer, PublicPlayer } from "@/lib/supabase-storage";
 import { Search, ChevronDown } from "lucide-react";
 import { PlayerFormDialog } from "@/components/PlayerFormDialog";
 import { useDebounce } from "@/hooks/useDebounce";
 
 // Union type to handle both data formats
-type PlayerData = LocalPlayer | SupabasePlayer;
+type PlayerData = LocalPlayer | SupabasePlayer | PublicPlayer;
 
 interface PlayerSelectionDialogProps {
   players: PlayerData[];
-  selectedPlayerId?: number;
-  onSelect: (playerId: number | undefined) => void;
+  selectedPlayerId?: number | string;
+  onSelect: (playerId: number | string | undefined) => void;
   onPlayerAdded?: () => void;
   children: React.ReactNode;
   draftYear?: string;
@@ -107,7 +107,7 @@ export function PlayerSelectionDialog({ players, selectedPlayerId, onSelect, onP
     });
   }, [players, debouncedSearchName, filterCategories, filterPositions, filterEvaluations, draftYear, getHighestEvaluationRank]);
 
-  const handleSelect = (playerId?: number) => {
+  const handleSelect = (playerId?: number | string) => {
     onSelect(playerId);
     setIsOpen(false);
   };
