@@ -473,7 +473,7 @@ export default function DraftPredictions() {
                         players={players}
                         draftYear={selectedYear}
                         onSelect={(playerId) => {
-                          if (playerId !== undefined) {
+                          if (playerId !== undefined && typeof playerId === 'number') {
                             handlePlayerVoteToggle(playerId, true);
                           }
                         }}

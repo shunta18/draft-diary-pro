@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Link } from "react-router-dom";
-import { getPlayers as getLocalPlayers } from "@/lib/playerStorage";
-import { getPlayers as getSupabasePlayers } from "@/lib/supabase-storage";
 import { PlayerSelectionDialog } from "@/components/PlayerSelectionDialog";
 import { SEO } from "@/components/SEO";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getDraftData as getSupabaseDraftData, saveDraftData as saveSupabaseDraftData, saveTeamDraftData } from "@/lib/supabase-storage";
 import { Navigation } from "@/components/Navigation";
 import { Footer } from "@/components/Footer";
+import { usePublicPlayers } from "@/hooks/usePlayerQueries";
 
 // Helper function to normalize position data
 const normalizePosition = (position: string | string[]): string[] => {
@@ -43,10 +42,10 @@ const teams = [
 
 // Draft data structure
 interface DraftSelection {
-  本命?: number;
-  候補1?: number;
-  候補2?: number;
-  候補3?: number;
+  本命?: number | string;
+  候補1?: number | string;
+  候補2?: number | string;
+  候補3?: number | string;
   memo: string;
 }
 
@@ -103,7 +102,9 @@ export default function Draft() {
   const [draftRounds, setDraftRounds] = useState<number[]>([1, 2, 3, 4, 5]);
   const [devRounds, setDevRounds] = useState<number[]>([1, 2, 3]);
   const [isLoading, setIsLoading] = useState(true);
-  const [players, setPlayers] = useState<any[]>([]);
+  
+  // Use public players data from draft database
+  const { data: publicPlayers = [], isLoading: playersLoading } = usePublicPlayers();
 
   // Load draft data from Supabase or localStorage
   useEffect(() => {
@@ -243,7 +244,7 @@ export default function Draft() {
   };
 
   // Update draft selection
-  const updateDraftSelection = (position: string, field: keyof DraftSelection, value: number | string) => {
+  const updateDraftSelection = (position: string, field: keyof DraftSelection, value: number | string | undefined) => {
     if (!selectedTeam) return;
     const newDraftPositions = {
       ...draftPositions,
@@ -266,7 +267,7 @@ export default function Draft() {
   };
 
   // Update dev selection
-  const updateDevSelection = (position: string, field: keyof DraftSelection, value: number | string) => {
+  const updateDevSelection = (position: string, field: keyof DraftSelection, value: number | string | undefined) => {
     if (!selectedTeam) return;
     const newDevPositions = {
       ...devPositions,
@@ -288,29 +289,6 @@ export default function Draft() {
     });
   };
 
-  // Load players data
-  useEffect(() => {
-    const loadPlayers = async () => {
-      try {
-        if (user) {
-          // Logged in: load from Supabase (user's own players only)
-          const supabasePlayers = await getSupabasePlayers();
-          setPlayers(supabasePlayers);
-        } else {
-          // Not logged in: load from localStorage (sample data)
-          setPlayers(getLocalPlayers());
-        }
-      } catch (error) {
-        console.error('Failed to load players:', error);
-        // Fallback to localStorage if Supabase fails
-        setPlayers(getLocalPlayers());
-      }
-    };
-
-    if (!loading) {
-      loadPlayers();
-    }
-  }, [user, loading]);
 
   // Filter favorite teams based on user login status
   const favoriteTeams = teams.filter(team => {
@@ -564,17 +542,17 @@ export default function Draft() {
                      )}
                    </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                     {['本命', '候補1', '候補2', '候補3'].map((type) => {
                       const currentSelection = draftPositions[`${round}位`]?.[type as keyof DraftSelection];
-                      const selectedPlayer = typeof currentSelection === 'number' ? players.find(p => p.id === currentSelection) : null;
+                      const selectedPlayer = currentSelection ? publicPlayers.find(p => String(p.id) === String(currentSelection)) : null;
                       
-                       return (
-                         <div key={type} className="space-y-1">
-                           <label className="text-xs text-muted-foreground">{type}</label>
-                           <PlayerSelectionDialog
-                             players={players}
-                             selectedPlayerId={typeof currentSelection === 'number' ? currentSelection : undefined}
+                        return (
+                          <div key={type} className="space-y-1">
+                            <label className="text-xs text-muted-foreground">{type}</label>
+                            <PlayerSelectionDialog
+                              players={publicPlayers}
+                              selectedPlayerId={currentSelection}
                              onSelect={(playerId) => updateDraftSelection(`${round}位`, type as keyof DraftSelection, playerId)}
                            >
                              <Button variant="outline" className="w-full h-8 text-xs justify-start">
@@ -668,17 +646,17 @@ export default function Draft() {
                      )}
                    </div>
                   
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
+                   <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                     {['本命', '候補1', '候補2', '候補3'].map((type) => {
                       const currentSelection = devPositions[`育成${round}位`]?.[type as keyof DraftSelection];
-                      const selectedPlayer = typeof currentSelection === 'number' ? players.find(p => p.id === currentSelection) : null;
+                      const selectedPlayer = currentSelection ? publicPlayers.find(p => String(p.id) === String(currentSelection)) : null;
                       
-                       return (
-                         <div key={type} className="space-y-1">
-                           <label className="text-xs text-muted-foreground">{type}</label>
-                           <PlayerSelectionDialog
-                             players={players}
-                             selectedPlayerId={typeof currentSelection === 'number' ? currentSelection : undefined}
+                        return (
+                          <div key={type} className="space-y-1">
+                            <label className="text-xs text-muted-foreground">{type}</label>
+                            <PlayerSelectionDialog
+                              players={publicPlayers}
+                              selectedPlayerId={currentSelection}
                              onSelect={(playerId) => updateDevSelection(`育成${round}位`, type as keyof DraftSelection, playerId)}
                            >
                              <Button variant="outline" className="w-full h-8 text-xs justify-start">

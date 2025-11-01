@@ -1462,7 +1462,10 @@ const VirtualDraft = () => {
                           <PlayerSelectionDialog
                             players={availablePlayers}
                             selectedPlayerId={currentSelection?.playerId || null}
-                            onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                            onSelect={(playerId) => {
+                              const numericPlayerId = typeof playerId === 'number' ? playerId : (playerId ? null : null);
+                              handlePlayerSelect(team.id, numericPlayerId);
+                            }}
                             onPlayerAdded={loadPlayers}
                           >
                             <Button variant="outline" className="w-full">
@@ -1545,7 +1548,10 @@ const VirtualDraft = () => {
                             <PlayerSelectionDialog
                               players={availablePlayers}
                               selectedPlayerId={null}
-                              onSelect={(playerId) => handlePlayerSelect(team.id, playerId)}
+                              onSelect={(playerId) => {
+                                const numericPlayerId = typeof playerId === 'number' ? playerId : null;
+                                handlePlayerSelect(team.id, numericPlayerId);
+                              }}
                               onPlayerAdded={loadPlayers}
                             >
                               <Button variant="default" className="w-full">
