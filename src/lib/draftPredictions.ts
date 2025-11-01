@@ -280,22 +280,21 @@ export const getPlayerVoteCounts = async (draftYear: string = "2025", teamId?: n
 };
 
 // 全ポジションの投票数を取得（投票ページ表示用、ドラフト順位ごと）
-export const getPositionVoteCounts = async (draftYear: string = "2025") => {
+export const getPositionVoteCounts = async (draftYear: string = "2025", teamId?: number) => {
   try {
-    // 十分大きな制限を設定して全データを取得
-    const { data, error } = await supabase
-      .from("draft_team_position_votes")
-      .select("team_id, position, draft_round")
-      .eq("draft_year", draftYear)
-      .limit(50000); // デフォルト制限を回避するため大きな値を設定
+    // RPCを呼び出してデータベース側で集計
+    const { data, error } = await supabase.rpc("get_position_vote_counts_by_team", {
+      p_draft_year: draftYear,
+      p_team_id: teamId || null,
+    });
 
     if (error) throw error;
 
-    // team_id, position, draft_round ごとに集計
+    // RPCの結果をRecord<string, number>形式に変換
     const voteCounts: Record<string, number> = {};
-    (data || []).forEach((vote) => {
-      const key = `${vote.team_id}_${vote.draft_round}_${vote.position}`;
-      voteCounts[key] = (voteCounts[key] || 0) + 1;
+    (data || []).forEach((row: any) => {
+      const key = `${row.team_id}_${row.draft_round}_${row.position}`;
+      voteCounts[key] = parseInt(row.vote_count, 10);
     });
 
     return { voteCounts, error: null };
