@@ -639,6 +639,15 @@ export type Database = {
           vote_count: number
         }[]
       }
+      get_position_vote_counts_by_team: {
+        Args: { p_draft_year?: string; p_team_id?: number }
+        Returns: {
+          draft_round: number
+          position: string
+          team_id: number
+          vote_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

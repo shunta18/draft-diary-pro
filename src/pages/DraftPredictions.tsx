@@ -138,7 +138,7 @@ export default function DraftPredictions() {
     const { voteCounts: playerCounts } = await getPlayerVoteCounts(selectedYear, selectedTeam);
     setPlayerVoteCounts(playerCounts);
 
-    const { voteCounts: positionCounts } = await getPositionVoteCounts(selectedYear);
+    const { voteCounts: positionCounts } = await getPositionVoteCounts(selectedYear, selectedTeam);
     setPositionVoteCounts(positionCounts);
 
     setIsLoading(false);
@@ -149,6 +149,9 @@ export default function DraftPredictions() {
     const reloadVoteCounts = async () => {
       const { voteCounts: playerCounts } = await getPlayerVoteCounts(selectedYear, selectedTeam);
       setPlayerVoteCounts(playerCounts);
+      
+      const { voteCounts: positionCounts } = await getPositionVoteCounts(selectedYear, selectedTeam);
+      setPositionVoteCounts(positionCounts);
     };
     reloadVoteCounts();
   }, [selectedTeam, selectedYear]);
@@ -186,7 +189,7 @@ export default function DraftPredictions() {
         },
         async () => {
           // 全体の投票数とユーザーの投票状態を更新
-          const { voteCounts } = await getPositionVoteCounts(selectedYear);
+          const { voteCounts } = await getPositionVoteCounts(selectedYear, selectedTeam);
           setPositionVoteCounts(voteCounts);
           
           const { positionVotes } = await getUserVotes(selectedYear);
@@ -249,7 +252,7 @@ export default function DraftPredictions() {
     }
 
     // 投票数を即座に再読み込み
-    const { voteCounts } = await getPositionVoteCounts(selectedYear);
+    const { voteCounts } = await getPositionVoteCounts(selectedYear, selectedTeam);
     setPositionVoteCounts(voteCounts);
 
     // ユーザーの投票状態を更新
@@ -364,7 +367,7 @@ export default function DraftPredictions() {
     });
 
     // 投票数を再読み込み
-    const { voteCounts } = await getPositionVoteCounts(selectedYear);
+    const { voteCounts } = await getPositionVoteCounts(selectedYear, selectedTeam);
     setPositionVoteCounts(voteCounts);
   };
 
